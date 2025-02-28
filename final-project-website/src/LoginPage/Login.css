@@ -1,0 +1,183 @@
+@import url('https://fonts.googleapis.com/css2?family=Mulish:wght@200;300;400;500;600;700;800&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Mulish', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    min-height: 100vh;
+    background: linear-gradient(to right, #ff4b2b, #ff416c);
+    overflow: hidden;
+}
+
+/* ---- Background Video ---- */
+.background-video {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: -1;
+}
+
+/* ---- Container ---- */
+.container {
+    position: relative;
+    width: 800px;
+    height: 500px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: rgba(0, 0, 0, 0.25) 0px 14px 28px, rgba(0, 0, 0, 0.22) 0px 10px 10px;
+    overflow: hidden;
+    display: flex;
+}
+
+/* ---- Forms Container ---- */
+.forms-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 50%;
+    height: 100%;
+    transition: transform 0.6s ease-in-out;
+}
+
+.sign-up-mode .forms-container {
+    transform: translateX(100%);
+}
+
+/* ---- Sign-In & Sign-Up Forms ---- */
+.signin-signup {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    width: 100%;
+    text-align: center;
+}
+
+.sign-in-form, .sign-up-form {
+    position: absolute;
+    width: 100%;
+    transition: all 0.6s ease-in-out;
+}
+
+.sign-up-mode .sign-in-form {
+    opacity: 0;
+    transform: translateX(-100%);
+}
+
+.sign-up-form {
+    opacity: 0;
+    transform: translateX(100%);
+}
+
+.sign-up-mode .sign-up-form {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* ---- Input Fields ---- */
+.input-field, .select-field {
+    position: relative;
+    width: 80%;
+    margin: 10px 0;
+    border-radius: 25px;
+    display: flex;
+    align-items: center;
+    background: #f1f1f1;
+    padding: 10px;
+}
+
+.input-field i, .select-field i {
+    margin-right: 10px;
+    color: #acacac;
+}
+
+.input-field input, .select-field select {
+    border: none;
+    outline: none;
+    background: transparent;
+    width: 100%;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+/* ---- Buttons ---- */
+.btn {
+    width: 80%;
+    background: #ff416c;
+    border: none;
+    color: white;
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: 0.3s ease-in-out;
+}
+
+.btn:hover {
+    background: #ff4b2b;
+}
+
+/* ---- Overlay Panel ---- */
+.overlay-container {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(to right, #ff4b2b, #ff416c);
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    transition: transform 0.6s ease-in-out;
+}
+
+.sign-up-mode .overlay-container {
+    transform: translateX(-100%);
+}
+
+/* ---- Overlay Content ---- */
+.overlay-content {
+    width: 80%;
+}
+
+.overlay-content h2 {
+    font-size: 30px;
+    margin-bottom: 10px;
+}
+
+.overlay-content p {
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+/* ---- Responsive Design ---- */
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+        height: 100vh;
+        width: 100%;
+    }
+
+    .forms-container {
+        width: 100%;
+    }
+
+    .overlay-container {
+        width: 100%;
+        height: 40%;
+    }
+}
