@@ -1,0 +1,476 @@
+/* HomePage.css */
+.home-container {
+  position: static;
+  width: 240%;
+  height: 300vh;
+  background: linear-gradient(to right, #ec4899, #f97316);
+  overflow: hidden;
+}
+
+/* Shape Divider */
+.shape-divider {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+}
+
+/* Content Section */
+.content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  color: rgb(255, 255, 255);
+  padding: 0 24px;
+}
+
+/* Large background text */
+.shapes-title {
+  font-size: 7rem;
+  font-weight: 800;
+  opacity: 0.2;
+  position: absolute;
+  top: 33%;
+}
+
+/* Main Heading */
+.main-heading {
+  font-size: 2.5rem;
+  font-weight: bold;
+  position: relative;
+}
+
+/* Paragraph Text */
+.description {
+  font-size: 1.125rem;
+  margin-top: 1rem;
+  max-width: 600px;
+}
+
+/* Social Media Icons */
+.social-icons {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  align-items: center;
+}
+
+.social-icons span {
+  font-size: 1rem;
+}
+
+.social-icons svg {
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.social-icons svg:hover {
+  color: #e2e8f0;
+}
+/* Body padding to prevent overlap */
+body {
+  padding-top: 70px;
+  background-image: url('src/assets/background.jpg'); /* Add your background image URL here */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  min-height: 100vh;
+}
+/* Illustration Placeholder */
+.illustration {
+  position: absolute;
+  bottom: 2.5rem;
+  right: 2.5rem;
+  width: 20rem;
+  height: 15rem;
+  background-color: #ffffff;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.illustration span {
+  color: #6b7280;
+}
+
+/* Navbar Styling with Glass Mirror Effect */
+.navbar {
+  background: rgba(10, 32, 92, 0.4); /* Transparent background */
+  backdrop-filter: blur(10px); /* Blur the background */
+  -webkit-backdrop-filter: blur(10px); /* Safari support */
+  padding: 12px 25px;
+  width: 100%;
+  height: auto;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1); /* Add subtle border for separation */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Slight shadow for depth */
+}
+
+/* Navbar brand styling */
+.navbar-brand {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #f8f8f8 !important;
+}
+
+/* Navbar links */
+.navbar-nav .nav-link {
+  color: #e30000 !important;
+  font-size: 1.3rem;
+  font-weight: bold;
+  margin-right: 20px;
+  transition: color 0.3s ease;
+}
+
+.navbar-nav .nav-link:hover {
+  color: #17a2b8 !important;
+}
+
+/* Navbar toggler for mobile */
+.navbar-toggler {
+  border: none !important;
+}
+
+.navbar-toggler-icon {
+  background-color: #ffffff;
+}
+
+/* Navbar collapse */
+.navbar-collapse {
+  justify-content: space-between;
+}
+
+/* Body padding to prevent overlap */
+body {
+  padding-top: 70px;
+}
+
+/* Search Button Styling */
+.btn {
+  --border-color: linear-gradient(-45deg, #ffae00, #7e03aa, #00fffb);
+  --border-width: 0.125em;
+  --curve-size: 0.5em;
+  --blur: 30px;
+  --bg: #080312;
+  --color: #afffff;
+  color: var(--color);
+  cursor: pointer;
+  position: relative;
+  isolation: isolate;
+  display: inline-grid;
+  place-content: center;
+  padding: 0.5em 1.5em;
+  font-size: 17px;
+  border: 0;
+  text-transform: uppercase;
+  box-shadow: 10px 10px 20px rgba(0, 0, 0, 0.6);
+  clip-path: polygon(
+    0% var(--curve-size),
+    var(--curve-size) 0,
+    100% 0,
+    100% calc(100% - var(--curve-size)),
+    calc(100% - var(--curve-size)) 100%,
+    0 100%
+  );
+  transition: color 250ms;
+}
+
+.btn::after,
+.btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.btn::before {
+  background: var(--border-color);
+  background-size: 300% 300%;
+  animation: move-bg 5s ease infinite;
+  z-index: -2;
+}
+
+@keyframes move-bg {
+  0% {
+    background-position: 31% 0%;
+  }
+  50% {
+    background-position: 70% 100%;
+  }
+  100% {
+    background-position: 31% 0%;
+  }
+}
+
+.btn::after {
+  background: var(--bg);
+  z-index: -1;
+  clip-path: polygon(
+    var(--border-width) calc(var(--curve-size) + var(--border-width) * 0.5),
+    calc(var(--curve-size) + var(--border-width) * 0.5) var(--border-width),
+    calc(100% - var(--border-width)) var(--border-width),
+    calc(100% - var(--border-width)) calc(100% - var(--curve-size) - var(--border-width)),
+    calc(100% - var(--curve-size) - var(--border-width)) calc(100% - var(--border-width)),
+    var(--border-width) calc(100% - var(--border-width))
+  );
+  transition: clip-path 500ms;
+}
+
+.btn:hover::after {
+  clip-path: polygon(
+    calc(100% - var(--border-width)) calc(100% - var(--curve-size) - var(--border-width)),
+    calc(100% - var(--border-width)) var(--border-width),
+    calc(100% - var(--border-width)) var(--border-width),
+    calc(100% - var(--border-width)) calc(100% - var(--curve-size) - var(--border-width)),
+    calc(100% - var(--curve-size) - var(--border-width)) calc(100% - var(--border-width)),
+    calc(100% - var(--curve-size) - var(--border-width)) calc(100% - var(--border-width))
+  );
+  transition: 200ms;
+}
+
+.btn:hover {
+  color: #fff;
+}
+
+  .cubes {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform-style: preserve-3d;
+  }
+
+  .loop {
+    transform: rotateX(-35deg) rotateY(-45deg) translateZ(1.5625em);
+  }
+
+  @keyframes s {
+    to {
+      transform: scale3d(0.2, 0.2, 0.2);
+    }
+  }
+
+  .item {
+    margin: -1.5625em;
+    width: 3.125em;
+    height: 3.125em;
+    transform-origin: 50% 50% -1.5625em;
+    box-shadow: 0 0 0.125em currentColor;
+    background: currentColor;
+    animation: s 0.6s cubic-bezier(0.45, 0.03, 0.51, 0.95) infinite alternate;
+  }
+
+  .item:before,
+  .item:after {
+    position: absolute;
+    width: inherit;
+    height: inherit;
+    transform-origin: 0 100%;
+    box-shadow: inherit;
+    background: currentColor;
+    content: "";
+  }
+
+  .item:before {
+    bottom: 100%;
+    transform: rotateX(90deg);
+  }
+
+  .item:after {
+    left: 100%;
+    transform: rotateY(90deg);
+  }
+
+  .item:nth-child(1) {
+    margin-top: 6.25em;
+    color: #fe1e52;
+    animation-delay: -1.2s;
+  }
+
+  .item:nth-child(1):before {
+    color: #ff6488;
+  }
+
+  .item:nth-child(1):after {
+    color: #ff416d;
+  }
+
+  .item:nth-child(2) {
+    margin-top: 3.125em;
+    color: #fe4252;
+    animation-delay: -1s;
+  }
+
+  .item:nth-child(2):before {
+    color: #ff8892;
+  }
+
+  .item:nth-child(2):after {
+    color: #ff6572;
+  }
+
+  .item:nth-child(3) {
+    margin-top: 0em;
+    color: #fe6553;
+    animation-delay: -0.8s;
+  }
+
+  .item:nth-child(3):before {
+    color: #ffa499;
+  }
+
+  .item:nth-child(3):after {
+    color: #ff8476;
+  }
+
+  .item:nth-child(4) {
+    margin-top: -3.125em;
+    color: #fe8953;
+    animation-delay: -0.6s;
+  }
+
+  .item:nth-child(4):before {
+    color: #ffb999;
+  }
+
+  .item:nth-child(4):after {
+    color: #ffa176;
+  }
+
+  .item:nth-child(5) {
+    margin-top: -6.25em;
+    color: #feac54;
+    animation-delay: -0.4s;
+  }
+
+  .item:nth-child(5):before {
+    color: #ffce9a;
+  }
+
+  .item:nth-child(5):after {
+    color: #ffbd77;
+  }
+
+  .item:nth-child(6) {
+    margin-top: -9.375em;
+    color: #fed054;
+    animation-delay: -0.2s;
+  }
+
+  .item:nth-child(6):before {
+    color: #ffe49a;
+  }
+
+  .item:nth-child(6):after {
+    color: #ffda77;
+  }
+/* General container for the welcome section */
+.welcome-text {
+  text-align: left; /* Align text to the left */
+  padding: 80px 30px; /* Reduced padding for a more compact layout */
+  background-color: rgba(255, 255, 255, 0.4); /* Semi-transparent white background */
+  border-radius: 20px; /* Rounded corners */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); /* Stronger shadow for depth */
+  max-width: 500px; /* Smaller max width */
+  width: 100%; /* Take up full width */
+  position: absolute; /* Use absolute positioning */
+  bottom: 20px; /* Place it near the bottom of the container/page */
+  left: 20px; /* Place it on the left side */
+  margin: 0; /* Remove margins to avoid offset */
+  backdrop-filter: blur(15px); /* Glass effect: blur the content behind */
+  -webkit-backdrop-filter: blur(15px); /* Ensure compatibility with Webkit browsers */
+  border: 1px solid rgba(255, 255, 255, 0.3); /* Soft white border for subtle reflection */
+  z-index: 10; /* Ensure the box is above other elements */
+}
+
+/* Main title style */
+.welcome-text h1 {
+  font-size: 42px; /* Smaller font size for better compactness */
+  color: #2c3e50; /* Dark blue color */
+  margin-bottom: 20px; /* Space between title and subtitle */
+  font-family: 'Serif', Georgia;
+  font-weight: bold; /* Bold font */
+  line-height: 1.2; /* Slightly tight line height */
+}
+
+/* Secondary title style */
+.welcome-text h2 {
+  font-size: 50px; /* Smaller font size than the main title */
+  color: #15e906; /* Green color */
+  margin-bottom: 15px; /* Space between subtitle and paragraph */
+  font-family: 'Fantasy', Copperplate;
+  font-weight: normal; /* Normal weight for subtitle */
+  line-height: 0.7; /* Slightly increased line height for readability */
+}
+
+/* Paragraph style */
+.welcome-text p {
+  font-size: 14px; /* Smaller font size for the paragraph */
+  line-height: 1.5; /* Line height for better readability */
+  color: #000000; /* Light gray text color */
+  font-family: 'Georgia', serif; /* Serif font for the paragraph */
+  max-width: 550px; /* Smaller max width for paragraph */
+  margin: 0; /* Remove margins */
+  padding: 5px 0; /* Reduced padding for top and bottom */
+}
+
+/* Reflective Glass Effect - Reflection at the bottom */
+.welcome-text::after {
+  content: ''; /* Empty content to create the pseudo-element */
+  position: absolute;
+  bottom: -20px; /* Position the reflection just below the main box */
+  left: 0;
+  width: 100%;
+  height: 50px; /* Height of the reflection */
+  background: rgba(255, 255, 255, 0.3); /* Light white background for the reflection */
+  border-radius: 10px;
+  transform: scaleY(-1); /* Flip the reflection vertically */
+  opacity: 0.2; /* Make the reflection faint */
+  filter: blur(8px); /* Slight blur for the reflection */
+}
+
+/* Responsive design adjustments */
+@media (max-width: 768px) {
+  .welcome-text {
+    padding: 30px 15px; /* Adjust padding for smaller screens */
+    bottom: 10px; /* Adjust bottom position on smaller screens */
+    left: 10px; /* Adjust left position on smaller screens */
+  }
+
+  .welcome-text h1 {
+    font-size: 24px; /* Adjust font size on smaller screens */
+  }
+
+  .welcome-text h2 {
+    font-size: 18px; /* Adjust font size on smaller screens */
+  }
+
+  .welcome-text p {
+    font-size: 12px; /* Adjust font size on smaller screens */
+  }
+}
+/* Styling for the video container */
+.video-container {
+  flex: 1;
+  display: flex;
+  justify-content: right;
+  align-items: right;
+  /* Ensure the video container has some margin on the right for spacing */
+  margin-right: 0px;
+}
+
+/* Styling for the video element */
+.video-clip {
+  width: 100%;
+  max-width: 400px; /* You can adjust the width as per your design */
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
