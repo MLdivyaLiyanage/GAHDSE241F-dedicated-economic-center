@@ -72,15 +72,7 @@
 .social-icons svg:hover {
   color: #e2e8f0;
 }
-/* Body padding to prevent overlap */
-body {
-  padding-top: 70px;
-  background-image: url('src/assets/background.jpg'); /* Add your background image URL here */
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  min-height: 100vh;
-}
+
 /* Illustration Placeholder */
 .illustration {
   position: absolute;
