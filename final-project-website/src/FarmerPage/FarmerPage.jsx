@@ -112,18 +112,6 @@ const StyledWrapper = styled.div`
     object-fit: cover;
   }
 
-  .card .image-container .price {
-    position: absolute;
-    right: 0.7rem;
-    bottom: -1rem;
-    background: white;
-    color: var(--accent-color);
-    font-weight: 900;
-    font-size: 0.9rem;
-    padding: 0.5rem;
-    border-radius: 15px;
-    box-shadow: rgba(100, 100, 111, 0.2) 0px 0px 15px 0px;
-  }
 
   .card .favorite {
     position: absolute;
