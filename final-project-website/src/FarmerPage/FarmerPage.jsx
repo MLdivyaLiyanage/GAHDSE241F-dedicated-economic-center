@@ -1,24 +1,24 @@
-import React from 'react';
+/* eslint-disable react/prop-types */
+import  'react';
 import styled from 'styled-components';
-import "./card.css";
+import "./Farmer.css";
 
 // The Card component now accepts an array of image URLs as a prop
 const Card = ({ imageUrls }) => {
   const brands = [
-    'Bell pepper', 'Cucumber', 'Amandine potato', 'Carrot', 'Pineapple',
-    'Butterhead lettuce', 'Cauliflower', 'Beetroot', 'Savoy cabbage', 'Spring Onion',
-    'Birds eye chili', 'Aubergine', 'Green chilies', 'Courgette', 'Butternut squash'
+    'Saman Perera', 'Rohana Silva', 'Bandara Wijesinghe', 'Sunil Jayawardena', 'Sarath Kumara',
+    'Kamal Rathnayake', 'Gayan Fernando', 'Thilakaratne Mudalige', 'Mahinda Ekanayake', 'Ravindra Senanayake',
+    'Dinesh Wickramasinghe', 'Janaka Jayasundara', 'Upul Wijeratne', 'Ajith Kumara', 'Chandana Herath'
   ];
   
   const productNames = [
-    'Bell pepper', 'Cucumber', 'Amandine potato', 'Carrot', 'Pineapple',
-    'Butterhead lettuce', 'Cauliflower', 'Beetroot', 'Savoy cabbage', 'Spring Onion',
-    'Birds eye chili', 'Aubergine', 'Green chilies', 'Courgette', 'Butternut squash'
+    'Grows Lime', 'Grows Garlic', 'Grows Onion', 'Grows Lettuce Leaves', 'Grows Leeks',
+    'Grows Cabbage Flowers', 'Grows Cucumber', 'Grows Cabbage', 'Grows Green Chillies', 'Grows Tomato',
+    'Grows Potato', 'Grows Brinjals', 'Grows Bell Pepper', 'Grows Pumpkin', 'Grows Beetroot'
   ];
 
   const cards = Array.from({ length: 15 }, (_, index) => {
     const imageUrl = imageUrls[index] || `https://placeimg.com/240/130/tech?${index}`; // Fallback to random image if no specific image is passed
-    const rating = Math.floor(Math.random() * 5) + 1; // Generate random rating between 1 and 5
     const brand = brands[index % brands.length]; // Cycle through the brands array
     const productName = productNames[index % productNames.length]; // Cycle through the product names array
 
@@ -26,37 +26,22 @@ const Card = ({ imageUrls }) => {
       <div className="card" key={index}>
         <div className="image-container">
           <img src={imageUrl} alt={`Product ${index + 1}`} className="image" />
-          <div className="price">$49.9</div>
+          
         </div>
-        <label className="favorite">
-          <input defaultChecked type="checkbox" />
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#000000">
-            <path d="M12 20a1 1 0 0 1-.437-.1C11.214 19.73 3 15.671 3 9a5 5 0 0 1 8.535-3.536l.465.465.465-.465A5 5 0 0 1 21 9c0 6.646-8.212 10.728-8.562 10.9A1 1 0 0 1 12 20z" />
-          </svg>
-        </label>
+
         <div className="content">
           <div className="brand">{brand}</div>
           <div className="product-name">{productName}</div>
-          <div className="quantity-container">
-            <label>Quantity:</label>
-            <input type="number" min="1" defaultValue="1" className="quantity-input" />
-          </div>
-          <div className="rating">
-            {Array.from({ length: rating }, (_, i) => (
-              <svg key={i} viewBox="0 0 99.498 16.286" xmlns="http://www.w3.org/2000/svg" className="star-svg">
-                <path d="M48.513 9.465l4.329 8.764-7.525-4.146-7.525 4.146 4.329-8.764-7.69-7.332h9.502L48.513 0l4.33 8.765h9.503l-7.69 7.332z" fill="#ffd426"/>
-              </svg>
-            ))}
-            ({Math.floor(Math.random() * 10000)}) {/* Random reviews */}
-          </div>
+          
         </div>
         <div className="button-container">
-          <button className="buy-button button">Buy Now</button>
-          <button className="cart-button button">
-            <svg viewBox="0 0 27.97 25.074" xmlns="http://www.w3.org/2000/svg">
-              <path d="M0,1.175A1.173,1.173,0,0,1,1.175,0H3.4A2.743,2.743,0,0,1,5.882,1.567H26.01A1.958,1.958,0,0,1,27.9,4.035l-2.008,7.459a3.532,3.532,0,0,1-3.4,2.61H8.36l.264,1.4a1.18,1.18,0,0,0,1.156.955H23.9a1.175,1.175,0,0,1,0,2.351H9.78a3.522,3.522,0,0,1-3.462-2.865L3.791,2.669A.39.39,0,0,0,3.4,2.351H1.175A1.173,1.173,0,0,1,0,1.175ZM6.269,22.724a2.351,2.351,0,1,1,2.351,2.351A2.351,2.351,0,0,1,6.269,22.724Zm16.455-2.351a2.351,2.351,0,1,1-2.351,2.351A2.351,2.351,0,0,1,22.724,20.373Z" id="cart-shopping-solid" />
-            </svg>
-          </button>
+        <button>
+        <span className="shadow" />
+        <span className="edge" />
+        <span className="front text"> Click me
+        </span>
+      </button>
+          
         </div>
       </div>
     );
@@ -67,21 +52,21 @@ const Card = ({ imageUrls }) => {
 
 // The images array will be passed to the Card component
 const images = [
-  'src/assets/pic1.jpg',
-  'src/assets/pic2.jpg',
-  'src/assets/pic3.jpg',
-  'src/assets/pic4.jpg',
-  'src/assets/pic5.jpg',
-  'src/assets/pic6.jpg',
-  'src/assets/pic15.jpg',
-  'src/assets/pic8.jpg',
-  'src/assets/pic9.jpg',
-  'src/assets/pic10.jpg',
-  'src/assets/pic11.jpg',
-  'src/assets/pic12.jpg',
-  'src/assets/pic13.jpg',
-  'src/assets/pic16.jpg',
-  'src/assets/pic14.jpg',
+  'src/assets/Farmer1.jpg',
+  'src/assets/Farmer2.jpg',
+  'src/assets/Farmer3.jpg',
+  'src/assets/Farmer4.jpg',
+  'src/assets/Farmer5.jpg',
+  'src/assets/Farmer6.jpg',
+  'src/assets/Farmer7.jpg',
+  'src/assets/Farmer8.jpg',
+  'src/assets/Farmer9.jpg',
+  'src/assets/Farmer10.jpg',
+  'src/assets/Farmer11.jpg',
+  'src/assets/Farmer12.jpg',
+  'src/assets/Farmer13.jpg',
+  'src/assets/Farmer14.jpg',
+  'src/assets/Farmer15.jpg',
 ];
 
 const App = () => {
@@ -104,8 +89,9 @@ const StyledWrapper = styled.div`
     position: relative;
     width: 100%;
     max-width: 240px;
+    height: 430px;
     background: white;
-    border-radius: 1rem;
+    border-radius: 15px; 
     padding: 0.3rem;
     box-shadow: rgba(100, 100, 111, 0.2) 0px 50px 30px -20px;
     transition: all 0.5s ease-in-out;
@@ -114,16 +100,15 @@ const StyledWrapper = styled.div`
   .card .image-container {
     position: relative;
     width: 100%;
-    height: 130px;
-    border-radius: 0.7rem;
-    border-top-right-radius: 4rem;
+    height: 330px;
+    border-radius: 15px;
     margin-bottom: 1rem;
   }
 
   .card .image-container .image {
     height: 80%;  /* Adjusted for medium size */
     width: 100%;
-    border-radius: inherit;
+    border-radius: 15px;
     object-fit: cover;
   }
 
@@ -136,7 +121,7 @@ const StyledWrapper = styled.div`
     font-weight: 900;
     font-size: 0.9rem;
     padding: 0.5rem;
-    border-radius: 1rem 1rem 2rem 2rem;
+    border-radius: 15px;
     box-shadow: rgba(100, 100, 111, 0.2) 0px 0px 15px 0px;
   }
 

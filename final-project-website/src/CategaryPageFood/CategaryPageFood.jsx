@@ -1,4 +1,4 @@
-import React from "react";
+import "react";
 import Button from "react-bootstrap/Button";
 import Container from "react-bootstrap/Container";
 import Form from "react-bootstrap/Form";
@@ -8,8 +8,6 @@ import NavDropdown from "react-bootstrap/NavDropdown";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./Categary.css"; // Ensure this contains necessary styles
 import styled from 'styled-components';
-
-
 
 // Card Component (Image Slider)
 

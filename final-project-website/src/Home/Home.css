@@ -7,6 +7,8 @@
   overflow: hidden;
 }
 
+
+
 /* Shape Divider */
 .shape-divider {
   position: absolute;
@@ -70,7 +72,7 @@
 }
 
 .social-icons svg:hover {
-  color: #e2e8f0;
+  color: #ffffff;
 }
 
 /* Illustration Placeholder */
@@ -89,7 +91,7 @@
 }
 
 .illustration span {
-  color: #6b7280;
+  color: #ffffff;
 }
 
 /* Navbar Styling with Glass Mirror Effect */
@@ -112,12 +114,12 @@
 .navbar-brand {
   font-size: 1.8rem;
   font-weight: bold;
-  color: #f8f8f8 !important;
+  color: #ffffff !important;
 }
 
 /* Navbar links */
 .navbar-nav .nav-link {
-  color: #e30000 !important;
+  color: #ffffff !important;
   font-size: 1.3rem;
   font-weight: bold;
   margin-right: 20px;
@@ -364,105 +366,23 @@ body {
   .item:nth-child(6):after {
     color: #ffda77;
   }
-/* General container for the welcome section */
-.welcome-text {
-  text-align: left; /* Align text to the left */
-  padding: 80px 30px; /* Reduced padding for a more compact layout */
-  background-color: rgba(255, 255, 255, 0.4); /* Semi-transparent white background */
-  border-radius: 20px; /* Rounded corners */
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); /* Stronger shadow for depth */
-  max-width: 500px; /* Smaller max width */
-  width: 100%; /* Take up full width */
-  position: absolute; /* Use absolute positioning */
-  bottom: 20px; /* Place it near the bottom of the container/page */
-  left: 20px; /* Place it on the left side */
-  margin: 0; /* Remove margins to avoid offset */
-  backdrop-filter: blur(15px); /* Glass effect: blur the content behind */
-  -webkit-backdrop-filter: blur(15px); /* Ensure compatibility with Webkit browsers */
-  border: 1px solid rgba(255, 255, 255, 0.3); /* Soft white border for subtle reflection */
-  z-index: 10; /* Ensure the box is above other elements */
-}
 
-/* Main title style */
-.welcome-text h1 {
-  font-size: 42px; /* Smaller font size for better compactness */
-  color: #2c3e50; /* Dark blue color */
-  margin-bottom: 20px; /* Space between title and subtitle */
-  font-family: 'Serif', Georgia;
-  font-weight: bold; /* Bold font */
-  line-height: 1.2; /* Slightly tight line height */
-}
-
-/* Secondary title style */
-.welcome-text h2 {
-  font-size: 50px; /* Smaller font size than the main title */
-  color: #15e906; /* Green color */
-  margin-bottom: 15px; /* Space between subtitle and paragraph */
-  font-family: 'Fantasy', Copperplate;
-  font-weight: normal; /* Normal weight for subtitle */
-  line-height: 0.7; /* Slightly increased line height for readability */
-}
-
-/* Paragraph style */
-.welcome-text p {
-  font-size: 14px; /* Smaller font size for the paragraph */
-  line-height: 1.5; /* Line height for better readability */
-  color: #000000; /* Light gray text color */
-  font-family: 'Georgia', serif; /* Serif font for the paragraph */
-  max-width: 550px; /* Smaller max width for paragraph */
-  margin: 0; /* Remove margins */
-  padding: 5px 0; /* Reduced padding for top and bottom */
-}
-
-/* Reflective Glass Effect - Reflection at the bottom */
-.welcome-text::after {
-  content: ''; /* Empty content to create the pseudo-element */
-  position: absolute;
-  bottom: -20px; /* Position the reflection just below the main box */
-  left: 0;
-  width: 100%;
-  height: 50px; /* Height of the reflection */
-  background: rgba(255, 255, 255, 0.3); /* Light white background for the reflection */
-  border-radius: 10px;
-  transform: scaleY(-1); /* Flip the reflection vertically */
-  opacity: 0.2; /* Make the reflection faint */
-  filter: blur(8px); /* Slight blur for the reflection */
-}
-
-/* Responsive design adjustments */
-@media (max-width: 768px) {
-  .welcome-text {
-    padding: 30px 15px; /* Adjust padding for smaller screens */
-    bottom: 10px; /* Adjust bottom position on smaller screens */
-    left: 10px; /* Adjust left position on smaller screens */
-  }
-
-  .welcome-text h1 {
-    font-size: 24px; /* Adjust font size on smaller screens */
-  }
-
-  .welcome-text h2 {
-    font-size: 18px; /* Adjust font size on smaller screens */
-  }
-
-  .welcome-text p {
-    font-size: 12px; /* Adjust font size on smaller screens */
-  }
-}
-/* Styling for the video container */
+/* Full-screen video container */
 .video-container {
-  flex: 1;
-  display: flex;
-  justify-content: right;
-  align-items: right;
-  /* Ensure the video container has some margin on the right for spacing */
-  margin-right: 0px;
+  position: relative;
+  width: 100%;
+  height: 100vh; /* Full viewport height */
+  overflow: hidden;
 }
 
-/* Styling for the video element */
-.video-clip {
+/* Full-screen background video */
+.background-video {
+  position: absolute;
+  top: 50%;
+  left: 50%;
   width: 100%;
-  max-width: 400px; /* You can adjust the width as per your design */
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  height: 100%;
+  object-fit: cover; /* Ensures the video covers the screen */
+  transform: translate(-50%, -50%);
+  z-index: -1; /* Moves the video behind other content */
 }
