@@ -3,12 +3,6 @@
 # E-Commerce Project
 ## _This is an e-commerce web application created using the React Project._
 
-## 🚀 Getting Started
-
-### 🏗 Install Node.js
-Ensure **Node.js** is installed. If not, download it from the [Node.js Official Website](https://nodejs.org).
-
----
 
 # React + Vite Project 🚀
 
