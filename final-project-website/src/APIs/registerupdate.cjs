@@ -21,19 +21,19 @@ con.connect((err)=>{
 })
 
 
-app.put("/updateregister/:userid",(req,res)=>{
-    const userid=req.params.userid;
+app.put("/updateregister/:id",(req,res)=>{
+    const id=req.params.id;
     const username=req.body.username;
     const email=req.body.email;
     const pwrd=req.body.pwrd;
     const role=req.body.role;
 
-    con.query('UPDATE register SET username=?,email=?,pwrd=?,role=? WHERE userid=?',[username,email,pwrd,role,userid],(err,result)=>{
+    con.query('UPDATE register SET username=?,email=?,pwrd=?,role=? WHERE userid=?',[username,email,pwrd,role,id],(err,result)=>{
         if(err)
             {
                 console.log(err)
             }else{
-                if(results.affectedRows==0)
+                if(result.affectedRows==0)
                 {
                     res.send("User Id not present")
                 }
