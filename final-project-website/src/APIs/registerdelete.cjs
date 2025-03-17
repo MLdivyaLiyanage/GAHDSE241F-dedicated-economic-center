@@ -5,7 +5,7 @@ app.use(express.json())
 
 const con=mysql.createConnection({
     host:'localhost',
-    username:'root',
+    user:'root',
     password:'',
     database:'economic_center'
 })
