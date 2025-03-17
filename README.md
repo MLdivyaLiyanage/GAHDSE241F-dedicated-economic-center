@@ -1,5 +1,3 @@
-# GAHDSE241F-dedicated-economic-center
-
 # E-Commerce Project
 ## _This is an e-commerce web application created using the React Project._
 
