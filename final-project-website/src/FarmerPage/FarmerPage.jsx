@@ -3,8 +3,8 @@ import  'react';
 import styled from 'styled-components';
 import "./Farmer.css";
 
-// The Card component now accepts an array of image URLs as a prop
-const Card = ({ imageUrls }) => {
+// The Carousel component now accepts an array of image URLs as a prop
+const Carousel = ({ imageUrls }) => {
   const brands = [
     'Saman Perera', 'Rohana Silva', 'Bandara Wijesinghe', 'Sunil Jayawardena', 'Sarath Kumara',
     'Kamal Rathnayake', 'Gayan Fernando', 'Thilakaratne Mudalige', 'Mahinda Ekanayake', 'Ravindra Senanayake',
@@ -17,7 +17,7 @@ const Card = ({ imageUrls }) => {
     'Grows Potato', 'Grows Brinjals', 'Grows Bell Pepper', 'Grows Pumpkin', 'Grows Beetroot'
   ];
 
-  const cards = Array.from({ length: 15 }, (_, index) => {
+  const Carousel = Array.from({ length: 15 }, (_, index) => {
     const imageUrl = imageUrls[index] || `https://placeimg.com/240/130/tech?${index}`; // Fallback to random image if no specific image is passed
     const brand = brands[index % brands.length]; // Cycle through the brands array
     const productName = productNames[index % productNames.length]; // Cycle through the product names array
@@ -47,10 +47,10 @@ const Card = ({ imageUrls }) => {
     );
   });
 
-  return <StyledWrapper>{cards}</StyledWrapper>;
+  return <StyledWrapper>{Carousel }</StyledWrapper>;
 };
 
-// The images array will be passed to the Card component
+// The images array will be passed to the Carousel  component
 const images = [
   'src/assets/Farmer1.jpg',
   'src/assets/Farmer2.jpg',
@@ -72,7 +72,7 @@ const images = [
 const App = () => {
   return (
     <div>
-      <Card imageUrls={images} />
+      <Carousel  imageUrls={images} />
     </div>
   );
 };

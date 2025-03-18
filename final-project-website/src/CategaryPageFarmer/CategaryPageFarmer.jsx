@@ -6,6 +6,7 @@ import Nav from "react-bootstrap/Nav";
 import Navbar from "react-bootstrap/Navbar";
 import NavDropdown from "react-bootstrap/NavDropdown";
 import "bootstrap/dist/css/bootstrap.min.css";
+import PropTypes from 'prop-types';
 import "./CategaryPageFarmer.css"; // Ensure this contains necessary styles
 import styled from 'styled-components';
 
@@ -45,9 +46,86 @@ const Card = () => {
           </div>
         </div>
       </div>
-    </StyledWrapper>
-  );
+    </StyledWrapper>  
+
+);
 };
+        // The Carousel component now accepts an array of image URLs as a prop
+const Carousel = ({ imageUrls }) => {
+  const brands = [
+    'Saman Perera', 'Rohana Silva', 'Bandara Wijesinghe', 'Sunil Jayawardena', 'Sarath Kumara',
+    'Kamal Rathnayake', 'Gayan Fernando', 'Thilakaratne Mudalige', 'Mahinda Ekanayake', 'Ravindra Senanayake',
+    'Dinesh Wickramasinghe', 'Janaka Jayasundara', 'Upul Wijeratne', 'Ajith Kumara', 'Chandana Herath'
+  ];
+  
+  const productNames = [
+    'Grows Lime', 'Grows Garlic', 'Grows Onion', 'Grows Lettuce Leaves', 'Grows Leeks',
+    'Grows Cabbage Flowers', 'Grows Cucumber', 'Grows Cabbage', 'Grows Green Chillies', 'Grows Tomato',
+    'Grows Potato', 'Grows Brinjals', 'Grows Bell Pepper', 'Grows Pumpkin', 'Grows Beetroot'
+  ];
+
+  const Carousel = Array.from({ length: 15 }, (_, index) => {
+    const imageUrl = imageUrls[index] || `https://placeimg.com/240/130/tech?${index}`; // Fallback to random image if no specific image is passed
+    const brand = brands[index % brands.length]; // Cycle through the brands array
+    const productName = productNames[index % productNames.length]; // Cycle through the product names array
+
+    return (
+      <div className="card" key={index}>
+        <div className="image-container">
+          <img src={imageUrl} alt={`Product ${index + 1}`} className="image" />
+          
+        </div>
+
+        <div className="content">
+          <div className="brand">{brand}</div>
+          <div className="product-name">{productName}</div>
+          
+        </div>
+        <div className="button-container">
+        <button>
+        <span className="shadow" />
+        <span className="edge" />
+        <span className="front text"> Click me
+        </span>
+      </button>
+          
+        </div>
+      </div>
+    );
+  });
+
+  return <StyledWrapper>{Carousel }</StyledWrapper>;
+};
+
+// The images array will be passed to the Carousel  component
+const images = [
+  'src/assets/Farmer1.jpg',
+  'src/assets/Farmer2.jpg',
+  'src/assets/Farmer3.jpg',
+  'src/assets/Farmer4.jpg',
+  'src/assets/Farmer5.jpg',
+  'src/assets/Farmer6.jpg',
+  'src/assets/Farmer7.jpg',
+  'src/assets/Farmer8.jpg',
+  'src/assets/Farmer9.jpg',
+  'src/assets/Farmer10.jpg',
+  'src/assets/Farmer11.jpg',
+  'src/assets/Farmer12.jpg',
+  'src/assets/Farmer13.jpg',
+  'src/assets/Farmer14.jpg',
+  'src/assets/Farmer15.jpg',
+];
+const CarouselComponent = () => {
+  return (
+    <div>
+      <Carousel  imageUrls={images} />
+    </div>
+  )
+};
+Carousel.propTypes = {
+  imageUrls: PropTypes.arrayOf(PropTypes.string).isRequired,
+};  
+
 
 const StyledWrapper = styled.div`
   .slider {
@@ -134,10 +212,11 @@ const StyledWrapper = styled.div`
       height: 120px; /* Adjust height for smaller screens */
     }
   }
+    
 `;
 
 // Navigation Bar Component
-function Home() {
+function NavigationBar() {
   return (
     <>
       <Navbar expand="lg" className="navbar">
@@ -171,5 +250,12 @@ function Home() {
     </>
   );
 }
-
-export default Home;
+const CategaryPageFarmer = () => {
+  return (
+    <>
+      <NavigationBar />
+      <CarouselComponent />
+    </>
+  );
+};
+export default CategaryPageFarmer;

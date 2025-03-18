@@ -340,4 +340,269 @@
       padding: 0.4rem 0;
     }
   }
-  
+  /* Root Variables */
+:root {
+  --accent-color: #ffd426;
+  --card-bg-color: #e89f9f;
+  --secondary-color: hsl(345deg 100% 47%); /* Updated to match button color */
+  --btn-radius: 8px;
+  --btn-width: auto;
+  --btn-height: 40px;
+}
+
+/* Base Styles */
+.card {
+  position: relative;
+  width: 100%;
+  max-width: 300px;
+  background: var(--card-bg-color);
+  padding: 0.5rem;
+  box-shadow: rgba(0, 0, 0, 0.2) 0px 50px 30px -20px;
+  transition: all 0.5s ease-in-out;
+  overflow: hidden;
+}
+
+/* Image Covers Full Card */
+.card .image-container {
+  position: fixed;
+  width: 100%;
+  height: 400px;
+  overflow: hidden;
+}
+
+.card .image-container img {
+  width: 100%;
+  height: 300%;
+  object-fit: cover;
+  border-radius: 15px; 
+}
+
+
+
+/* Content Section */
+.card .content {
+  padding: 1rem;
+  text-align: center;
+}
+
+.card .content .brand {
+  font-weight: 900;
+  color: #000000;
+  font-size: 1.2rem;
+}
+
+.card .content .product-name {
+  font-weight: 700;
+  color: #222;
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  font-family: 'Arial', sans-serif;
+}
+
+/* Button Container */
+.button-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+/* Button Styling */
+button {
+  position: relative;
+  padding: 10px 20px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: rgb(255, 255, 255);
+  border: none;
+  border-radius: var(--btn-radius);
+  background: var(--secondary-color);
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+  overflow: hidden;
+}
+
+/* Hover and Active Effects */
+button:hover {
+  background: #03b500;
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+/* Button Shadow */
+.shadow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--btn-radius);
+  background: hsl(0deg 0% 0% / 0.25);
+  transform: translateY(2px);
+  transition: transform 600ms cubic-bezier(.3, .7, .4, 1);
+}
+
+button:active .shadow {
+  transform: translateY(4px);
+}
+
+
+
+/* Animation */
+@keyframes bounce {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Responsive Adjustments */
+@media (max-width: 1024px) {
+  .card {
+    width: 50%;
+  }
+}
+
+@media (max-width: 768px) {
+  .card {
+    width: 100%;
+  }
+}
+.card-container {
+  display: inline-grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1rem;
+  padding: 1rem;
+  justify-items: center;
+}
+
+.card {
+  --accent-color: rgb(10, 68, 244);
+  position: relative;
+  width: 100%;
+  max-width: 240px;
+  height: 430px;
+  background: white;
+  border-radius: 15px; 
+  padding: 0.3rem;
+  box-shadow: rgba(100, 100, 111, 0.2) 0px 50px 30px -20px;
+  transition: all 0.5s ease-in-out;
+}
+
+.card .image-container {
+  position: relative;
+  width: 100%;
+  height: 330px;
+  border-radius: 15px;
+  margin-bottom: 1rem;
+}
+
+.card .image-container .image {
+  height: 80%;
+  width: 100%;
+  border-radius: 15px;
+  object-fit: cover;
+}
+
+.card .favorite {
+  position: absolute;
+  width: 19px;
+  height: 19px;
+  top: 5px;
+  right: 5px;
+  cursor: pointer;
+}
+
+.card .favorite input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.card .favorite input:checked ~ svg {
+  animation: bouncing 0.5s;
+  fill: rgb(240, 119, 119);
+  filter: drop-shadow(0px 3px 1px rgba(53, 53, 53, 0.14));
+}
+
+.card .favorite svg {
+  fill: #a8a8a8;
+}
+
+.card .content {
+  padding: 0px 0.8rem;
+  margin-bottom: 1rem;
+}
+
+.card .content .brand {
+  font-weight: 900;
+  color: #a6a6a6;
+}
+
+.card .content .product-name {
+  font-weight: 700;
+  color: #666666;
+  font-size: 0.7rem;
+  margin-bottom: 1rem;
+}
+
+.card .content .quantity-container {
+  margin-top: 1rem;
+  font-size: 0.8rem;
+}
+
+.card .content .quantity-container input {
+  font-size: 1rem;
+  padding: 0.1rem 0.3rem;
+  border-radius: 0.3rem;
+}
+
+.card .content .rating {
+  display: flex;
+  margin: 1rem 0;
+}
+
+.card .content .rating svg {
+  width: 2rem;
+  height: 2rem;
+}
+
+.card .button-container {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.card .button {
+  width: 48%;
+  padding: 0.6rem;
+  font-size: 0.9rem;
+  border-radius: 0.5rem;
+  background-color: rgb(4, 252, 0);
+  border: none;
+  color: #333;
+  font-weight: bold;
+}
+
+.card .cart-button {
+  background-color: rgb(255, 0, 0);
+}
+
+@keyframes bouncing {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
