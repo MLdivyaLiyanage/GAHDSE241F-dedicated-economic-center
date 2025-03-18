@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import  { useState } from "react";
 import axios from "axios"; // Import axios for API calls
 import "./Login.css";
 import background2 from "../assets/background2.mp4"; // Ensure correct path
@@ -27,7 +27,7 @@ const AuthForm = () => {
   const handleSignUp = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post("http://localhost:3000/registerpost", formData);
+      await axios.post("http://localhost:3000/registerpost", formData);
       setMessage("User registered successfully!");
       setFormData({ username: "", email: "", pwrd: "", role: "" }); // Reset form
     } catch (error) {
@@ -57,8 +57,7 @@ const AuthForm = () => {
                 <input type="password" name="pwrd" placeholder="Password" required />
               </div>
               <input type="submit" value="Login" className="btn" />
-              <p className="switch-text">
-                Don't have an account? <span onClick={toggleForm}>Sign Up</span>
+              <p className="switch-text"> Don&apos;t have an account? <span onClick={toggleForm}>Sign Up</span>
               </p>
             </form>
 
