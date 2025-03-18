@@ -1,10 +1,9 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import LoginPage from "./LoginPage/LoginPage";
-
+import LoginPage from "./LoginPage/LoginPage.jsx"
 
 createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-  <LoginPage/>
+  {<LoginPage/>}
   </React.StrictMode>
 );
