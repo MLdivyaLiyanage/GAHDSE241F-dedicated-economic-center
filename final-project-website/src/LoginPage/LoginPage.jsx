@@ -31,7 +31,7 @@ const AuthForm = () => {
       setMessage("User registered successfully!");
       setFormData({ username: "", email: "", pwrd: "", role: "" }); // Reset form
     } catch (error) {
-      setMessage("Error: Unable to register user.");
+      setMessage("Error: Can't register user");
       console.error(error);
     }
   };
