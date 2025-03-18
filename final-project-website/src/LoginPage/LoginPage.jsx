@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import  { useState } from "react";
 import "./Login.css";
 import background2 from "../assets/background2.mp4"; // Ensure the correct file extension
 
@@ -31,8 +31,7 @@ const AuthForm = () => {
                 <input type="password" placeholder="Password" required />
               </div>
               <input type="submit" value="Login" className="btn" />
-              <p className="switch-text">
-                Don't have an account? <span onClick={toggleForm}>Sign Up</span>
+              <p className="switch-text">Don&apos;t have an account? <span onClick={toggleForm}>Sign Up</span>
               </p>
             </form>
 
