@@ -1,9 +1,9 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import CategaryPageFarmer from "./CategaryPageFarmer/CategaryPageFarmer";
+import ProfilePage from "./ProfilePage/ProfilePage";
 
 createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-  {<CategaryPageFarmer/>}
+  {<ProfilePage/>}
   </React.StrictMode>
 );

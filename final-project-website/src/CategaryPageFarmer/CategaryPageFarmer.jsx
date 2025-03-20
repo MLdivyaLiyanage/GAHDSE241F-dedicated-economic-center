@@ -113,7 +113,6 @@ const StyledWrapper = styled.div`
     }
   }
 
-  /* Make sure to adjust these for better responsiveness */
   @media (max-width: 768px) {
     .slider {
       height: 150px; /* Adjust height for smaller screens */
