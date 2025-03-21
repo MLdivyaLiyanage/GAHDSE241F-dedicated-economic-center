@@ -33,8 +33,8 @@ const StyledButton = styled.button`
 // Custom object-shaped profile upload box with custom position
 const ObjectShapedBox = styled.div`
   position: relative;
-  width: 350px;  // Medium-sized box width
-  height: 220px; // Medium-sized box height
+  width: 400px;  // Medium-sized box width
+  height: 300px; // Medium-sized box height
   margin: 0 0 30px 0; // Remove auto margin - position at the left
   cursor: pointer;
   
@@ -171,6 +171,16 @@ export default function UserProfileForm() {
                   type="text"
                   className="field-input"
                   placeholder="Enter Username"
+                />
+              </div>
+
+              {/* New Email Field */}
+              <div className="form-field">
+                <label className="field-label">Email Address</label>
+                <input
+                  type="email"
+                  className="field-input"
+                  placeholder="Enter Email Address"
                 />
               </div>
 
