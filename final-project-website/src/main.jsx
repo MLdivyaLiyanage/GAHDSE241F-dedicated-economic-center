@@ -1,9 +1,10 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import CombineFarmerProfile from "./Routes/CombineFarmerProfile";
+import FarmerSlider from "./FarmerSlider/FarmerSlider.jsx";
+
 
 createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <CombineFarmerProfile />
+    <FarmerSlider/>
   </React.StrictMode>
 );

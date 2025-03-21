@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 import  'react';
 import styled from 'styled-components';
-import "./card.css";
+import "./foodcard.css";
 
 // The Card component now accepts an array of image URLs as a prop
 const Card = ({ imageUrls }) => {

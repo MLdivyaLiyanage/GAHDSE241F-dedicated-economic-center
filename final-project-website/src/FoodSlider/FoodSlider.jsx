@@ -6,7 +6,7 @@ import Nav from "react-bootstrap/Nav";
 import Navbar from "react-bootstrap/Navbar";
 import NavDropdown from "react-bootstrap/NavDropdown";
 import "bootstrap/dist/css/bootstrap.min.css";
-import "./Categary.css"; // Ensure this contains necessary styles
+import "./FoodSlider.css"; // Ensure this contains necessary styles
 import styled from 'styled-components';
 
 // Card Component (Image Slider)
