@@ -6,7 +6,7 @@ import Nav from "react-bootstrap/Nav";
 import Navbar from "react-bootstrap/Navbar";
 import NavDropdown from "react-bootstrap/NavDropdown";
 import "bootstrap/dist/css/bootstrap.min.css";
-import "./Profile.css";
+import "./profile01.css";
 import styled from "styled-components";
 import { FaStar } from "react-icons/fa";
 
