@@ -1,4 +1,4 @@
-import React from "react";
+import  "react";
 import CardBox from "../CardBox/CardBox";  // Import FoodProfile component
 import CategaryPageFood from "../CategaryPageFood/CategaryPageFood";  // Import CategoryPageFood component
 
