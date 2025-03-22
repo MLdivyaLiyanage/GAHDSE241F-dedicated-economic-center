@@ -11,7 +11,6 @@ import "./navbar.css";  // Ensure this contains necessary styles
 
 // Navigation Bar Component
 function Home() {
-  const navigate = useNavigate(); // Fix: Define navigate
   return (
     <>
       <Navbar expand="lg" className="navbar">
@@ -20,11 +19,11 @@ function Home() {
           <Navbar.Toggle aria-controls="navbarScroll" />
           <Navbar.Collapse id="navbarScroll">
             <Nav className="me-auto my-2 my-lg-0 navbar-nav" navbarScroll>
-            <Nav.Link onClick={() => navigate("/")}>Home</Nav.Link> 
-              <Nav.Link href="#service">Service</Nav.Link>
+            <Nav.Link href="#home">Home</Nav.Link>
+            <Nav.Link href="#service">Service</Nav.Link>
               <NavDropdown title="Category" id="navbarScrollingDropdown">
-              <NavDropdown.Item onClick={() => navigate("/farmer")}>Farmer</NavDropdown.Item>
-              <NavDropdown.Item onClick={() => navigate("/product")}>Product</NavDropdown.Item>
+              <NavDropdown.Item href="/farmer">Farmer</NavDropdown.Item>
+              <NavDropdown.Item href="/product">Product</NavDropdown.Item>
                 <NavDropdown.Divider />
               </NavDropdown>
             </Nav>
