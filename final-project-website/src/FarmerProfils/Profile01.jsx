@@ -1,47 +1,12 @@
 import "react";
-import Button from "react-bootstrap/Button";
-import Container from "react-bootstrap/Container";
-import Form from "react-bootstrap/Form";
-import Nav from "react-bootstrap/Nav";
-import Navbar from "react-bootstrap/Navbar";
-import NavDropdown from "react-bootstrap/NavDropdown";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./profile01.css";
 import styled from "styled-components";
 import { FaStar } from "react-icons/fa";
 
-const NavigationWithVideo = () => {
+const ProfilePage = () => {
   return (
     <div>
-      <Navbar expand="lg" className="navbar">
-        <Container fluid>
-          <Navbar.Brand href="/" className="navbar-brand">
-            My Website
-          </Navbar.Brand>
-          <Navbar.Toggle aria-controls="navbarScroll" />
-          <Navbar.Collapse id="navbarScroll">
-            <Nav className="me-auto my-2 my-lg-0 navbar-nav" navbarScroll>
-              <Nav.Link href="#home">Home</Nav.Link>
-              <Nav.Link href="#service">Service</Nav.Link>
-              <NavDropdown title="Category" id="navbarScrollingDropdown">
-                <NavDropdown.Item href="#action1">Category 1</NavDropdown.Item>
-                <NavDropdown.Item href="#action2">Category 2</NavDropdown.Item>
-                <NavDropdown.Divider />
-                <NavDropdown.Item href="#action3">Something Else</NavDropdown.Item>
-              </NavDropdown>
-            </Nav>
-            <Form className="d-flex">
-              <Form.Control
-                type="search"
-                placeholder="Search"
-                className="me-2"
-                aria-label="Search"
-              />
-              <Button className="btn">Search</Button>
-            </Form>
-          </Navbar.Collapse>
-        </Container>
-      </Navbar>
       <ProfileSection />
     </div>
   );
@@ -72,44 +37,23 @@ const ProfileSection = () => {
         </div>
         <div className="about-card">
           <h2>About Me</h2>
-          <p>Hello! I’m Saman Perera, a dedicated farmer from Sri Lanka with over 10 years of experience in organic and sustainable agriculture. I specialize in cultivating high-quality tea and spices using eco-friendly farming practices. My passion for farming drives me to implement innovative techniques that enhance crop quality while preserving the environment. I strongly believe in sustainable agriculture and work closely with local communities to promote organic farming methods.</p>
+          <p>Hello! I&apos;m Saman Perera, a dedicated farmer from Sri Lanka with over 10 years of experience in organic and sustainable agriculture. I specialize in cultivating high-quality tea and spices using eco-friendly farming practices. My passion for farming drives me to implement innovative techniques that enhance crop quality while preserving the environment. I strongly believe in sustainable agriculture and work closely with local communities to promote organic farming methods.</p>
         </div>
-        <ButtonComponent />
+      
       </div>
       <ProductSection />
     </StyledWrapper>
-    
   );
 };
 
-const ButtonComponent = () => {
-  return (
-    <StyledWrapper>
-      <button className="button">
-        <div className="outline" />
-        <div className="state state--default">
-          <div className="icon">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" height="1.2em" width="1.2em">
-              <g style={{ filter: "url(#shadow)" }}>
-                <path fill="currentColor" d="M14.2199 21.63C13.0399 21.63 11.3699 20.8 10.0499 16.83L9.32988 14.67L7.16988 13.95C3.20988 12.63 2.37988 10.96 2.37988 9.78001C2.37988 8.61001 3.20988 6.93001 7.16988 5.60001L15.6599 2.77001C17.7799 2.06001 19.5499 2.27001 20.6399 3.35001C21.7299 4.43001 21.9399 6.21001 21.2299 8.33001L18.3999 16.82C17.0699 20.8 15.3999 21.63 14.2199 21.63Z" />
-              </g>
-            </svg>
-          </div>
-          <p>{[..."Send Message"].map((char, index) => (<span key={index} style={{ "--i": index }}>{char}</span>))}</p>
-        </div>
-      </button>
-    </StyledWrapper> 
-  );
-};
+
 const ProductSection = () => {
   return (
-
-      <div className="product-container">
-        <div className="product-card">
-          <h2>My Product</h2>
-        </div>
+    <div className="product-container">
+      <div className="product-card">
+        <h2>My Product</h2>
       </div>
-
+    </div>
   );
 };
 
@@ -209,4 +153,4 @@ const StyledWrapper = styled.div`
   }
 `;
 
-export default NavigationWithVideo;
+export default ProfilePage;

@@ -1,6 +1,6 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import FarmerProfile from "./UserProfiles/FarmerProfile.jsx";
+import NavBar from "./NavBar/NavBar.jsx";
 
 
 
