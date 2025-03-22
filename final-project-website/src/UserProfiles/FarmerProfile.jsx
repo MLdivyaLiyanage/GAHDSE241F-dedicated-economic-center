@@ -2,6 +2,10 @@ import { useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./farmerP.css";
 import styled from "styled-components";
+import axios from "axios"; // Add axios for API calls
+
+// API base URL - change this to match your backend server address
+const API_BASE_URL = "http://localhost:5000/api";
 
 const StyledButton = styled.button`
   display: inline-block;
@@ -94,36 +98,234 @@ const ObjectShapedBox = styled.div`
   }
 `;
 
-const Button = () => {
-  return (
-    <div className="button-container">
-      <StyledButton>
-        Upload
-      </StyledButton>
-    </div>
-  );
-};
+// Notification component
+const Notification = styled.div`
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 15px 25px;
+  background-color: ${props => props.type === 'success' ? '#4CAF50' : '#f44336'};
+  color: white;
+  border-radius: 5px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  animation: slideIn 0.3s forwards;
+  
+  @keyframes slideIn {
+    from {
+      transform: translateX(100%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+`;
 
 export default function UserProfileForm() {
+  // User profile state
   const [profileImage, setProfileImage] = useState(null);
+  const [profileImageFile, setProfileImageFile] = useState(null);
+  const [profileImagePath, setProfileImagePath] = useState('');
+  
+  // Product state
   const [productImages, setProductImages] = useState([]);
+  const [productImageFiles, setProductImageFiles] = useState([]);
+  const [productImagePaths, setProductImagePaths] = useState([]);
+  
+  // Form data state
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [age, setAge] = useState('');
+  const [aboutMe, setAboutMe] = useState('');
+  const [address, setAddress] = useState('');
+  const [idNumber, setIdNumber] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [location, setLocation] = useState('');
+  const [workExperience, setWorkExperience] = useState('');
+  const [facebookLink, setFacebookLink] = useState('');
+  const [instagramLink, setInstagramLink] = useState('');
+  
+  // Product form data state
+  const [productName, setProductName] = useState('');
+  const [productPrice, setProductPrice] = useState('');
+  const [productDetails, setProductDetails] = useState('');
+  
+  // UI state
+  const [loading, setLoading] = useState(false);
+  const [notification, setNotification] = useState({ show: false, type: '', message: '' });
+  const [userId, setUserId] = useState(null);
 
+  // Show notification helper
+  const showNotification = (type, message) => {
+    setNotification({ show: true, type, message });
+    setTimeout(() => {
+      setNotification({ show: false, type: '', message: '' });
+    }, 5000);
+  };
+
+  // Handle profile image selection
   const handleProfileImageChange = (e) => {
     if (e.target.files[0]) {
-      setProfileImage(URL.createObjectURL(e.target.files[0]));
+      const file = e.target.files[0];
+      setProfileImageFile(file);
+      setProfileImage(URL.createObjectURL(file));
     }
   };
 
+  // Handle product images selection
   const handleProductImagesChange = (e) => {
-    const files = Array.from(e.target.files).map((file) =>
-      URL.createObjectURL(file)
-    );
-    setProductImages([...productImages, ...files]);
+    if (e.target.files.length > 0) {
+      const files = Array.from(e.target.files);
+      setProductImageFiles(prev => [...prev, ...files]);
+      
+      const newPreviewUrls = files.map(file => URL.createObjectURL(file));
+      setProductImages(prev => [...prev, ...newPreviewUrls]);
+    }
+  };
+
+  // Upload profile image to server
+  const uploadProfileImage = async () => {
+    if (!profileImageFile) return '';
+    
+    try {
+      const formData = new FormData();
+      formData.append('profileImage', profileImageFile);
+      
+      const response = await axios.post(`${API_BASE_URL}/upload-profile`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
+      return response.data.filePath;
+    } catch (error) {
+      console.error('Error uploading profile image:', error);
+      showNotification('error', 'Failed to upload profile image');
+      return '';
+    }
+  };
+
+  // Upload product images to server
+  const uploadProductImages = async () => {
+    if (productImageFiles.length === 0) return [];
+    
+    try {
+      const formData = new FormData();
+      productImageFiles.forEach(file => {
+        formData.append('productImages', file);
+      });
+      
+      const response = await axios.post(`${API_BASE_URL}/upload-products`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
+      return response.data.filePaths;
+    } catch (error) {
+      console.error('Error uploading product images:', error);
+      showNotification('error', 'Failed to upload product images');
+      return [];
+    }
+  };
+
+  // Save user profile to server
+  const saveUserProfile = async (profileImagePath) => {
+    try {
+      const userData = {
+        username,
+        email,
+        age: age || null,
+        aboutMe,
+        address,
+        idNumber,
+        phoneNumber,
+        location,
+        workExperience,
+        facebookLink,
+        instagramLink,
+        profileImagePath
+      };
+      
+      const response = await axios.post(`${API_BASE_URL}/user-profile`, userData);
+      setUserId(response.data.userId);
+      return response.data.userId;
+    } catch (error) {
+      console.error('Error saving user profile:', error);
+      showNotification('error', 'Failed to save user profile');
+      throw error;
+    }
+  };
+
+  // Save product to server
+  const saveProduct = async (userId, productImagePaths) => {
+    try {
+      const productData = {
+        userId,
+        productName,
+        productPrice: productPrice || 0,
+        productDetails,
+        productImagePaths
+      };
+      
+      const response = await axios.post(`${API_BASE_URL}/add-product`, productData);
+      return response.data.productId;
+    } catch (error) {
+      console.error('Error saving product:', error);
+      showNotification('error', 'Failed to save product');
+      throw error;
+    }
+  };
+
+  // Handle form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!username) {
+      showNotification('error', 'Username is required');
+      return;
+    }
+    
+    setLoading(true);
+    
+    try {
+      // 1. Upload profile image
+      const uploadedProfileImagePath = await uploadProfileImage();
+      
+      // 2. Save user profile
+      const userId = await saveUserProfile(uploadedProfileImagePath);
+      
+      // 3. Upload product images
+      const uploadedProductImagePaths = await uploadProductImages();
+      
+      // 4. Save product (if name is provided)
+      if (productName) {
+        await saveProduct(userId, uploadedProductImagePaths);
+      }
+      
+      showNotification('success', 'Data saved successfully!');
+      
+      // Reset product form
+      setProductName('');
+      setProductPrice('');
+      setProductDetails('');
+      setProductImages([]);
+      setProductImageFiles([]);
+      setProductImagePaths([]);
+      
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      showNotification('error', 'An error occurred. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="min-h-screen">
-      <div className="form-container">
+      {notification.show && (
+        <Notification type={notification.type}>
+          {notification.message}
+        </Notification>
+      )}
+      
+      <form onSubmit={handleSubmit} className="form-container">
         {/* User Profile Section */}
         <div className="form-section">
           <h1 className="section-title">User Profile</h1>
@@ -171,16 +373,21 @@ export default function UserProfileForm() {
                   type="text"
                   className="field-input"
                   placeholder="Enter Username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
                 />
               </div>
 
-              {/* New Email Field */}
               <div className="form-field">
                 <label className="field-label">Email Address</label>
                 <input
                   type="email"
                   className="field-input"
                   placeholder="Enter Email Address"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
                 />
               </div>
 
@@ -190,6 +397,8 @@ export default function UserProfileForm() {
                   type="number"
                   className="field-input"
                   placeholder="Enter Age"
+                  value={age}
+                  onChange={(e) => setAge(e.target.value)}
                 />
               </div>
 
@@ -198,6 +407,8 @@ export default function UserProfileForm() {
                 <textarea
                   className="field-input"
                   placeholder="Tell something about yourself"
+                  value={aboutMe}
+                  onChange={(e) => setAboutMe(e.target.value)}
                 ></textarea>
               </div>
             </div>
@@ -210,6 +421,8 @@ export default function UserProfileForm() {
                   type="text"
                   className="field-input"
                   placeholder="Enter Address"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
                 />
               </div>
 
@@ -219,6 +432,8 @@ export default function UserProfileForm() {
                   type="text"
                   className="field-input"
                   placeholder="Enter ID Number"
+                  value={idNumber}
+                  onChange={(e) => setIdNumber(e.target.value)}
                 />
               </div>
 
@@ -228,6 +443,8 @@ export default function UserProfileForm() {
                   type="tel"
                   className="field-input"
                   placeholder="Enter Phone Number"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
                 />
               </div>
 
@@ -237,6 +454,8 @@ export default function UserProfileForm() {
                   type="text"
                   className="field-input"
                   placeholder="Enter Location"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
                 />
               </div>
 
@@ -245,6 +464,8 @@ export default function UserProfileForm() {
                 <textarea
                   className="field-input"
                   placeholder="Describe your work experience"
+                  value={workExperience}
+                  onChange={(e) => setWorkExperience(e.target.value)}
                 ></textarea>
               </div>
 
@@ -256,6 +477,8 @@ export default function UserProfileForm() {
                       type="url"
                       className="field-input social-media-field"
                       placeholder="Facebook Profile URL"
+                      value={facebookLink}
+                      onChange={(e) => setFacebookLink(e.target.value)}
                     />
                   </div>
                   <div className="social-media-input">
@@ -263,6 +486,8 @@ export default function UserProfileForm() {
                       type="url"
                       className="field-input social-media-field"
                       placeholder="Instagram Profile URL"
+                      value={instagramLink}
+                      onChange={(e) => setInstagramLink(e.target.value)}
                     />
                   </div>
                 </div>
@@ -309,6 +534,8 @@ export default function UserProfileForm() {
                   type="text"
                   className="field-input"
                   placeholder="Enter Product Name"
+                  value={productName}
+                  onChange={(e) => setProductName(e.target.value)}
                 />
               </div>
             </div>
@@ -318,8 +545,11 @@ export default function UserProfileForm() {
                 <label className="field-label">Product Price</label>
                 <input
                   type="number"
+                  step="0.01"
                   className="field-input"
                   placeholder="Enter Product Price"
+                  value={productPrice}
+                  onChange={(e) => setProductPrice(e.target.value)}
                 />
               </div>
 
@@ -328,6 +558,8 @@ export default function UserProfileForm() {
                 <textarea
                   className="field-input"
                   placeholder="Enter Product Details"
+                  value={productDetails}
+                  onChange={(e) => setProductDetails(e.target.value)}
                 ></textarea>
               </div>
             </div>
@@ -335,8 +567,12 @@ export default function UserProfileForm() {
         </div>
 
         {/* Submit Button */}
-        <Button />
-      </div>
+        <div className="button-container">
+          <StyledButton type="submit" disabled={loading}>
+            {loading ? 'Saving...' : 'Upload'}
+          </StyledButton>
+        </div>
+      </form>
     </div>
   );
 }
