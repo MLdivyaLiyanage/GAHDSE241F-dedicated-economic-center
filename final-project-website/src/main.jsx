@@ -1,11 +1,11 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import FeedBack from "./RivevAndFeedBack/FeedBack.jsx";
+import Massage from "./MassagePage/Massage.jsx";
 
 
 
 createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <FeedBack/>
+    <Massage/>
   </React.StrictMode>
 );
