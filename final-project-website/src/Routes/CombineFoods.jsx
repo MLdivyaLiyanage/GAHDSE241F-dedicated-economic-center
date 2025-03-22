@@ -1,15 +1,15 @@
 import  "react";
-import CardBox from "../CardBox/CardBox";  // Import FoodProfile component
-import CategaryPageFood from "../CategaryPageFood/CategaryPageFood";  // Import CategoryPageFood component
+import FoodCard from "../FoodCard/FoodCard";  // Import FoodProfile component
+import FoodSlider from "../FoodSlider/FoodSlider";  // Import CategoryPageFood component
 
 const CombineFoods = () => {
   return (
     <div>
       {/* Render FoodProfile first */}
-      <CategaryPageFood />
+      <FoodSlider />
 
       {/* Render CategoryPageFood after FoodProfile */}
-      <CardBox />
+      <FoodCard />
     </div>
   );
 };
