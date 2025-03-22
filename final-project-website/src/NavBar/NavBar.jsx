@@ -35,7 +35,7 @@ function Home() {
             <Nav className="profile-nav">
               <Button
                 className="profile-btn"
-                onClick={() => console.log("Profile clicked")}
+                onClick={() => navigate("/profile")}
                 aria-label="User Profile"
               >
                 <svg
