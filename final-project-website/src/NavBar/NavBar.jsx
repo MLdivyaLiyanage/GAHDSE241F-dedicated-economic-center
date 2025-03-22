@@ -1,4 +1,4 @@
-import  "react";
+import "react";
 import Button from "react-bootstrap/Button";
 import Container from "react-bootstrap/Container";
 import Form from "react-bootstrap/Form";
@@ -29,20 +29,20 @@ function Home() {
             </Nav>
             <Form className="d-flex me-2">
               <Form.Control type="search" placeholder="Search" className="me-2" aria-label="Search" />
-              <Button className="btn">Search</Button>
+              <Button className="search-btn">Search</Button>
             </Form>
             <Nav className="profile-nav">
-              <Button 
+              <Button
                 className="profile-btn"
                 onClick={() => console.log("Profile clicked")}
                 aria-label="User Profile"
               >
-                <svg 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  width="24" 
-                  height="24" 
-                  fill="currentColor" 
-                  className="bi bi-person-circle" 
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  fill="currentColor"
+                  className="bi bi-person-circle"
                   viewBox="0 0 16 16"
                 >
                   <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
