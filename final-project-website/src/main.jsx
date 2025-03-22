@@ -1,11 +1,10 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import FeedBack from "./RivevAndFeedBack/FeedBack.jsx";
-
+import FarmerProfile from "./UserProfiles/FarmerProfile.jsx";
 
 
 createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <FeedBack/>
+    <FarmerProfile/>
   </React.StrictMode>
 );
