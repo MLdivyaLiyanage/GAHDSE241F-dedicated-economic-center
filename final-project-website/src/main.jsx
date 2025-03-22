@@ -1,10 +1,10 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import NavBar from "./NavBar/NavBar.jsx";
+import HomeFirstPage from "./Home/HomeFirstPage.jsx";
 
 
 createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <NavBar/>
+    <HomeFirstPage/>
   </React.StrictMode>
 );
