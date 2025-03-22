@@ -14,17 +14,16 @@ function Home() {
     <>
       <Navbar expand="lg" className="navbar">
         <Container fluid>
-          <Navbar.Brand href="#" className="navbar-brand">My Website</Navbar.Brand>
+          <Navbar.Brand href="#" className="navbar-brand">Dedicated Economic Center</Navbar.Brand>
           <Navbar.Toggle aria-controls="navbarScroll" />
           <Navbar.Collapse id="navbarScroll">
             <Nav className="me-auto my-2 my-lg-0 navbar-nav" navbarScroll>
               <Nav.Link href="#home">Home</Nav.Link>
               <Nav.Link href="#service">Service</Nav.Link>
               <NavDropdown title="Category" id="navbarScrollingDropdown">
-                <NavDropdown.Item href="#action1">Category 1</NavDropdown.Item>
-                <NavDropdown.Item href="#action2">Category 2</NavDropdown.Item>
+              <NavDropdown.Item onClick={() => navigate("/farmer")}>Farmer</NavDropdown.Item>
+              <NavDropdown.Item onClick={() => navigate("/product")}>Product</NavDropdown.Item>
                 <NavDropdown.Divider />
-                <NavDropdown.Item href="#action3">Something Else</NavDropdown.Item>
               </NavDropdown>
             </Nav>
             <Form className="d-flex me-2">
