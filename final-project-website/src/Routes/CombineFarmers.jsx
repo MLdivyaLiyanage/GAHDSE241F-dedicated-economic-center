@@ -1,13 +1,13 @@
 import React from "react";
-import CategaryPageFarmer from "../CategaryPageFarmer/CategaryPageFarmer";  // Import FoodProfile component
-import FarmerPage from "../FarmerPage/FarmerPage";  // Import CategoryPageFood component
+import FarmerSlider from "../FarmerSlider/FarmerSlider";  // Import FoodProfile component
+import FarmerCard from "../FarmerCard/FarmerCard";  // Import CategoryPageFood component
 
 const CombineFarmers = () => {
   return (
     <div>
-      <CategaryPageFarmer />
+      <FarmerSlider />
 
-      <FarmerPage />
+      <FarmerCard />
     </div>
   );
 };
