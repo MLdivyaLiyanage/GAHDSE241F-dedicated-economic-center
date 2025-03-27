@@ -1,6 +1,5 @@
 import "react";
 import "bootstrap/dist/css/bootstrap.min.css";
-import "./FarmerSlider.css"; // Ensure this contains necessary styles
 import styled from 'styled-components';
 import Container from "react-bootstrap/Container";
 
@@ -44,11 +43,31 @@ const Card = () => {
 };
 
 const StyledWrapper = styled.div`
+  /* Adding background image */
+  background-image: url('src/assets/backimg1.jpg'); /* Replace with your image path */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  height: 100vh; /* Full viewport height */
+  width: 100%; /* Full width */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+
+  /* Ensure that the background image fills the whole screen without distortion */
+  position: absolute; 
+  top: 0;
+  left: 0;
+
   .slider {
     width: 100%;
+    top: -30%;
+    left: 0;
     height: var(--height);
     overflow: hidden;
     mask-image: linear-gradient(to right, transparent, #000 10% 90%, transparent);
+    position: relative;
   }
 
   .slider .list {
@@ -106,6 +125,7 @@ const StyledWrapper = styled.div`
     }
   }
 
+  /* Mobile responsiveness */
   @media (max-width: 768px) {
     .slider {
       height: 150px; /* Adjust height for smaller screens */

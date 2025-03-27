@@ -1,6 +1,5 @@
 import  "react";
 import "bootstrap/dist/css/bootstrap.min.css";
-import "./Home.css"; // Import Home CSS file
 
 const NavigationWithVideo = () => {
   return (

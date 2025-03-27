@@ -1,7 +1,7 @@
 import "react";
 import Container from "react-bootstrap/Container";
 import "bootstrap/dist/css/bootstrap.min.css";
-import "./FoodSlider.css"; // Ensure this contains necessary styles
+
 import styled from 'styled-components';
 
 // Card Component (Image Slider)
@@ -44,11 +44,36 @@ const Card = () => {
 };
 
 const StyledWrapper = styled.div`
+  /* Adding background image */
+  background-image: url('src/assets/backimg2.jpg'); /* Replace with your image path */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  height: 100vh; /* Full viewport height */
+  width: 100%; /* Full width */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+
+  /* Ensure that the background image fills the whole screen without distortion */
+  position: absolute; 
+  top: 0;
+  left: 0;
+
+
+  
+  /* Slider Styles */
   .slider {
     width: 100%;
+     top: -30%;
+    max-width: 100vw; /* Ensure no overflow horizontally */
     height: var(--height);
     overflow: hidden;
     mask-image: linear-gradient(to right, transparent, #000 10% 90%, transparent);
+    position: relative;
+    display: flex;
+    justify-content: center;
   }
 
   .slider .list {
@@ -73,8 +98,10 @@ const StyledWrapper = styled.div`
     width: 100%;
     height: 100%;
     object-fit: cover;
+    border-radius: 8px; /* Optional: Adds rounded corners to images */
   }
 
+  /* Animation for sliding */
   @keyframes autoRun {
     from {
       left: 100%;
@@ -107,6 +134,17 @@ const StyledWrapper = styled.div`
   }
 
   /* Make sure to adjust these for better responsiveness */
+  @media (max-width: 1024px) {
+    .slider {
+      height: 200px; /* Adjust height for medium screens */
+    }
+
+    .slider .list .item {
+      width: 200px; /* Adjust width for medium screens */
+      height: 200px; /* Adjust height for medium screens */
+    }
+  }
+
   @media (max-width: 768px) {
     .slider {
       height: 150px; /* Adjust height for smaller screens */
@@ -120,7 +158,7 @@ const StyledWrapper = styled.div`
 
   @media (max-width: 480px) {
     .slider {
-      height: 120px; /* Adjust height for smaller screens */
+      height: 120px; /* Adjust height for very small screens */
     }
 
     .slider .list .item {

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Container, Row, Col, Button, Form, InputGroup } from 'react-bootstrap';
 import { FaChevronLeft, FaChevronRight, FaStar, FaHeart, FaShare } from 'react-icons/fa';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import './buy01.css';
+import './bay01.css';
 
 function App() {
   const [quantity, setQuantity] = useState(1);

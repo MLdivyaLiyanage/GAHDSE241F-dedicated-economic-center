@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 import  'react';
 import styled from 'styled-components';
-import "./Farmer.css";
+
 
 // The Carousel component now accepts an array of image URLs as a prop
 const Carousel = ({ imageUrls }) => {

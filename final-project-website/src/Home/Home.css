@@ -1,13 +1,11 @@
 /* HomePage.css */
 .home-container {
   position: static;
-  width: 240%;
-  height: 300vh;
-  background: linear-gradient(to right, #ec4899, #f97316);
+  width: 100%;  /* Changed from 240% to fix overflow issues */
+  height: 100vh;  /* Changed from 300vh for better initial viewing */
+  background: linear-gradient(135deg, #ec4899, #f97316);  /* Slightly adjusted angle */
   overflow: hidden;
-}
-
-
+}  
 
 /* Shape Divider */
 .shape-divider {
@@ -37,6 +35,7 @@
   opacity: 0.2;
   position: absolute;
   top: 33%;
+  z-index: 0;  /* Ensure it stays behind other content */
 }
 
 /* Main Heading */
@@ -44,6 +43,7 @@
   font-size: 2.5rem;
   font-weight: bold;
   position: relative;
+  z-index: 1;  /* Ensure it stays above the shapes-title */
 }
 
 /* Paragraph Text */
@@ -51,6 +51,7 @@
   font-size: 1.125rem;
   margin-top: 1rem;
   max-width: 600px;
+  z-index: 1;  /* Ensure it stays above the shapes-title */
 }
 
 /* Social Media Icons */
@@ -59,6 +60,7 @@
   gap: 1rem;
   margin-top: 1.5rem;
   align-items: center;
+  z-index: 1;  /* Ensure it stays above the shapes-title */
 }
 
 .social-icons span {
@@ -68,11 +70,12 @@
 .social-icons svg {
   font-size: 1.5rem;
   cursor: pointer;
-  transition: color 0.3s ease;
+  transition: color 0.3s ease, transform 0.2s ease;  /* Added transform for hover effect */
 }
 
 .social-icons svg:hover {
   color: #ffffff;
+  transform: translateY(-2px);  /* Slight lift effect on hover */
 }
 
 /* Illustration Placeholder */
@@ -82,22 +85,25 @@
   right: 2.5rem;
   width: 20rem;
   height: 15rem;
-  background-color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.9);  /* Made slightly transparent */
   border-radius: 0.5rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);  /* Enhanced shadow */
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: transform 0.3s ease;  /* Added transition for hover effect */
+}
+
+.illustration:hover {
+  transform: translateY(-5px);  /* Lift effect on hover */
 }
 
 .illustration span {
-  color: #ffffff;
-}
-
-
+  color: #333333;  /* Changed from white for better visibility on white background */
+}  
 
 /* Full-screen video container */
-.video-container {
+.homeFirstpage.video-container {
   position: relative;
   width: 100%;
   height: 100vh; /* Full viewport height */
@@ -105,7 +111,7 @@
 }
 
 /* Full-screen background video */
-.background-video {
+.homeFirstpage.background-video {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -114,4 +120,18 @@
   object-fit: cover; /* Ensures the video covers the screen */
   transform: translate(-50%, -50%);
   z-index: -1; /* Moves the video behind other content */
+}
+
+/* Added basic media query for responsiveness */
+@media (max-width: 768px) {
+  .shapes-title {
+    font-size: 4rem;
+  }
+  
+  .illustration {
+    width: 16rem;
+    height: 12rem;
+    bottom: 1.5rem;
+    right: 1.5rem;
+  }
 }
