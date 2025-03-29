@@ -1,10 +1,11 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Container, Row, Col, Button, Form, InputGroup, Card, Accordion } from 'react-bootstrap';
 import { FaChevronLeft, FaChevronRight, FaStar, FaHeart, FaShare, FaCreditCard, FaPaypal, FaApplePay, FaGooglePay } from 'react-icons/fa';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './payment.css';
+import axios from 'axios'; // Make sure to install axios with: npm install axios
 
 function App() {
   const [quantity, setQuantity] = useState(1);
@@ -23,30 +24,72 @@ function App() {
     cardExpiry: '',
     cardCVV: ''
   });
-
-  // Product images array with placeholders 
-  const images = [
-    'src/assets/Appel01.jpg',
-    'src/assets/Appel02.jpg',
-    'src/assets/Appel03.jpg',
-  ];
-
-  // Product details
-  const product = {
+  const [product, setProduct] = useState({
+    id: 1, // Default product ID
     name: "Organic Fresh Apple",
     description: "Our organic apples are grown without synthetic pesticides or fertilizers. Rich in antioxidants, fiber, and vitamin C, these crisp and juicy apples make for a perfect healthy snack or addition to your favorite recipes.",
     price: 350.00,
     rating: 4.8,
     reviews: 124,
     inStock: true
-  };
-
-  // Shipping options
-  const shippingOptions = {
+  });
+  const [images, setImages] = useState([
+    'src/assets/Appel01.jpg',
+    'src/assets/Appel02.jpg',
+    'src/assets/Appel03.jpg',
+  ]);
+  const [shippingOptions, setShippingOptions] = useState({
     standard: { name: 'Standard Delivery', price: 50.00, days: '3-5' },
     express: { name: 'Express Delivery', price: 100.00, days: '1-2' },
     free: { name: 'Free Delivery', price: 0.00, days: '5-7' }
-  };
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const API_BASE_URL = 'http://localhost:3001/api';
+
+  // Fetch product data
+  useEffect(() => {
+    const fetchProductData = async () => {
+      try {
+        setLoading(true);
+        // Fetch product details (using ID 1 as default)
+        const productResponse = await axios.get(`${API_BASE_URL}/products/1`);
+        if (productResponse.data) {
+          setProduct({
+            ...productResponse.data,
+            price: parseFloat(productResponse.data.price),
+            rating: parseFloat(productResponse.data.rating) || 4.8,
+            reviews: parseInt(productResponse.data.reviews) || 124,
+            inStock: productResponse.data.in_stock === 1
+          });
+          
+          // If product images array exists, use it
+          if (productResponse.data.images && productResponse.data.images.length > 0) {
+            setImages(productResponse.data.images);
+          }
+        }
+        
+        // Fetch shipping options
+        const shippingResponse = await axios.get(`${API_BASE_URL}/shipping-options`);
+        if (shippingResponse.data) {
+          setShippingOptions(shippingResponse.data);
+          // Set default shipping method to the first option
+          if (Object.keys(shippingResponse.data).length > 0) {
+            setShippingMethod(Object.keys(shippingResponse.data)[0]);
+          }
+        }
+        
+        setLoading(false);
+      } catch (err) {
+        console.error("Error fetching data:", err);
+        setError("Failed to load product data. Using default values.");
+        setLoading(false);
+      }
+    };
+
+    fetchProductData();
+  }, []);
 
   // Price calculations
   const calculateSubtotal = () => product.price * quantity;
@@ -98,19 +141,72 @@ function App() {
   };
 
   // Handle order submission
-  const handleSubmitOrder = (e) => {
+  const handleSubmitOrder = async (e) => {
     e.preventDefault();
-    // Here you would typically process the payment
-    alert(`Order placed successfully! Total: Rs.${calculateTotal().toFixed(2)}`);
-    // Reset form and state
-    setShowPayment(false);
-    setQuantity(1);
+    
+    try {
+      // Prepare order data
+      const orderData = {
+        name: formData.name,
+        email: formData.email,
+        address: formData.address,
+        city: formData.city,
+        zipCode: formData.zipCode,
+        productId: product.id,
+        quantity: quantity,
+        shippingMethod: shippingMethod,
+        paymentMethod: paymentMethod,
+        unitPrice: product.price,
+        subtotal: calculateSubtotal(),
+        shippingCost: calculateShipping(),
+        tax: calculateTax(),
+        total: calculateTotal()
+      };
+      
+      // Send order to backend
+      const response = await axios.post(`${API_BASE_URL}/orders`, orderData);
+      
+      if (response.status === 201) {
+        alert(`Order placed successfully! Order ID: ${response.data.orderId}. Total: Rs.${calculateTotal().toFixed(2)}`);
+        // Reset form and state
+        setShowPayment(false);
+        setQuantity(1);
+        setFormData({
+          name: '',
+          email: '',
+          address: '',
+          city: '',
+          zipCode: '',
+          cardNumber: '',
+          cardExpiry: '',
+          cardCVV: ''
+        });
+      } else {
+        throw new Error('Failed to place order');
+      }
+    } catch (err) {
+      console.error('Order submission error:', err);
+      alert(`Failed to place order: ${err.message || 'Unknown error'}`);
+    }
   };
 
   // Handle back to product
   const handleBackToProduct = () => {
     setShowPayment(false);
   };
+
+  // Display loading state
+  if (loading) {
+    return (
+      <Container className="text-center my-5">
+        <h2>Loading product data...</h2>
+      </Container>
+    );
+  }
+
+  if (error) {
+    console.warn(error); // Log the error but continue with default values
+  }
 
   return (
     <main>
