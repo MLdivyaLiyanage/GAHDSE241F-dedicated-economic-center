@@ -1,5 +1,5 @@
-import  { useState } from 'react';
-import './Feedback.css'; // Import the CSS file
+import { useState, useEffect } from 'react';
+import './Feedback.css';
 
 const RatingAndFeedback = () => {
   // State for user input
@@ -9,9 +9,41 @@ const RatingAndFeedback = () => {
   
   // State for storing feedback entries
   const [feedbackList, setFeedbackList] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  
+  // API URL - Change this to match your server URL
+  const API_URL = 'http://localhost:5000/api';
+  
+  // Fetch existing feedback when component mounts
+  useEffect(() => {
+    fetchFeedback();
+  }, []);
+  
+  // Function to fetch all feedback from API
+  const fetchFeedback = async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const response = await fetch(`${API_URL}/feedback`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch feedback');
+      }
+      
+      const data = await response.json();
+      setFeedbackList(data);
+    } catch (err) {
+      setError('Error loading feedback: ' + err.message);
+      console.error('Fetch error:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
   
   // Handle form submission
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     // Validate input
@@ -22,25 +54,50 @@ const RatingAndFeedback = () => {
     
     // Create new feedback entry
     const newFeedback = {
-      id: Date.now(),
       name,
       rating,
-      comment,
-      date: new Date().toLocaleDateString()
+      comment
     };
     
-    // Add to feedback list
-    setFeedbackList([newFeedback, ...feedbackList]);
+    // Submit to API
+    setIsLoading(true);
+    setError(null);
     
-    // Reset form
-    setRating(0);
-    setComment('');
-    setName('');
+    try {
+      const response = await fetch(`${API_URL}/feedback`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newFeedback),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to submit feedback');
+      }
+      
+      // Reset form
+      setRating(0);
+      setComment('');
+      setName('');
+      
+      // Refresh feedback list
+      fetchFeedback();
+      
+    } catch (err) {
+      setError('Error submitting feedback: ' + err.message);
+      console.error('Submit error:', err);
+    } finally {
+      setIsLoading(false);
+    }
   };
   
   return (
     <div className="feedback-container">
       <h2 className="feedback-title">Rate and Share Your Feedback</h2>
+      
+      {/* Display error message if any */}
+      {error && <div className="error-message">{error}</div>}
       
       {/* Rating and Feedback Form */}
       <form onSubmit={handleSubmit} className="feedback-form">
@@ -52,6 +109,7 @@ const RatingAndFeedback = () => {
             onChange={(e) => setName(e.target.value)}
             className="form-input"
             placeholder="Enter your name"
+            disabled={isLoading}
           />
         </div>
         
@@ -64,6 +122,7 @@ const RatingAndFeedback = () => {
                 type="button"
                 onClick={() => setRating(star)}
                 className={`star-btn ${star <= rating ? 'star-filled' : ''}`}
+                disabled={isLoading}
               >
                 {star <= rating ? "★" : "☆"}
               </button>
@@ -79,20 +138,25 @@ const RatingAndFeedback = () => {
             className="form-textarea"
             rows="3"
             placeholder="Share your experience..."
+            disabled={isLoading}
           ></textarea>
         </div>
         
         <button
           type="submit"
           className="submit-btn"
+          disabled={isLoading}
         >
-          Submit Feedback
+          {isLoading ? 'Submitting...' : 'Submit Feedback'}
         </button>
       </form>
       
       {/* Feedback Display Section */}
       <div>
-        <h3 className="feedback-subtitle">Recent Feedback</h3>
+        <h3 className="feedback-subtitle">
+          Recent Feedback
+          {isLoading && ' (Loading...)'}
+        </h3>
         
         {feedbackList.length === 0 ? (
           <p className="feedback-empty">No feedback yet. Be the first to share!</p>
@@ -102,7 +166,9 @@ const RatingAndFeedback = () => {
               <div key={item.id} className="feedback-item">
                 <div className="feedback-header">
                   <span className="feedback-author">{item.name}</span>
-                  <span className="feedback-date">{item.date}</span>
+                  <span className="feedback-date">
+                    {new Date(item.date).toLocaleDateString()}
+                  </span>
                 </div>
                 <div className="stars-display">
                   {[1, 2, 3, 4, 5].map((star) => (

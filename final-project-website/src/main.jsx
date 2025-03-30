@@ -10,7 +10,7 @@ import { createRoot } from "react-dom/client";
 // import Profile01 from "./FarmerProfils/Profile01.jsx";
 // import BuyCardAndPayment from "./PaymentPage/BuyCardAndPayment.jsx";
 // import LoginPage from "./LoginPage/LoginPage.jsx";
-// import Feedback from "./RivevAndFeedback/Feedback.jsx";
+import FeedBack from "./RivevAndFeedBack/FeedBack.jsx";
 // import Massage from "./MassagePage/Massage.jsx";
 // import FarmerCard from "./FarmerCard/FarmerCard.jsx";
 //  import ProductCard01 from "./FarmerProductCards/ProductCard01.jsx";
@@ -39,12 +39,12 @@ createRoot(document.getElementById("root")).render(
     {/* <FarmerCard/> */}
     {/* <LoginPage/> */}
    {/*<CombineHomeNavbar/> */}
-    <CombineFarmers/>  
+    {/* <CombineFarmers/>   */}
   {/*<CombineFoods/>*/}
     {/* <FarmerProfile/> */}
     {/* <Profile01/> */}
     {/* <BuyCardAndPayment/> */}
-    {/* <Feedback/> */}
+    <FeedBack/>
     {/* <Massage/> */}
   </React.StrictMode>
 );
