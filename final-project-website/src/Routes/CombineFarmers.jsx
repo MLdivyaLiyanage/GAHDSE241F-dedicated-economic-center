@@ -187,9 +187,11 @@ const MainContainer = styled.div`
     height: var(--height);
     position: absolute;
     left: 100%;
-    animation: autoRun 6s linear infinite; /* Further reduced from 8s to 6s */
+    /* Changed from 6s to 15s for slower animation */
+    animation: autoRun 15s linear infinite; 
     transition: filter 0.5s;
-    animation-delay: calc((6s / var(--quantity)) * (var(--position) - 1) - 6s); /* Updated animation delay */
+    /* Updated animation delay calculation to match the new 15s duration */
+    animation-delay: calc((15s / var(--quantity)) * (var(--position) - 1) - 15s);
   }
 
   .slider .list .item img {
