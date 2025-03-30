@@ -1,6 +1,12 @@
 # E-Commerce Project
 ## _This is an e-commerce web application created using the React Project._
 
+## 🚀 Getting Started
+
+### 🏗 Install Node.js
+Ensure **Node.js** is installed. If not, download it from the [Node.js Official Website](https://nodejs.org).
+
+---
 
 # React + Vite Project 🚀
 
@@ -40,6 +46,44 @@ Run the development server with:
 npm run dev
 ```
 
+---
+
+
+## _Mobile application created using the Flutter Project._
+
+## 🚀 Started
+
+### 1.  Install Flutter SDK
+Download from the https://www.flutter.dev
+
+Make sure you have Flutter installed. You can check your installation by running:
+```sh
+flutter --version
+```
+### 2. Create a New Project
+Open a terminal or command prompt and run:
+```sh
+flutter create project_name
+```
+Replace project_name with your desired project name.
+
+### 3. Navigate to the Project Directory
+Move into the project folder:
+```sh
+cd project_name
+```
+
+### 4. Open the Project in Your Code Editor
+You can open the project in VS Code with:
+```sh
+code .
+```
+
+### 5. Run the Project
+Make sure you have an emulator running or a physical device connected, then run:
+```sh
+flutter run
+```
 ---
 
 ## 🌱 Git & GitHub Commands
