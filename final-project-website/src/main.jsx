@@ -17,7 +17,7 @@ import { createRoot } from "react-dom/client";
 //  import Profile01 from "./FarmerProfils/Profile01.jsx";
 // import FoodCard from "./FoodCard/FoodCard.jsx";
 // import LoginPage from "./LoginPage/LoginPage.jsx";
-import BuyCardAndPayment from "./PaymentPage/BuyCardAndPayment.jsx";
+//import BuyCardAndPayment from "./PaymentPage/BuyCardAndPayment.jsx";
 
 
 
@@ -39,11 +39,11 @@ createRoot(document.getElementById("root")).render(
     {/* <FarmerCard/> */}
     {/* <LoginPage/> */}
    {/*<CombineHomeNavbar/> */}
-    {/* <CombineFarmers/>   */}
+    <CombineFarmers/>  
   {/*<CombineFoods/>*/}
     {/* <FarmerProfile/> */}
     {/* <Profile01/> */}
-    <BuyCardAndPayment/>
+    {/*<BuyCardAndPayment/>*/}
     {/* <FeedBack/> */}
     {/* <Massage/> */}
   </React.StrictMode>

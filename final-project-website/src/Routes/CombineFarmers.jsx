@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import styled from 'styled-components';
 import Container from "react-bootstrap/Container";
@@ -40,9 +40,24 @@ const SliderCard = () => {
   );
 };
 
-// The Carousel component with farmer cards
+// The Farmer Cards component
 const FarmerCards = ({ imageUrls }) => {
-  const brands = [
+  const [selectedUser, setSelectedUser] = useState(null);
+  
+  const fetchUserDetails = async (id) => {
+    try {
+      // Fixed URL string syntax
+      const response = await fetch(`http://localhost:5000/api/users/${id}`);
+      if (!response.ok) throw new Error("Failed to fetch user details");
+      
+      const data = await response.json();
+      setSelectedUser(data); // Store fetched details in state
+    } catch (error) {
+      console.error("Error fetching user details:", error);
+    }
+  };
+
+  const farmerNames = [
     'Saman Perera', 'Rohana Silva', 'Bandara Wijesinghe', 'Sunil Jayawardena', 'Sarath Kumara',
     'Kamal Rathnayake', 'Gayan Fernando', 'Thilakaratne Mudalige', 'Mahinda Ekanayake', 'Ravindra Senanayake',
     'Dinesh Wickramasinghe', 'Janaka Jayasundara', 'Upul Wijeratne', 'Ajith Kumara', 'Chandana Herath'
@@ -55,33 +70,134 @@ const FarmerCards = ({ imageUrls }) => {
   ];
 
   const CardItems = Array.from({ length: 15 }, (_, index) => {
+    // Fixed URL string syntax
     const imageUrl = imageUrls[index] || `https://placeimg.com/240/130/tech?${index}`;
-    const brand = brands[index % brands.length];
+    const farmerName = farmerNames[index % farmerNames.length];
     const productName = productNames[index % productNames.length];
 
     return (
       <div className="card" key={index}>
         <div className="image-container">
-          <img src={imageUrl} alt={`Product ${index + 1}`} className="image" />
+          <img src={imageUrl} alt={`Farmer ${index + 1}`} className="image" />
         </div>
 
         <div className="content">
-          <div className="brand">{brand}</div>
+          <div className="brand">{farmerName}</div>
           <div className="product-name">{productName}</div>
         </div>
         <div className="button-container">
-          <button>
+          <button onClick={() => fetchUserDetails(index + 1)}>
             <span className="shadow" />
             <span className="edge" />
-            <span className="front text">Click me</span>
+            <span className="front text">View Details</span>
           </button>
         </div>
       </div>
     );
   });
 
-  return <div className="cards-container">{CardItems}</div>;
+  return (
+    <div>
+      <div className="cards-container">{CardItems}</div>
+      {selectedUser && (
+        <UserModal user={selectedUser} onClose={() => setSelectedUser(null)} />
+      )}
+    </div>
+  );
 };
+
+// Modal to show user details
+const UserModal = ({ user, onClose }) => {
+  return (
+    <ModalOverlay>
+      <ModalContent>
+        <h2>{user.username}</h2>
+        <div className="user-info">
+          <p><strong>Email:</strong> {user.email}</p>
+          <p><strong>Age:</strong> {user.age}</p>
+          <p><strong>Phone:</strong> {user.phone_number}</p>
+          <p><strong>Location:</strong> {user.location}</p>
+          <p><strong>Address:</strong> {user.address}</p>
+          <div className="about-section">
+            <h3>About</h3>
+            <p>{user.about_me}</p>
+          </div>
+          {user.work_experience && (
+            <div className="experience-section">
+              <h3>Experience</h3>
+              <p>{user.work_experience}</p>
+            </div>
+          )}
+        </div>
+        <button onClick={onClose}>Close</button>
+      </ModalContent>
+    </ModalOverlay>
+  );
+};
+
+// Styled Components for modal
+const ModalOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+`;
+
+const ModalContent = styled.div`
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  text-align: left;
+  max-width: 80%;
+  max-height: 80%;
+  overflow-y: auto;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  
+  h2 {
+    color: #333;
+    margin-bottom: 15px;
+    text-align: center;
+  }
+  
+  h3 {
+    color: #0A44F4;
+    margin-top: 15px;
+    margin-bottom: 10px;
+  }
+  
+  .user-info {
+    margin-bottom: 15px;
+  }
+  
+  .about-section, .experience-section {
+    border-top: 1px solid #eee;
+    padding-top: 10px;
+  }
+  
+  button {
+    margin-top: 15px;
+    padding: 8px 16px;
+    background-color: #0A44F4;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    
+    &:hover {
+      background-color: #083bbf;
+    }
+  }
+`;
 
 // Images array for farmer cards
 const images = [
