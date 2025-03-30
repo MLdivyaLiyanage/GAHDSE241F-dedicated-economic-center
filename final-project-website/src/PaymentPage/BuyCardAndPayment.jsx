@@ -6,6 +6,71 @@ import { FaChevronLeft, FaChevronRight, FaStar, FaHeart, FaShare, FaCreditCard, 
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './payment.css';
 import axios from 'axios'; // Make sure to install axios with: npm install axios
+import Swal from 'sweetalert2'; // Make sure to install sweetalert2 with: npm install sweetalert2
+
+// Payment Status Alert Component
+const PaymentStatusAlert = ({ isDataStored, orderNumber = "OR23451", onContinueShopping }) => {
+  useEffect(() => {
+    if (isDataStored) {
+      // Success alert when data is stored in database
+      Swal.fire({
+        html: `
+          <div style="text-align: center; font-family: Arial, sans-serif;">
+            <div style="margin-bottom: 20px;">
+              <div style="width: 80px; height: 80px; border-radius: 50%; background-color: rgba(72, 187, 120, 0.1); margin: 0 auto; display: flex; justify-content: center; align-items: center;">
+                <svg style="width: 40px; height: 40px; color: #4BB543;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+              </div>
+            </div>
+            <h2 style="color: #4a5568; font-size: 24px; margin-bottom: 15px; font-weight: 600;">Your payment was successful</h2>
+            <p style="color: #718096; font-size: 16px; margin-bottom: 25px;">Thank you for your purchase. Your order #${orderNumber} has been confirmed.</p>
+          </div>
+        `,
+        showConfirmButton: true,
+        confirmButtonText: 'Continue Shopping',
+        confirmButtonColor: '#4BB543',
+        width: 400,
+        padding: '30px',
+        backdrop: `rgba(0,0,0,0.4)`,
+        allowOutsideClick: false,
+        showCloseButton: false
+      }).then((result) => {
+        // When user clicks the "Continue Shopping" button
+        if (result.isConfirmed) {
+          onContinueShopping(); // Call the passed function to navigate back to product page
+        }
+      });
+    } else {
+      // Error alert when data is not stored in database
+      Swal.fire({
+        html: `
+          <div style="text-align: center; font-family: Arial, sans-serif;">
+            <div style="margin-bottom: 20px;">
+              <div style="width: 80px; height: 80px; border-radius: 50%; background-color: rgba(245, 101, 101, 0.1); margin: 0 auto; display: flex; justify-content: center; align-items: center;">
+                <svg style="width: 40px; height: 40px; color: #f56565;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </div>
+            </div>
+            <h2 style="color: #4a5568; font-size: 24px; margin-bottom: 15px; font-weight: 600;">Payment unsuccessful</h2>
+            <p style="color: #718096; font-size: 16px; margin-bottom: 25px;">We couldn't process your payment. Please try again.</p>
+          </div>
+        `,
+        showConfirmButton: true,
+        confirmButtonText: 'Try Again',
+        confirmButtonColor: '#f56565',
+        width: 400,
+        padding: '30px',
+        backdrop: `rgba(0,0,0,0.4)`,
+        allowOutsideClick: false,
+        showCloseButton: false
+      });
+    }
+  }, [isDataStored, orderNumber, onContinueShopping]);
+
+  return null; // Component doesn't render anything directly
+};
 
 function App() {
   const [quantity, setQuantity] = useState(1);
@@ -45,6 +110,8 @@ function App() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [paymentStatus, setPaymentStatus] = useState(null);
+  const [orderNumber, setOrderNumber] = useState("");
 
   const API_BASE_URL = 'http://localhost:3001/api';
 
@@ -167,32 +234,41 @@ function App() {
       const response = await axios.post(`${API_BASE_URL}/orders`, orderData);
       
       if (response.status === 201) {
-        alert(`Order placed successfully! Order ID: ${response.data.orderId}. Total: Rs.${calculateTotal().toFixed(2)}`);
-        // Reset form and state
-        setShowPayment(false);
-        setQuantity(1);
-        setFormData({
-          name: '',
-          email: '',
-          address: '',
-          city: '',
-          zipCode: '',
-          cardNumber: '',
-          cardExpiry: '',
-          cardCVV: ''
-        });
+        // Set order number and payment success status
+        setOrderNumber(response.data.orderId || "OR" + Math.floor(Math.random() * 100000));
+        setPaymentStatus(true);
       } else {
         throw new Error('Failed to place order');
       }
     } catch (err) {
       console.error('Order submission error:', err);
-      alert(`Failed to place order: ${err.message || 'Unknown error'}`);
+      setPaymentStatus(false);
     }
   };
 
   // Handle back to product
   const handleBackToProduct = () => {
     setShowPayment(false);
+  };
+
+  // Function to handle continuing shopping after successful payment
+  const handleContinueShopping = () => {
+    // Reset all form data
+    setFormData({
+      name: '',
+      email: '',
+      address: '',
+      city: '',
+      zipCode: '',
+      cardNumber: '',
+      cardExpiry: '',
+      cardCVV: ''
+    });
+    
+    // Reset other states
+    setQuantity(1);
+    setShowPayment(false);
+    setPaymentStatus(null);
   };
 
   // Display loading state
@@ -591,6 +667,15 @@ function App() {
           </Row>
         )}
       </Container>
+      
+      {/* Payment Status Alert Component with onContinueShopping prop */}
+      {paymentStatus !== null && (
+        <PaymentStatusAlert 
+          isDataStored={paymentStatus} 
+          orderNumber={orderNumber}
+          onContinueShopping={handleContinueShopping} 
+        />
+      )}
     </main>
   );
 }
