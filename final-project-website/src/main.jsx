@@ -41,9 +41,9 @@ createRoot(document.getElementById("root")).render(
     {/* <FarmerCard/> */}
      {/* <LoginPage/>  */}
    {/*<CombineHomeNavbar/> */}
-    <CombineFarmers/> 
+     <CombineFarmers/>  
   {/* <CombineFoods/> */}
-     {/*<FarmerProfile/> */}
+     {/* <FarmerProfile/>  */}
      {/*<Profile01/> */}
     {/*<BuyCardAndPayment/>*/}
     {/* <FeedBack/> */}

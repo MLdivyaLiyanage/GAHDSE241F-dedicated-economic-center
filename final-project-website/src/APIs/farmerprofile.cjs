@@ -4,7 +4,6 @@ const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-
 const app = express();
 const port = 5000;
 
@@ -61,7 +60,6 @@ const uploadProfile = multer({ storage: profileStorage });
 const uploadProduct = multer({ storage: productStorage });
 
 // API Routes
-
 // Upload profile image
 app.post('/api/upload-profile', uploadProfile.single('profileImage'), (req, res) => {
   if (!req.file) {
@@ -101,7 +99,8 @@ app.post('/api/user-profile', (req, res) => {
     workExperience, 
     facebookLink, 
     instagramLink,
-    profileImagePath
+    profileImagePath,
+    isUpdate
   } = req.body;
 
   // Check if user already exists
@@ -109,6 +108,11 @@ app.post('/api/user-profile', (req, res) => {
     if (err) {
       console.error('Error querying database:', err);
       return res.status(500).json({ error: 'Database error' });
+    }
+
+    if (results.length > 0 && !isUpdate) {
+      // User exists but not in update mode
+      return res.status(400).json({ error: 'Username already exists' });
     }
 
     if (results.length > 0) {
@@ -129,104 +133,53 @@ app.post('/api/user-profile', (req, res) => {
         (err, results) => {
           if (err) {
             console.error('Error updating user:', err);
-            return res.status(500).json({ error: 'Error updating user profile' });
+            return res.status(500).json({ error: 'Failed to update user profile' });
           }
           
-          res.json({ success: true, userId: userId, message: 'User profile updated successfully' });
+          res.json({ 
+            success: true, 
+            message: 'User profile updated successfully', 
+            userId: userId 
+          });
         }
       );
     } else {
-      // New user, insert profile
+      // Create new user
       const insertQuery = `
-        INSERT INTO users (username, email, age, about_me, address, id_number, 
-                          phone_number, location, work_experience, facebook_link, 
-                          instagram_link, profile_image)
+        INSERT INTO users 
+        (username, email, age, about_me, address, id_number, phone_number, 
+         location, work_experience, facebook_link, instagram_link, profile_image) 
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
       
       db.query(
         insertQuery, 
-        [username, email, age, aboutMe, address, idNumber, phoneNumber, location, 
-         workExperience, facebookLink, instagramLink, profileImagePath],
+        [username, email, age, aboutMe, address, idNumber, phoneNumber, 
+         location, workExperience, facebookLink, instagramLink, profileImagePath],
         (err, results) => {
           if (err) {
             console.error('Error creating user:', err);
-            return res.status(500).json({ error: 'Error creating user profile' });
+            return res.status(500).json({ error: 'Failed to create user profile' });
           }
           
-          const userId = results.insertId;
-          res.json({ success: true, userId: userId, message: 'User profile created successfully' });
+          res.json({ 
+            success: true, 
+            message: 'User profile created successfully', 
+            userId: results.insertId 
+          });
         }
       );
     }
   });
 });
 
-// Add Product
-app.post('/api/add-product', (req, res) => {
-  const { 
-    userId, 
-    productName, 
-    productPrice, 
-    productDetails, 
-    productImagePaths 
-  } = req.body;
-
-  // Insert product
-  const insertProductQuery = `
-    INSERT INTO products (user_id, name, price, details)
-    VALUES (?, ?, ?, ?)
-  `;
-  
-  db.query(
-    insertProductQuery, 
-    [userId, productName, productPrice, productDetails],
-    (err, results) => {
-      if (err) {
-        console.error('Error adding product:', err);
-        return res.status(500).json({ error: 'Error adding product' });
-      }
-      
-      const productId = results.insertId;
-      
-      // Insert product images
-      if (productImagePaths && productImagePaths.length > 0) {
-        const insertImagesValues = productImagePaths.map(path => [productId, path]);
-        
-        db.query(
-          'INSERT INTO product_images (product_id, image_path) VALUES ?',
-          [insertImagesValues],
-          (err) => {
-            if (err) {
-              console.error('Error adding product images:', err);
-              return res.status(500).json({ error: 'Error adding product images' });
-            }
-            
-            res.json({ 
-              success: true, 
-              productId: productId, 
-              message: 'Product added successfully' 
-            });
-          }
-        );
-      } else {
-        res.json({ 
-          success: true, 
-          productId: productId, 
-          message: 'Product added successfully without images' 
-        });
-      }
-    }
-  );
-});
-
-// Get User Profile
+// Get User Profile by Username
 app.get('/api/user-profile/:username', (req, res) => {
-  const { username } = req.params;
+  const username = req.params.username;
   
   db.query('SELECT * FROM users WHERE username = ?', [username], (err, results) => {
     if (err) {
-      console.error('Error fetching user profile:', err);
+      console.error('Error querying user:', err);
       return res.status(500).json({ error: 'Database error' });
     }
     
@@ -234,53 +187,227 @@ app.get('/api/user-profile/:username', (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
     
-    const user = results[0];
-    res.json({ success: true, user });
+    res.json({ 
+      success: true, 
+      user: results[0] 
+    });
   });
+});
+
+// Add/Update Product
+app.post('/api/add-product', (req, res) => {
+  const { 
+    userId, 
+    productId, 
+    productName, 
+    productPrice, 
+    productDetails, 
+    productImagePaths 
+  } = req.body;
+  
+  if (!userId) {
+    return res.status(400).json({ error: 'User ID is required' });
+  }
+  
+  if (productId) {
+    // Update existing product
+    const updateQuery = `
+      UPDATE products 
+      SET name = ?, price = ?, details = ? 
+      WHERE id = ? AND user_id = ?
+    `;
+    
+    db.query(
+      updateQuery, 
+      [productName, productPrice, productDetails, productId, userId],
+      (err, results) => {
+        if (err) {
+          console.error('Error updating product:', err);
+          return res.status(500).json({ error: 'Failed to update product' });
+        }
+        
+        // Handle product images if they exist
+        if (productImagePaths && productImagePaths.length > 0) {
+          // Delete existing product images
+          db.query('DELETE FROM product_images WHERE product_id = ?', [productId], (err) => {
+            if (err) {
+              console.error('Error deleting old product images:', err);
+            }
+            
+            // Insert new product images
+            const imageValues = productImagePaths.map(path => [productId, path]);
+            const imageInsertQuery = 'INSERT INTO product_images (product_id, image_path) VALUES ?';
+            
+            db.query(imageInsertQuery, [imageValues], (err) => {
+              if (err) {
+                console.error('Error adding product images:', err);
+              }
+              
+              res.json({ 
+                success: true, 
+                message: 'Product updated successfully', 
+                productId: productId 
+              });
+            });
+          });
+        } else {
+          res.json({ 
+            success: true, 
+            message: 'Product updated successfully', 
+            productId: productId 
+          });
+        }
+      }
+    );
+  } else {
+    // Add new product
+    const insertQuery = `
+      INSERT INTO products (user_id, name, price, details) 
+      VALUES (?, ?, ?, ?)
+    `;
+    
+    db.query(
+      insertQuery, 
+      [userId, productName, productPrice, productDetails],
+      (err, results) => {
+        if (err) {
+          console.error('Error adding product:', err);
+          return res.status(500).json({ error: 'Failed to add product' });
+        }
+        
+        const newProductId = results.insertId;
+        
+        // Add product images if they exist
+        if (productImagePaths && productImagePaths.length > 0) {
+          const imageValues = productImagePaths.map(path => [newProductId, path]);
+          const imageInsertQuery = 'INSERT INTO product_images (product_id, image_path) VALUES ?';
+          
+          db.query(imageInsertQuery, [imageValues], (err) => {
+            if (err) {
+              console.error('Error adding product images:', err);
+              return res.status(500).json({ error: 'Failed to add product images' });
+            }
+            
+            res.json({ 
+              success: true, 
+              message: 'Product added successfully', 
+              productId: newProductId 
+            });
+          });
+        } else {
+          res.json({ 
+            success: true, 
+            message: 'Product added successfully', 
+            productId: newProductId 
+          });
+        }
+      }
+    );
+  }
 });
 
 // Get User Products
 app.get('/api/user-products/:userId', (req, res) => {
-  const { userId } = req.params;
+  const userId = req.params.userId;
   
+  // Get all products for the user
   db.query('SELECT * FROM products WHERE user_id = ?', [userId], (err, products) => {
     if (err) {
-      console.error('Error fetching user products:', err);
+      console.error('Error fetching products:', err);
       return res.status(500).json({ error: 'Database error' });
     }
     
     if (products.length === 0) {
-      return res.json({ success: true, products: [] });
+      return res.json({ 
+        success: true, 
+        products: [] 
+      });
     }
     
-    // Get images for each product
+    // Get images for all products
     const productIds = products.map(product => product.id);
+    const placeholders = productIds.map(() => '?').join(',');
     
     db.query(
-      'SELECT * FROM product_images WHERE product_id IN (?)',
-      [productIds],
-      (err, images) => {
+      `SELECT product_id, image_path FROM product_images WHERE product_id IN (${placeholders})`,
+      productIds,
+      (err, imageResults) => {
         if (err) {
           console.error('Error fetching product images:', err);
-          return res.status(500).json({ error: 'Database error' });
+          return res.status(500).json({ error: 'Failed to fetch product images' });
         }
         
-        // Map images to products
+        // Map images to their respective products
         const productsWithImages = products.map(product => {
-          const productImages = images.filter(img => img.product_id === product.id);
+          const images = imageResults
+            .filter(img => img.product_id === product.id)
+            .map(img => img.image_path);
+          
           return {
             ...product,
-            images: productImages.map(img => img.image_path)
+            images: images
           };
         });
         
-        res.json({ success: true, products: productsWithImages });
+        res.json({ 
+          success: true, 
+          products: productsWithImages 
+        });
       }
     );
   });
+});
+
+// Delete Product
+app.delete('/api/delete-product/:productId', (req, res) => {
+  const productId = req.params.productId;
+  const userId = req.query.userId; // For security, ensure the user owns the product
+  
+  if (!userId) {
+    return res.status(400).json({ error: 'User ID is required' });
+  }
+  
+  // Verify product ownership
+  db.query(
+    'SELECT * FROM products WHERE id = ? AND user_id = ?',
+    [productId, userId],
+    (err, results) => {
+      if (err) {
+        console.error('Error verifying product ownership:', err);
+        return res.status(500).json({ error: 'Database error' });
+      }
+      
+      if (results.length === 0) {
+        return res.status(403).json({ error: 'Unauthorized or product not found' });
+      }
+      
+      // Delete product images first
+      db.query('DELETE FROM product_images WHERE product_id = ?', [productId], (err) => {
+        if (err) {
+          console.error('Error deleting product images:', err);
+          return res.status(500).json({ error: 'Failed to delete product images' });
+        }
+        
+        // Then delete the product
+        db.query('DELETE FROM products WHERE id = ?', [productId], (err) => {
+          if (err) {
+            console.error('Error deleting product:', err);
+            return res.status(500).json({ error: 'Failed to delete product' });
+          }
+          
+          res.json({ 
+            success: true, 
+            message: 'Product deleted successfully' 
+          });
+        });
+      });
+    }
+  );
 });
 
 // Start the server
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
+
+module.exports = app;
