@@ -1,10 +1,76 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Container, Row, Col, Button, Form, InputGroup, Card, Accordion } from 'react-bootstrap';
 import { FaChevronLeft, FaChevronRight, FaStar, FaHeart, FaShare, FaCreditCard, FaPaypal, FaApplePay, FaGooglePay } from 'react-icons/fa';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './payment.css';
+import axios from 'axios'; // Make sure to install axios with: npm install axios
+import Swal from 'sweetalert2'; // Make sure to install sweetalert2 with: npm install sweetalert2
+
+// Payment Status Alert Component
+const PaymentStatusAlert = ({ isDataStored, orderNumber = "OR23451", onContinueShopping }) => {
+  useEffect(() => {
+    if (isDataStored) {
+      // Success alert when data is stored in database
+      Swal.fire({
+        html: `
+          <div style="text-align: center; font-family: Arial, sans-serif;">
+            <div style="margin-bottom: 20px;">
+              <div style="width: 80px; height: 80px; border-radius: 50%; background-color: rgba(72, 187, 120, 0.1); margin: 0 auto; display: flex; justify-content: center; align-items: center;">
+                <svg style="width: 40px; height: 40px; color: #4BB543;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+              </div>
+            </div>
+            <h2 style="color: #4a5568; font-size: 24px; margin-bottom: 15px; font-weight: 600;">Your payment was successful</h2>
+            <p style="color: #718096; font-size: 16px; margin-bottom: 25px;">Thank you for your purchase. Your order #${orderNumber} has been confirmed.</p>
+          </div>
+        `,
+        showConfirmButton: true,
+        confirmButtonText: 'Continue Shopping',
+        confirmButtonColor: '#4BB543',
+        width: 400,
+        padding: '30px',
+        backdrop: `rgba(0,0,0,0.4)`,
+        allowOutsideClick: false,
+        showCloseButton: false
+      }).then((result) => {
+        // When user clicks the "Continue Shopping" button
+        if (result.isConfirmed) {
+          onContinueShopping(); // Call the passed function to navigate back to product page
+        }
+      });
+    } else {
+      // Error alert when data is not stored in database
+      Swal.fire({
+        html: `
+          <div style="text-align: center; font-family: Arial, sans-serif;">
+            <div style="margin-bottom: 20px;">
+              <div style="width: 80px; height: 80px; border-radius: 50%; background-color: rgba(245, 101, 101, 0.1); margin: 0 auto; display: flex; justify-content: center; align-items: center;">
+                <svg style="width: 40px; height: 40px; color: #f56565;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </div>
+            </div>
+            <h2 style="color: #4a5568; font-size: 24px; margin-bottom: 15px; font-weight: 600;">Payment unsuccessful</h2>
+            <p style="color: #718096; font-size: 16px; margin-bottom: 25px;">We couldn't process your payment. Please try again.</p>
+          </div>
+        `,
+        showConfirmButton: true,
+        confirmButtonText: 'Try Again',
+        confirmButtonColor: '#f56565',
+        width: 400,
+        padding: '30px',
+        backdrop: `rgba(0,0,0,0.4)`,
+        allowOutsideClick: false,
+        showCloseButton: false
+      });
+    }
+  }, [isDataStored, orderNumber, onContinueShopping]);
+
+  return null; // Component doesn't render anything directly
+};
 
 function App() {
   const [quantity, setQuantity] = useState(1);
@@ -23,30 +89,74 @@ function App() {
     cardExpiry: '',
     cardCVV: ''
   });
-
-  // Product images array with placeholders 
-  const images = [
-    'src/assets/Appel01.jpg',
-    'src/assets/Appel02.jpg',
-    'src/assets/Appel03.jpg',
-  ];
-
-  // Product details
-  const product = {
+  const [product, setProduct] = useState({
+    id: 1, // Default product ID
     name: "Organic Fresh Apple",
     description: "Our organic apples are grown without synthetic pesticides or fertilizers. Rich in antioxidants, fiber, and vitamin C, these crisp and juicy apples make for a perfect healthy snack or addition to your favorite recipes.",
     price: 350.00,
     rating: 4.8,
     reviews: 124,
     inStock: true
-  };
-
-  // Shipping options
-  const shippingOptions = {
+  });
+  const [images, setImages] = useState([
+    'src/assets/Appel01.jpg',
+    'src/assets/Appel02.jpg',
+    'src/assets/Appel03.jpg',
+  ]);
+  const [shippingOptions, setShippingOptions] = useState({
     standard: { name: 'Standard Delivery', price: 50.00, days: '3-5' },
     express: { name: 'Express Delivery', price: 100.00, days: '1-2' },
     free: { name: 'Free Delivery', price: 0.00, days: '5-7' }
-  };
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [paymentStatus, setPaymentStatus] = useState(null);
+  const [orderNumber, setOrderNumber] = useState("");
+
+  const API_BASE_URL = 'http://localhost:3001/api';
+
+  // Fetch product data
+  useEffect(() => {
+    const fetchProductData = async () => {
+      try {
+        setLoading(true);
+        // Fetch product details (using ID 1 as default)
+        const productResponse = await axios.get(`${API_BASE_URL}/products/1`);
+        if (productResponse.data) {
+          setProduct({
+            ...productResponse.data,
+            price: parseFloat(productResponse.data.price),
+            rating: parseFloat(productResponse.data.rating) || 4.8,
+            reviews: parseInt(productResponse.data.reviews) || 124,
+            inStock: productResponse.data.in_stock === 1
+          });
+          
+          // If product images array exists, use it
+          if (productResponse.data.images && productResponse.data.images.length > 0) {
+            setImages(productResponse.data.images);
+          }
+        }
+        
+        // Fetch shipping options
+        const shippingResponse = await axios.get(`${API_BASE_URL}/shipping-options`);
+        if (shippingResponse.data) {
+          setShippingOptions(shippingResponse.data);
+          // Set default shipping method to the first option
+          if (Object.keys(shippingResponse.data).length > 0) {
+            setShippingMethod(Object.keys(shippingResponse.data)[0]);
+          }
+        }
+        
+        setLoading(false);
+      } catch (err) {
+        console.error("Error fetching data:", err);
+        setError("Failed to load product data. Using default values.");
+        setLoading(false);
+      }
+    };
+
+    fetchProductData();
+  }, []);
 
   // Price calculations
   const calculateSubtotal = () => product.price * quantity;
@@ -98,19 +208,81 @@ function App() {
   };
 
   // Handle order submission
-  const handleSubmitOrder = (e) => {
+  const handleSubmitOrder = async (e) => {
     e.preventDefault();
-    // Here you would typically process the payment
-    alert(`Order placed successfully! Total: Rs.${calculateTotal().toFixed(2)}`);
-    // Reset form and state
-    setShowPayment(false);
-    setQuantity(1);
+    
+    try {
+      // Prepare order data
+      const orderData = {
+        name: formData.name,
+        email: formData.email,
+        address: formData.address,
+        city: formData.city,
+        zipCode: formData.zipCode,
+        productId: product.id,
+        quantity: quantity,
+        shippingMethod: shippingMethod,
+        paymentMethod: paymentMethod,
+        unitPrice: product.price,
+        subtotal: calculateSubtotal(),
+        shippingCost: calculateShipping(),
+        tax: calculateTax(),
+        total: calculateTotal()
+      };
+      
+      // Send order to backend
+      const response = await axios.post(`${API_BASE_URL}/orders`, orderData);
+      
+      if (response.status === 201) {
+        // Set order number and payment success status
+        setOrderNumber(response.data.orderId || "OR" + Math.floor(Math.random() * 100000));
+        setPaymentStatus(true);
+      } else {
+        throw new Error('Failed to place order');
+      }
+    } catch (err) {
+      console.error('Order submission error:', err);
+      setPaymentStatus(false);
+    }
   };
 
   // Handle back to product
   const handleBackToProduct = () => {
     setShowPayment(false);
   };
+
+  // Function to handle continuing shopping after successful payment
+  const handleContinueShopping = () => {
+    // Reset all form data
+    setFormData({
+      name: '',
+      email: '',
+      address: '',
+      city: '',
+      zipCode: '',
+      cardNumber: '',
+      cardExpiry: '',
+      cardCVV: ''
+    });
+    
+    // Reset other states
+    setQuantity(1);
+    setShowPayment(false);
+    setPaymentStatus(null);
+  };
+
+  // Display loading state
+  if (loading) {
+    return (
+      <Container className="text-center my-5">
+        <h2>Loading product data...</h2>
+      </Container>
+    );
+  }
+
+  if (error) {
+    console.warn(error); // Log the error but continue with default values
+  }
 
   return (
     <main>
@@ -495,6 +667,15 @@ function App() {
           </Row>
         )}
       </Container>
+      
+      {/* Payment Status Alert Component with onContinueShopping prop */}
+      {paymentStatus !== null && (
+        <PaymentStatusAlert 
+          isDataStored={paymentStatus} 
+          orderNumber={orderNumber}
+          onContinueShopping={handleContinueShopping} 
+        />
+      )}
     </main>
   );
 }
