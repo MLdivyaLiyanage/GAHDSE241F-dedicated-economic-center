@@ -115,11 +115,35 @@ const FarmerCards = ({ imageUrls }) => {
 
   return (
     <div>
+      <div className="cards-container">{CardItems}</div>
       
-      <NavBar/>
-      <FarmerSlider />
-
-      <FarmerCard />
+      {isLoading && (
+        <LoadingOverlay>
+          <div className="loading-spinner">Loading...</div>
+        </LoadingOverlay>
+      )}
+      
+      {error && (
+        <ErrorOverlay>
+          <div className="error-message">
+            <p>Error: {error}</p>
+            {error.includes("500") && (
+              <p className="error-hint">
+                This might be caused by database connection issues or missing data.
+                Make sure your database is set up correctly with proper tables and data.
+              </p>
+            )}
+            <div className="button-group">
+              <button className="retry-button" onClick={() => handleRetry(selectedUser?.id || 1)}>Retry</button>
+              <button className="close-button" onClick={() => setError(null)}>Close</button>
+            </div>
+          </div>
+        </ErrorOverlay>
+      )}
+      
+      {selectedUser && (
+        <EnhancedUserModal user={selectedUser} onClose={() => setSelectedUser(null)} />
+      )}
     </div>
   );
 };

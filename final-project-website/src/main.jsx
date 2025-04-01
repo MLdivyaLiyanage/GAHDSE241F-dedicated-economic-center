@@ -9,7 +9,7 @@ import CombineFarmers from "./Routes/CombineFarmers.jsx";
 // import FarmerProfile from "./UserProfiles/FarmerProfile.jsx";
 // import Profile01 from "./FarmerProfils/Profile01.jsx";
 // import BuyCardAndPayment from "./PaymentPage/BuyCardAndPayment.jsx";
-// import LoginPage from "./LoginPage/LoginPage.jsx";
+ //import LoginPage from "./LoginPage/LoginPage.jsx";
 // import FeedBack from "./RivevAndFeedBack/FeedBack.jsx";
 // import Massage from "./MassagePage/Massage.jsx";
 // import FarmerCard from "./FarmerCard/FarmerCard.jsx";
@@ -18,6 +18,7 @@ import CombineFarmers from "./Routes/CombineFarmers.jsx";
 // import FoodCard from "./FoodCard/FoodCard.jsx";
 // import LoginPage from "./LoginPage/LoginPage.jsx";
 //import BuyCardAndPayment from "./PaymentPage/BuyCardAndPayment.jsx";
+//import genraete from "./profilegenrate/genraete.jsx";
 
 
 
@@ -38,14 +39,15 @@ createRoot(document.getElementById("root")).render(
       {/* <Profile01/>   */}
     {/* <ProductCard01/>  */}
     {/* <FarmerCard/> */}
-    {/* <LoginPage/> */}
+     {/* <LoginPage/>  */}
    {/*<CombineHomeNavbar/> */}
-    {/*<CombineFarmers/> */}
-  {/*<CombineFoods/>*/}
+    <CombineFarmers/> 
+  {/* <CombineFoods/> */}
      {/*<FarmerProfile/> */}
      {/*<Profile01/> */}
     {/*<BuyCardAndPayment/>*/}
     {/* <FeedBack/> */}
     {/* <Massage/> */}
+    {/* <genraete/> */}
   </React.StrictMode>
 );
