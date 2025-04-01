@@ -9,6 +9,7 @@ const CombineFarmers = () => {
     <div>
       
       <NavBar/>
+      
       <FarmerSlider />
 
       <FarmerCard />
