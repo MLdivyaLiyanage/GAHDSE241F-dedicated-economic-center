@@ -1,0 +1,180 @@
+/* Base styles for small to medium screens */
+.card {
+    --accent-color: #ffd426;
+    position: relative;
+    width: 100%;
+    max-width: 240px;
+    background: rgb(232, 159, 159);
+    border-radius: 2rem;
+    padding: 0.3rem;
+    box-shadow: rgba(100, 100, 111, 0.2) 0px 50px 30px -20px;
+    transition: all 0.5s ease-in-out;
+  }
+  
+  .card .image-container {
+    position: relative;
+    width: 100%;
+    height: 130px;
+    border-radius: 0.7rem;
+    border-top-right-radius: 4rem;
+    margin-bottom: 1rem;
+  }
+  
+  .card .image-container .svg {
+    height: 100%;
+    width: 100%;
+    border-radius: inherit;
+  }
+  
+  .card .image-container .price {
+    position: absolute;
+    right: 0.7rem;
+    bottom: -1rem;
+    background: rgb(210, 126, 126);
+    color: var(--accent-color);
+    font-weight: 900;
+    font-size: 0.9rem;
+    padding: 0.5rem;
+    border-radius: 1rem 1rem 2rem 2rem;
+    box-shadow: rgba(100, 100, 111, 0.2) 0px 0px 15px 0px;
+  }
+  
+  
+  
+  .card .content {
+    padding: 0px 0.8rem;
+    margin-bottom: 1rem;
+  }
+  
+  .card .content .brand {
+    font-weight: 900;
+    color: #a6a6a6;
+  }
+  
+  .card .content .product-name {
+    font-weight: 700;
+    color: #666666;
+    font-size: 0.7rem;
+    margin-bottom: 1rem;
+  }
+  :root {
+    --btn-width: 100px; /* Adjust width */
+    --btn-height: 20px; /* Adjust height */
+    --btn-radius: 8px; /* Adjust border-radius */
+  }
+  
+  button {
+    position: relative;
+    border: none;
+    background: transparent;
+    padding: 0;
+    cursor: pointer;
+    outline-offset: 4px;
+    transition: filter 250ms;
+    user-select: none;
+    touch-action: manipulation;
+    width: var(--btn-width);
+    height: var(--btn-height);
+  }
+  
+  .shadow {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: var(--btn-radius);
+    background: hsl(0deg 0% 0% / 0.25);
+    will-change: transform;
+    transform: translateY(2px);
+    transition: transform 600ms cubic-bezier(.3, .7, .4, 1);
+  }
+  
+  .edge {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: var(--btn-radius);
+    background: linear-gradient(
+       to left,
+       hsl(340deg 100% 16%) 0%,
+       hsl(340deg 100% 32%) 8%,
+       hsl(340deg 100% 32%) 92%,
+       hsl(340deg 100% 16%) 100%
+     );
+  }
+  
+  button:active .shadow {
+    transform: translateY(4px);
+  }
+  
+  .front {
+    display: block;
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: var(--btn-radius);
+    font-size: 1.1rem;
+    color: white;
+    background: hsl(345deg 100% 47%);
+    will-change: transform;
+    transform: translateY(-4px);
+    transition: transform 600ms cubic-bezier(.3, .7, .4, 1);
+  }
+  
+  
+  @keyframes bouncing {
+    from, to {
+      transform: scale(1, 1);
+    }
+  
+    25% {
+      transform: scale(1.5, 2.1);
+    }
+  
+    50% {
+      transform: scale(2.1, 1.5);
+    }
+  
+    75% {
+      transform: scale(1.5, 2.05);
+    }
+  }
+  
+  /* Media Queries for responsiveness */
+  @media (max-width: 1024px) {
+    .card {
+      width: 45%;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .card {
+      width: 90%;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .card {
+      width: 100%;
+    }
+    .card .image-container {
+      height: 100px;
+    }
+    .card .image-container .price {
+      font-size: 0.8rem;
+    }
+    .card .content .product-name {
+      font-size: 0.8rem;
+    }
+    .card .content .rating {
+      font-size: 0.5rem;
+    }
+    .card .button-container .button {
+      font-size: 0.8rem;
+      padding: 0.4rem 0;
+    }
+  }
+  
