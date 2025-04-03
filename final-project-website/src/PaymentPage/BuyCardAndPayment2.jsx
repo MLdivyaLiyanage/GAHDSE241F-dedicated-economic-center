@@ -1,5 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
+import PropTypes from 'prop-types'; // Import PropTypes
 import { useState, useEffect } from 'react';
 import { Container, Row, Col, Button, Form, InputGroup, Card, Accordion } from 'react-bootstrap';
 import { FaChevronLeft, FaChevronRight, FaStar, FaHeart, FaShare, FaCreditCard, FaPaypal, FaApplePay, FaGooglePay } from 'react-icons/fa';
@@ -8,6 +9,7 @@ import './payment.css';
 import axios from 'axios'; // Make sure to install axios with: npm install axios
 import Swal from 'sweetalert2'; // Make sure to install sweetalert2 with: npm install sweetalert2
 
+// Payment Status Alert Component
 // Payment Status Alert Component
 const PaymentStatusAlert = ({ isDataStored, orderNumber = "OR23451", onContinueShopping }) => {
   useEffect(() => {
@@ -71,7 +73,12 @@ const PaymentStatusAlert = ({ isDataStored, orderNumber = "OR23451", onContinueS
 
   return null; // Component doesn't render anything directly
 };
-
+// Prop types validation for PaymentStatusAlert
+PaymentStatusAlert.propTypes = {
+  isDataStored: PropTypes.bool.isRequired,
+  orderNumber: PropTypes.string.isRequired,
+  onContinueShopping: PropTypes.func.isRequired,
+};
 function App() {
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState(0);

@@ -1,6 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import { Container, Row, Col, Button, Form, InputGroup, Card, Accordion } from 'react-bootstrap';
 import { FaChevronLeft, FaChevronRight, FaStar, FaHeart, FaShare, FaCreditCard, FaPaypal, FaApplePay, FaGooglePay } from 'react-icons/fa';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -70,6 +71,12 @@ const PaymentStatusAlert = ({ isDataStored, orderNumber = "OR23451", onContinueS
   }, [isDataStored, orderNumber, onContinueShopping]);
 
   return null; // Component doesn't render anything directly
+};
+// Prop types validation for PaymentStatusAlert
+PaymentStatusAlert.propTypes = {
+  isDataStored: PropTypes.bool.isRequired,
+  orderNumber: PropTypes.string.isRequired,
+  onContinueShopping: PropTypes.func.isRequired,
 };
 
 function App() {

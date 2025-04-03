@@ -15,6 +15,7 @@ import BuyCardAndPayment6 from "./PaymentPage/BuyCardAndPayment6"
 import BuyCardAndPayment7 from "./PaymentPage/BuyCardAndPayment7"
 import BuyCardAndPayment8 from "./PaymentPage/BuyCardAndPayment8"
 import BuyCardAndPayment9 from "./PaymentPage/BuyCardAndPayment9"
+import LoginPage from "./LoginPage/LoginPage"; // Adjust the import path as necessary
 
 const root = createRoot(document.getElementById("root"));
 root.render(
@@ -22,7 +23,8 @@ root.render(
     <Router>
       <NavBar />
       <Routes>
-        <Route path="/" element={<HomeFirstPage />} />
+        <Route path="/" element={<LoginPage />} />
+        <Route path="/home" element={<HomeFirstPage />} />
         <Route path="/farmer" element={<CombineFarmers />} />
         <Route path="/product" element={<CombineFoods />} />
         <Route path="/profile" element={<FarmerProfile />}/>

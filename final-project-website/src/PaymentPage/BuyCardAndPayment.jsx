@@ -1,5 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
+import PropTypes from 'prop-types';
 import { useState, useEffect } from 'react';
 import { Container, Row, Col, Button, Form, InputGroup, Card, Accordion } from 'react-bootstrap';
 import { FaChevronLeft, FaChevronRight, FaStar, FaHeart, FaShare, FaCreditCard, FaPaypal, FaApplePay, FaGooglePay } from 'react-icons/fa';
@@ -16,6 +17,12 @@ const PaymentStatusAlert = ({ isDataStored, orderNumber = "OR23451", onContinueS
       Swal.fire({
         html: `
           <div style="text-align: center; font-family: Arial, sans-serif;">
+                      <div style="margin-bottom: 20px;">
+              <div style="width: 80px; height: 80px; border-radius: 50%; background-color: rgba(72, 187, 120, 0.1); margin: 0 auto; display: flex; justify-content: center; align-items: center;">
+                <svg style="width: 40px; height: 40px; color: #4BB543;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+              </div>
             <div style="margin-bottom: 20px;">
               <div style="width: 80px; height: 80px; border-radius: 50%; background-color: rgba(72, 187, 120, 0.1); margin: 0 auto; display: flex; justify-content: center; align-items: center;">
                 <svg style="width: 40px; height: 40px; color: #4BB543;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -70,6 +77,12 @@ const PaymentStatusAlert = ({ isDataStored, orderNumber = "OR23451", onContinueS
   }, [isDataStored, orderNumber, onContinueShopping]);
 
   return null; // Component doesn't render anything directly
+};
+// Prop types validation for PaymentStatusAlert
+PaymentStatusAlert.propTypes = {
+  isDataStored: PropTypes.bool.isRequired,
+    orderNumber: PropTypes.string.isRequired,
+  onContinueShopping: PropTypes.func.isRequired,
 };
 
 function App() {
