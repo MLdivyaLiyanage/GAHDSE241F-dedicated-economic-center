@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./farmerP.css";
 import styled from "styled-components";
@@ -258,7 +258,7 @@ export default function UserProfileForm() {
       
       const response = await axios.post(`${API_BASE_URL}/user-profile`, userData);
       setUserId(response.data.userId);
-      return response.data.userId;
+      return response.data.userId; // Return the userId
     } catch (error) {
       console.error('Error saving user profile:', error);
       showNotification('error', 'Failed to save user profile');
@@ -267,7 +267,8 @@ export default function UserProfileForm() {
   };
 
   // Save product to server
-  const saveProduct = async (userId, productImagePaths) => {
+  const saveProduct = async (userId, productImagePaths) => { // userId is used here
+
     try {
       const productData = {
         userId,
@@ -303,7 +304,7 @@ export default function UserProfileForm() {
       const uploadedProfileImagePath = await uploadProfileImage();
       
       // 2. Save user profile
-      const userId = await saveUserProfile(uploadedProfileImagePath);
+      const newUserId = await saveUserProfile(uploadedProfileImagePath);
       
       // 3. Upload product images
       const uploadedProductImagePaths = await uploadProductImages();
@@ -311,8 +312,7 @@ export default function UserProfileForm() {
       // 4. Save product (if name is provided)
       if (productName) {
         await saveProduct(userId, uploadedProductImagePaths);
-      }
-      
+      } else if (newUserId) await saveProduct(newUserId, uploadedProductImagePaths);
       showNotification('success', isEditMode ? 'Profile updated successfully!' : 'Data saved successfully!');
       
       if (!isEditMode) {
