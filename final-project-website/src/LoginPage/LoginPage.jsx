@@ -1,11 +1,9 @@
 import { useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom"; // Import for navigation
 import "./Login.css";
 import background2 from "../assets/background2.mp4";
 
 const AuthForm = () => {
-  const navigate = useNavigate(); // Initialize useNavigate hook
   const [isSignUp, setIsSignUp] = useState(false);
   const [formData, setFormData] = useState({
     username: "",
@@ -13,23 +11,23 @@ const AuthForm = () => {
     pwrd: "",
     role: "",
   });
-  const [loginData, setLoginData] = useState({ // Separate state for login form
+  const [loginData, setLoginData] = useState({
     username: "",
     pwrd: ""
   });
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState(""); // Success/Error message
 
   const toggleForm = () => {
     setIsSignUp(!isSignUp);
     setMessage("");
   };
 
-  // Handle input changes for signup form
+  // Handle sign-up input changes
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Handle input changes for login form
+  // Handle login input changes
   const handleLoginChange = (e) => {
     setLoginData({ ...loginData, [e.target.name]: e.target.value });
   };
@@ -38,11 +36,11 @@ const AuthForm = () => {
   const handleSignUp = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("http://localhost:3000/registerpost", formData);
+      const response = await axios.post("http://localhost:3000/registerpost", formData);
       setMessage("User registered successfully!");
       setFormData({ username: "", email: "", pwrd: "", role: "" }); // Reset form
     } catch (error) {
-      setMessage("Error: Unable to register user.");
+      setMessage(error.response?.data || "Error: Unable to register user.");
       console.error(error);
     }
   };
@@ -52,18 +50,16 @@ const AuthForm = () => {
     e.preventDefault();
     try {
       const response = await axios.post("http://localhost:3000/login", loginData);
+      setMessage("Login successful!");
       
-      if (response.data.success) {
-        // Store user data in localStorage or context if needed
-        localStorage.setItem("user", JSON.stringify(response.data.user));
-        
-        // Navigate to home page after successful login
-        navigate("/home");
-      } else {
-        setMessage("Invalid username or password");
-      }
+      // Store user data in localStorage for session management
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+      localStorage.setItem('token', response.data.token);
+      
+      // Redirect to home page after successful login
+      window.location.href = "/home";
     } catch (error) {
-      setMessage("Error: Unable to login.");
+      setMessage(error.response?.data || "Error: Invalid credentials");
       console.error(error);
     }
   };
@@ -102,8 +98,8 @@ const AuthForm = () => {
                   onChange={handleLoginChange}
                 />
               </div>
-              {!isSignUp && message && <p className="message">{message}</p>}
               <input type="submit" value="Login" className="btn" />
+              {!isSignUp && message && <p className="message">{message}</p>}
               <p className="switch-text"> Don&apos;t have an account? <span onClick={toggleForm}>Sign Up</span>
               </p>
             </form>
