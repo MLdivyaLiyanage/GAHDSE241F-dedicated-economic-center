@@ -147,9 +147,9 @@ root.render(
         } 
       />
       <Route 
-        path="/productfeedback" 
+        path="/feedback" 
         element={
-          <Layout showNavBar={true}>
+          <Layout showNavBar={false}>
             <ProductFeedback />
           </Layout>
         } 
