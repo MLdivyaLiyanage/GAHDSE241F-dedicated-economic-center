@@ -6,6 +6,7 @@ import Nav from "react-bootstrap/Nav";
 import Navbar from "react-bootstrap/Navbar";
 import NavDropdown from "react-bootstrap/NavDropdown";
 import styled from "styled-components";
+import { useNavigate } from "react-router-dom";
 
 const StyledWrapper = styled.div`
 :root {
@@ -223,6 +224,8 @@ button:active {
 `;
 
 function Home() {
+  const navigate = useNavigate();
+
   return (
     <StyledWrapper>
       <Navbar expand="lg" className="navbar">
@@ -233,11 +236,11 @@ function Home() {
           <Navbar.Toggle aria-controls="navbarScroll" />
           <Navbar.Collapse id="navbarScroll">
             <Nav className="me-auto my-2 my-lg-0 navbar-nav" navbarScroll>
-              <Nav.Link href="#home">Home</Nav.Link>
+            <Nav.Link onClick={() => navigate("/")}>Home</Nav.Link>
               <Nav.Link href="#service">Service</Nav.Link>
               <NavDropdown title="Category" id="navbarScrollingDropdown">
-                <NavDropdown.Item href="/farmer">Farmer</NavDropdown.Item>
-                <NavDropdown.Item href="/product">Product</NavDropdown.Item>
+              <NavDropdown.Item onClick={() => navigate("/farmer")}>Farmer</NavDropdown.Item>
+              <NavDropdown.Item onClick={() => navigate("/product")}>Product</NavDropdown.Item>
                 <NavDropdown.Divider />
               </NavDropdown>
             </Nav>
@@ -251,11 +254,7 @@ function Home() {
               <Button className="search-btn">Search</Button>
             </Form>
             <Nav className="profile-nav">
-              <Button
-                className="profile-btn"
-                onClick={() => console.log("/profile")}
-                aria-label="User Profile"
-              >
+            <Button className="profile-btn" onClick={() => navigate("/profile")} aria-label="User Profile">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="40"

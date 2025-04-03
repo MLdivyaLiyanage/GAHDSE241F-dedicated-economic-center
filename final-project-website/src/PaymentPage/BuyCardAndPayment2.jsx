@@ -91,7 +91,7 @@ function App() {
   });
   const [product, setProduct] = useState({
     id: 1, // Default product ID
-    name: "Bell Pepper",
+    name: "Cucumber",
     description: "Our organic apples are grown without synthetic pesticides or fertilizers. Rich in antioxidants, fiber, and vitamin C, these crisp and juicy apples make for a perfect healthy snack or addition to your favorite recipes.",
     price: 350.00,
     rating: 4.8,
@@ -99,9 +99,9 @@ function App() {
     inStock: true
   });
   const [images, setImages] = useState([
-    'src/assets/bellpepper1.jpg',
-    'src/assets/bellpepper2.jpg',
-    'src/assets/bellpepper3.jpg',
+    'src/assets/cucumber1.jpg',
+    'src/assets/cucumber2.jpg',
+    'src/assets/cucumber3.jpg',
   ]);
   const [shippingOptions, setShippingOptions] = useState({
     standard: { name: 'Standard Delivery', price: 50.00, days: '3-5' },

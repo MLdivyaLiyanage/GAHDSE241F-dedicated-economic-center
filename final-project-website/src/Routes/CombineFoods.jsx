@@ -1,6 +1,7 @@
 import React from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import styled from 'styled-components';
+import { useNavigate } from "react-router-dom";
 
 // Create a global style for the full background
 const AppWrapper = styled.div`
@@ -16,63 +17,79 @@ const AppWrapper = styled.div`
 
 // Food Slider and Cards Component
 const FoodSlider = () => {
+  const navigate = useNavigate();
+
   // Sample food data
   const foodItems = [
     { 
       id: 1, 
       name: "Bell pepper",
-      image: "src/assets/img50.jpg", 
-      price: "$49.9"
+      image: "src/assets/bellpepper1.jpg", 
+      price: "$49.9",
+      path: "/bellpepper"
     },
     { 
       id: 2, 
       name: "Cucumber",
-      image: "src/assets/img45.jpg", 
-      price: "$49.9"
+      image: "src/assets/cucumber1.jpg", 
+      price: "$49.9",
+      path: "/cucumber"
     },
     { 
       id: 3, 
       name: "Amandine potato",
-      image: "src/assets/img43.jpg", 
-      price: "$49.9"
+      image: "src/assets/potato1.jpg", 
+      price: "$49.9",
+      path: "/amandine-potato"
     },
     { 
       id: 4, 
       name: "Carrot",
-      image: "src/assets/img41.jpg", 
-      price: "$49.9"
+      image: "src/assets/carrot1.jpg", 
+      price: "$49.9",
+      path: "/carrot"
     },
     { 
       id: 5, 
       name: "Pineapple",
-      image: "src/assets/img40.jpg", 
-      price: "$49.9"
+      image: "src/assets/pineapple1.jpg", 
+      price: "$49.9",
+      path: "/pineapple"
     },
     { 
       id: 6, 
       name: "Butterhead lettuce",
-      image: "src/assets/img21.jpg", 
-      price: "$49.9"
+      image: "src/assets/lettuce1.jpg", 
+      price: "$49.9",
+      path: "/butterhead-lettuce"
     },
     { 
       id: 7, 
       name: "Cauliflower",
-      image: "src/assets/img10.jpg", 
-      price: "$49.9"
+      image: "src/assets/cauliflower1.jpg", 
+      price: "$49.9",
+      path: "/cauliflower"
     },
     { 
       id: 8, 
       name: "Beetroot",
-      image: "src/assets/img7.jpg", 
-      price: "$49.9"
+      image: "src/assets/beetroot1.jpg", 
+      price: "$49.9",
+      path: "/beetroot"
     },
     { 
       id: 9, 
       name: "Savoy cabbage",
-      image: "src/assets/img3.jpg", 
-      price: "$49.9"
+      image: "src/assets/cabbage1.jpg", 
+      price: "$49.9",
+      path: "/savoy-cabbage"
     }
   ];
+
+  const handleCardClick = (path) => {
+    navigate(path);
+  };
+
 
   return (
     <StyledWrapper>
@@ -100,7 +117,7 @@ const FoodSlider = () => {
               <div className="product-name">{item.name}</div>
             </div>
             <div className="button-container">
-              <button>
+              <button onClick={()=>handleCardClick(item.path)}>
                 <span className="front text">Click me</span>
               </button>
             </div>

@@ -4,8 +4,8 @@ import { createRoot } from "react-dom/client";
 // import FarmerSlider from "./FarmerSlider/FarmerSlider";
 // import FarmerCard from "./FarmerCard/FarmerCard.jsx";
 // import CombineHomeNavbar from "./Routes/CombineHomeNavbar.jsx";
-// import CombineFarmers from "./Routes/CombineFarmers.jsx";
-import CombineFoods from "./Routes/CombineFoods.jsx";
+//import CombineFarmers from "./Routes/CombineFarmers.jsx";
+// import CombineFoods from "./Routes/CombineFoods.jsx";
 // import FarmerProfile from "./UserProfiles/FarmerProfile.jsx";
 // import Profile01 from "./FarmerProfils/Profile01.jsx";
 // import BuyCardAndPayment from "./PaymentPage/BuyCardAndPayment.jsx";
@@ -18,7 +18,8 @@ import CombineFoods from "./Routes/CombineFoods.jsx";
 // import FoodCard from "./FoodCard/FoodCard.jsx";
 // import LoginPage from "./LoginPage/LoginPage.jsx";
 //import BuyCardAndPayment from "./PaymentPage/BuyCardAndPayment.jsx";
-//import Genraete from "./profilegenrate/Genraete.jsx";
+
+
 
 
 
@@ -27,7 +28,7 @@ import CombineFoods from "./Routes/CombineFoods.jsx";
 createRoot(document.getElementById("root")).render(
   <React.StrictMode>
 
-      {/* <Genraete/> */}
+        
       {/* <BuyCardAndPayment/> */}
       {/* <LoginPage/> */}
     {/* <FoodSlider/> */}
@@ -39,8 +40,8 @@ createRoot(document.getElementById("root")).render(
     {/* <FarmerCard/> */}
     {/* <LoginPage/> */}
    {/*<CombineHomeNavbar/> */}
-    {/* <CombineFarmers/>  */}
-  <CombineFoods/>
+    {/*<CombineFarmers/> */}
+  {/*<CombineFoods/>*/}
      { /*<FarmerProfile/> */} 
      {/*<Profile01/> */}
     {/*<BuyCardAndPayment/>*/}

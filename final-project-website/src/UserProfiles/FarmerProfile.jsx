@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./farmerP.css";
 import styled from "styled-components";
@@ -31,6 +31,11 @@ const StyledButton = styled.button`
   &:active {
     transform: translateY(1px);
     box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+  }
+  
+  &.secondary {
+    background: linear-gradient(45deg, #FF8E53, #FE6B8B);
+    margin-right: 15px;
   }
 `;
 
@@ -154,6 +159,12 @@ export default function UserProfileForm() {
   const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState({ show: false, type: '', message: '' });
   const [userId, setUserId] = useState(null);
+  
+  // Edit mode state
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [searchUsername, setSearchUsername] = useState('');
+  const [userProducts, setUserProducts] = useState([]);
+  const [currentProductId, setCurrentProductId] = useState(null);
 
   // Show notification helper
   const showNotification = (type, message) => {
@@ -185,7 +196,7 @@ export default function UserProfileForm() {
 
   // Upload profile image to server
   const uploadProfileImage = async () => {
-    if (!profileImageFile) return '';
+    if (!profileImageFile) return profileImagePath; // Return existing path if no new file
     
     try {
       const formData = new FormData();
@@ -199,13 +210,13 @@ export default function UserProfileForm() {
     } catch (error) {
       console.error('Error uploading profile image:', error);
       showNotification('error', 'Failed to upload profile image');
-      return '';
+      return profileImagePath; // Return existing path on error
     }
   };
 
   // Upload product images to server
   const uploadProductImages = async () => {
-    if (productImageFiles.length === 0) return [];
+    if (productImageFiles.length === 0) return productImagePaths; // Return existing paths if no new files
     
     try {
       const formData = new FormData();
@@ -217,11 +228,12 @@ export default function UserProfileForm() {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       
-      return response.data.filePaths;
+      // Combine new paths with existing paths that we want to keep
+      return [...productImagePaths, ...response.data.filePaths];
     } catch (error) {
       console.error('Error uploading product images:', error);
       showNotification('error', 'Failed to upload product images');
-      return [];
+      return productImagePaths; // Return existing paths on error
     }
   };
 
@@ -240,7 +252,8 @@ export default function UserProfileForm() {
         workExperience,
         facebookLink,
         instagramLink,
-        profileImagePath
+        profileImagePath,
+        isUpdate: isEditMode // Flag to indicate if this is an update operation
       };
       
       const response = await axios.post(`${API_BASE_URL}/user-profile`, userData);
@@ -258,6 +271,7 @@ export default function UserProfileForm() {
     try {
       const productData = {
         userId,
+        productId: currentProductId, // This will be null for new products
         productName,
         productPrice: productPrice || 0,
         productDetails,
@@ -299,21 +313,146 @@ export default function UserProfileForm() {
         await saveProduct(userId, uploadedProductImagePaths);
       }
       
-      showNotification('success', 'Data saved successfully!');
+      showNotification('success', isEditMode ? 'Profile updated successfully!' : 'Data saved successfully!');
       
-      // Reset product form
-      setProductName('');
-      setProductPrice('');
-      setProductDetails('');
-      setProductImages([]);
-      setProductImageFiles([]);
-      setProductImagePaths([]);
+      if (!isEditMode) {
+        // Reset product form only for new submissions
+        setProductName('');
+        setProductPrice('');
+        setProductDetails('');
+        setProductImages([]);
+        setProductImageFiles([]);
+        setProductImagePaths([]);
+      }
       
     } catch (error) {
       console.error('Error submitting form:', error);
       showNotification('error', 'An error occurred. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Handle searching for a user profile
+  const handleSearchUser = async () => {
+    if (!searchUsername) {
+      showNotification('error', 'Please enter a username to search');
+      return;
+    }
+    
+    setLoading(true);
+    
+    try {
+      // Fetch user profile
+      const userResponse = await axios.get(`${API_BASE_URL}/user-profile/${searchUsername}`);
+      const userData = userResponse.data.user;
+      
+      // Populate form with user data
+      setUsername(userData.username);
+      setEmail(userData.email || '');
+      setAge(userData.age || '');
+      setAboutMe(userData.about_me || '');
+      setAddress(userData.address || '');
+      setIdNumber(userData.id_number || '');
+      setPhoneNumber(userData.phone_number || '');
+      setLocation(userData.location || '');
+      setWorkExperience(userData.work_experience || '');
+      setFacebookLink(userData.facebook_link || '');
+      setInstagramLink(userData.instagram_link || '');
+      setUserId(userData.id);
+      
+      // Handle profile image
+      if (userData.profile_image) {
+        setProfileImagePath(userData.profile_image);
+        setProfileImage(`${API_BASE_URL.replace('/api', '')}${userData.profile_image}`);
+      }
+      
+      // Fetch user products
+      const productsResponse = await axios.get(`${API_BASE_URL}/user-products/${userData.id}`);
+      setUserProducts(productsResponse.data.products);
+      
+      // If there are products, load the first one
+      if (productsResponse.data.products.length > 0) {
+        const product = productsResponse.data.products[0];
+        loadProductData(product);
+      }
+      
+      setIsEditMode(true);
+      showNotification('success', 'User profile loaded successfully!');
+      
+    } catch (error) {
+      console.error('Error searching for user:', error);
+      if (error.response && error.response.status === 404) {
+        showNotification('error', 'User not found');
+      } else {
+        showNotification('error', 'Error loading user profile');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load product data into form
+  const loadProductData = (product) => {
+    setCurrentProductId(product.id);
+    setProductName(product.name || '');
+    setProductPrice(product.price || '');
+    setProductDetails(product.details || '');
+    
+    // Load product images
+    if (product.images && product.images.length > 0) {
+      setProductImagePaths(product.images);
+      const imageUrls = product.images.map(path => `${API_BASE_URL.replace('/api', '')}${path}`);
+      setProductImages(imageUrls);
+    } else {
+      setProductImages([]);
+      setProductImagePaths([]);
+    }
+    
+    setProductImageFiles([]); // Reset image files since we're loading existing images
+  };
+
+  // Reset the form for a new entry
+  const handleResetForm = () => {
+    // Reset user profile
+    setUsername('');
+    setEmail('');
+    setAge('');
+    setAboutMe('');
+    setAddress('');
+    setIdNumber('');
+    setPhoneNumber('');
+    setLocation('');
+    setWorkExperience('');
+    setFacebookLink('');
+    setInstagramLink('');
+    
+    // Reset profile image
+    setProfileImage(null);
+    setProfileImageFile(null);
+    setProfileImagePath('');
+    
+    // Reset product data
+    setProductName('');
+    setProductPrice('');
+    setProductDetails('');
+    setProductImages([]);
+    setProductImageFiles([]);
+    setProductImagePaths([]);
+    
+    // Reset IDs and edit mode
+    setUserId(null);
+    setCurrentProductId(null);
+    setIsEditMode(false);
+    setUserProducts([]);
+    setSearchUsername('');
+  };
+
+  // Change current product
+  const handleChangeProduct = (productId) => {
+    const product = userProducts.find(p => p.id === productId);
+    if (product) {
+      loadProductData(product);
     }
   };
 
@@ -324,6 +463,56 @@ export default function UserProfileForm() {
           {notification.message}
         </Notification>
       )}
+      
+      {/* Update Profile Search Section */}
+      <div className="form-section">
+        <h1 className="section-title">
+          {isEditMode ? "Update Profile" : "Create New Profile"}
+        </h1>
+        
+        <div className="search-container" style={{ display: 'flex', marginBottom: '20px' }}>
+          <input
+            type="text"
+            className="field-input"
+            placeholder="Enter username to update"
+            value={searchUsername}
+            onChange={(e) => setSearchUsername(e.target.value)}
+            style={{ marginRight: '10px', flex: 1 }}
+          />
+          <StyledButton 
+            type="button" 
+            className="secondary"
+            onClick={handleSearchUser}
+            disabled={loading}
+          >
+            Search
+          </StyledButton>
+          <StyledButton 
+            type="button"
+            onClick={handleResetForm}
+          >
+            New Form
+          </StyledButton>
+        </div>
+        
+        {/* Product Selection (only in edit mode) */}
+        {isEditMode && userProducts.length > 0 && (
+          <div className="product-selector" style={{ marginBottom: '20px' }}>
+            <label className="field-label">Select Product to Edit:</label>
+            <select 
+              className="field-input"
+              value={currentProductId || ''}
+              onChange={(e) => handleChangeProduct(Number(e.target.value))}
+            >
+              {userProducts.map(product => (
+                <option key={product.id} value={product.id}>
+                  {product.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+      </div>
       
       <form onSubmit={handleSubmit} className="form-container">
         {/* User Profile Section */}
@@ -376,6 +565,7 @@ export default function UserProfileForm() {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   required
+                  readOnly={isEditMode} // Make username readonly in edit mode
                 />
               </div>
 
@@ -498,7 +688,9 @@ export default function UserProfileForm() {
 
         {/* Product Section */}
         <div className="form-section">
-          <h1 className="section-title">Add Product</h1>
+          <h1 className="section-title">
+            {isEditMode && currentProductId ? "Update Product" : "Add Product"}
+          </h1>
           
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '30px' }}>
             <div>
@@ -569,7 +761,7 @@ export default function UserProfileForm() {
         {/* Submit Button */}
         <div className="button-container">
           <StyledButton type="submit" disabled={loading}>
-            {loading ? 'Saving...' : 'Upload'}
+            {loading ? 'Saving...' : isEditMode ? 'Update' : 'Upload'}
           </StyledButton>
         </div>
       </form>
