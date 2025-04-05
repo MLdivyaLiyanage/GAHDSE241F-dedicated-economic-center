@@ -17,17 +17,18 @@ import BuyCardAndPayment7 from "./PaymentPage/BuyCardAndPayment7";
 import BuyCardAndPayment8 from "./PaymentPage/BuyCardAndPayment8";
 import BuyCardAndPayment9 from "./PaymentPage/BuyCardAndPayment9";
 import LoginPage from "./LoginPage/LoginPage";
-import ProductFeedback from "./ProductReviewRating/ProductFeedback";
+import ProductFeedback from "./ProductReviewRating/ProductFeedback"
 
 // Layout component that conditionally renders NavBar
-const Layout = ({ children, showNavBar = true }) => (
+const Layout = ({ children, showNavBar }) => (
   <>
     {showNavBar && <NavBar />}
     {children}
   </>
 );
 
-const App = () => (
+const root = createRoot(document.getElementById("root"));
+root.render(
   <Router>
     <Routes>
       {/* Login page route without NavBar */}
@@ -41,20 +42,118 @@ const App = () => (
       />
       
       {/* All other routes with NavBar */}
-      <Route path="/home" element={<Layout><HomeFirstPage /></Layout>} />
-      <Route path="/farmer" element={<Layout><CombineFarmers /></Layout>} />
-      <Route path="/product" element={<Layout><CombineFoods /></Layout>} />
-      <Route path="/profile" element={<Layout><FarmerProfile /></Layout>} />
-      <Route path="/bellpepper" element={<Layout><BuyCardAndPayment /></Layout>} />
-      <Route path="/cucumber" element={<Layout><BuyCardAndPayment2 /></Layout>} />
-      <Route path="/amandine-potato" element={<Layout><BuyCardAndPayment3 /></Layout>} />
-      <Route path="/carrot" element={<Layout><BuyCardAndPayment4 /></Layout>} />
-      <Route path="/pineapple" element={<Layout><BuyCardAndPayment5 /></Layout>} />
-      <Route path="/butterhead-lettuce" element={<Layout><BuyCardAndPayment6 /></Layout>} />
-      <Route path="/cauliflower" element={<Layout><BuyCardAndPayment7 /></Layout>} />
-      <Route path="/beetroot" element={<Layout><BuyCardAndPayment8 /></Layout>} />
-      <Route path="/savoy-cabbage" element={<Layout><BuyCardAndPayment9 /></Layout>} />
-      <Route path="/feedback/:productId" element={<Layout showNavBar={false}><ProductFeedback /></Layout>} />
+      <Route 
+        path="/home" 
+        element={
+          <Layout showNavBar={true}>
+            <HomeFirstPage />
+          </Layout>
+        } 
+      />
+      <Route 
+        path="/farmer" 
+        element={
+          <Layout showNavBar={true}>
+            <CombineFarmers />
+          </Layout>
+        } 
+      />
+      <Route 
+        path="/product" 
+        element={
+          <Layout showNavBar={true}>
+            <CombineFoods />
+          </Layout>
+        } 
+      />
+      <Route 
+        path="/profile" 
+        element={
+          <Layout showNavBar={true}>
+            <FarmerProfile />
+          </Layout>
+        } 
+      />
+      <Route 
+        path="/bellpepper" 
+        element={
+          <Layout showNavBar={true}>
+            <BuyCardAndPayment />
+          </Layout>
+        } 
+      />
+      <Route 
+        path="/cucumber" 
+        element={
+          <Layout showNavBar={true}>
+            <BuyCardAndPayment2 />
+          </Layout>
+        } 
+      />
+      <Route 
+        path="/amandine-potato" 
+        element={
+          <Layout showNavBar={true}>
+            <BuyCardAndPayment3 />
+          </Layout>
+        } 
+      />
+      <Route 
+        path="/carrot" 
+        element={
+          <Layout showNavBar={true}>
+            <BuyCardAndPayment4 />
+          </Layout>
+        } 
+      />
+      <Route 
+        path="/pineapple" 
+        element={
+          <Layout showNavBar={true}>
+            <BuyCardAndPayment5 />
+          </Layout>
+        } 
+      />
+      <Route 
+        path="/butterhead-lettuce" 
+        element={
+          <Layout showNavBar={true}>
+            <BuyCardAndPayment6 />
+          </Layout>
+        } 
+      />
+      <Route 
+        path="/cauliflower" 
+        element={
+          <Layout showNavBar={true}>
+            <BuyCardAndPayment7 />
+          </Layout>
+        } 
+      />
+      <Route 
+        path="/beetroot" 
+        element={
+          <Layout showNavBar={true}>
+            <BuyCardAndPayment8 />
+          </Layout>
+        } 
+      />
+      <Route 
+        path="/savoy-cabbage" 
+        element={
+          <Layout showNavBar={true}>
+            <BuyCardAndPayment9 />
+          </Layout>
+        } 
+      />
+      <Route 
+        path="/feedback" 
+        element={
+          <Layout showNavBar={false}>
+            <ProductFeedback />
+          </Layout>
+        } 
+      />
     </Routes>
   </Router>
 );
