@@ -1,6 +1,6 @@
 import  "react";
-import PropTypes from 'prop-types';
 import { createRoot } from "react-dom/client";
+import PropTypes from 'prop-types';
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import NavBar from "./NavBar/NavBar";
 
@@ -20,14 +20,12 @@ import BuyCardAndPayment9 from "./PaymentPage/BuyCardAndPayment9";
 import LoginPage from "./LoginPage/LoginPage";
 
 // Layout component that conditionally renders NavBar
-const Layout = ({ children, showNavBar }) => {
-  return ( 
-     <>
+const Layout = ({ children, showNavBar }) => (
+  <>
     {showNavBar && <NavBar />}
     {children}
   </>
 );
-};
 Layout.propTypes = {
   children: PropTypes.node.isRequired,
   showNavBar: PropTypes.bool.isRequired,
@@ -37,7 +35,7 @@ const root = createRoot(document.getElementById("root"));
 root.render(
   <Router>
     <Routes>
-      {/* Login page route without NavBar */}
+      Login page route without NavBar
       <Route 
         path="/" 
         element={
