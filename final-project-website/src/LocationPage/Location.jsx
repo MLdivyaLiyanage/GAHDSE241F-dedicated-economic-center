@@ -14,8 +14,7 @@ function App() {
     // Load Google Maps API script
     const loadGoogleMapsAPI = () => {
       const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places`;
-      script.async = true;
+      script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyDZennffc4I2wa2NDZeSi233YpTRl6P18g&libraries=places`;
       script.defer = true;
       script.onload = initializeMap;
       script.onerror = () => setErrorMsg('Failed to load Google Maps');

@@ -237,7 +237,7 @@ function Home() {
           <Navbar.Collapse id="navbarScroll">
             <Nav className="me-auto my-2 my-lg-0 navbar-nav" navbarScroll>
             <Nav.Link onClick={() => navigate("/home")}>Home</Nav.Link>
-              <Nav.Link href="#service">Service</Nav.Link>
+            <NavDropdown.Item onClick={() => navigate("/location")}>Services</NavDropdown.Item>
               <NavDropdown title="Category" id="navbarScrollingDropdown">
               <NavDropdown.Item onClick={() => navigate("/farmer")}>Farmer</NavDropdown.Item>
               <NavDropdown.Item onClick={() => navigate("/product")}>Product</NavDropdown.Item>
