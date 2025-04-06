@@ -19,6 +19,14 @@ import BuyCardAndPayment9 from "./PaymentPage/BuyCardAndPayment9";
 import LoginPage from "./LoginPage/LoginPage";
 import ProductFeedback from "./ProductReviewRating/ProductFeedback";
 import Location from "./LocationPage/Location";
+import FarmerFeedback from "./FarmerReviewRating/FarmerFeedback";
+import Massage from "./MassagePage/Massage";
+import Massage2 from "./MassagePage/Massage2";
+import Massage3 from "./MassagePage/Massage3";
+import Massage4 from "./MassagePage/Massage4";
+import Massage5 from "./MassagePage/Massage5";
+
+
 
 // Layout component that conditionally renders NavBar
 const Layout = ({ children, showNavBar = true }) => (
@@ -57,6 +65,14 @@ const App = () => (
       <Route path="/savoy-cabbage" element={<Layout><BuyCardAndPayment9 /></Layout>} />
       <Route path="/feedback/:productId" element={<Layout showNavBar={false}><ProductFeedback /></Layout>} />
       <Route path="/location" element={<Layout showNavBar={false}><Location /></Layout>} />
+      <Route path="/farmerfeedback/:farmerId" element={<Layout showNavBar={false}><FarmerFeedback /></Layout>} />
+      <Route path="/message" element={<Layout showNavBar={false}><Massage /></Layout>} />
+      <Route path="/message2" element={<Layout showNavBar={false}><Massage2 /></Layout>} />
+      <Route path="/message3" element={<Layout showNavBar={false}><Massage3 /></Layout>} />
+      <Route path="/message4" element={<Layout showNavBar={false}><Massage4 /></Layout>} />
+      <Route path="/message5" element={<Layout showNavBar={false}><Massage5 /></Layout>} />
+
+
     </Routes>
   </Router>
 );

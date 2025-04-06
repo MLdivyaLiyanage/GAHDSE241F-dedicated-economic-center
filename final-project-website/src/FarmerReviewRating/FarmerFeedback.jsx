@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react';
-import './Feedback.css';
+import { useNavigate } from 'react-router-dom';
+import './FarmerFeedback.css';
 
 const RatingAndFeedback = () => {
+  // React Router navigation hook
+  const navigate = useNavigate();
+  
   // State for user input
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
@@ -92,8 +96,23 @@ const RatingAndFeedback = () => {
     }
   };
   
+  // Handle back button click
+  const handleBack = () => {
+    navigate('/farmer'); // Navigate to the profile page
+  };
+  
   return (
     <div className="feedback-container">
+      {/* Back button */}
+      <div className="back-button-container">
+        <button 
+          className="back-button" 
+          onClick={handleBack}
+        >
+          ← Back to Profile
+        </button>
+      </div>
+      
       <h2 className="feedback-title">Rate and Share Your Feedback</h2>
       
       {/* Display error message if any */}

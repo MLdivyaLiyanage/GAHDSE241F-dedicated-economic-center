@@ -245,8 +245,8 @@ function App() {
 
   // Sample product data for the farmer's marketplace
   const productInfo = {
-    name: "Amandanie-Potato",
-    farmer: "Saman Perera",
+    name: "Onion",
+    farmer: "Bandara Wijesinghe",
     location: "Mathara",
     price: "Rs. 180/kg",
     available: true,

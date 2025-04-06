@@ -245,8 +245,8 @@ function App() {
 
   // Sample product data for the farmer's marketplace
   const productInfo = {
-    name: "Lettuce",
-    farmer: "Kelum",
+    name: "Leeks",
+    farmer: "Sarath Kumara",
     location: "Anuradhapura",
     price: "Rs. 180/kg",
     available: true,

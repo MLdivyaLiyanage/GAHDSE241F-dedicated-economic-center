@@ -245,8 +245,8 @@ function App() {
 
   // Sample product data for the farmer's marketplace
   const productInfo = {
-    name: "Cucumber",
-    farmer: "Shehan Kumara",
+    name: "Garlic",
+    farmer: "Rohana Silva",
     location: "Galle",
     price: "Rs. 180/kg",
     available: true,
