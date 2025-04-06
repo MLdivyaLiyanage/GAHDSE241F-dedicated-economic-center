@@ -27,7 +27,8 @@ import { createRoot } from "react-dom/client";
 //import BuyCardAndPayment7 from "./PaymentPage/BuyCardAndPayment7"
 //import BuyCardAndPayment8 from "./PaymentPage/BuyCardAndPayment8"
 // import BuyCardAndPayment9 from "./PaymentPage/BuyCardAndPayment9"
-import Location from "./LocationPage/Location.jsx";
+// import Location from "./LocationPage/Location.jsx";
+import HomeFirstPage from "./Home/HomeFirstPage.jsx";
 
 
 
@@ -38,7 +39,8 @@ import Location from "./LocationPage/Location.jsx";
 createRoot(document.getElementById("root")).render(
   <React.StrictMode>
 
-        <Location/>
+<HomeFirstPage/>
+        {/* <Location/> */}
       {/* <BuyCardAndPayment/> */}
       {/* <LoginPage/> */}
     {/* <FoodSlider/> */}

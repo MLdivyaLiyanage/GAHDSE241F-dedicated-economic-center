@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import PropTypes from 'prop-types';
+import Card from 'react-bootstrap/Card';
+import Container from 'react-bootstrap/Container';
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
 
 const HomePage = () => {
   const currentYear = new Date().getFullYear();
@@ -12,16 +16,12 @@ const HomePage = () => {
       setIsVisible(window.pageYOffset > 300);
     };
     
-    // Add scroll event listener
     window.addEventListener('scroll', handleScroll);
-    
-    // Clean up event listener
     return () => {
       window.removeEventListener('scroll', handleScroll);
     };
   }, []);
   
-  // Scroll to top function
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
@@ -31,7 +31,6 @@ const HomePage = () => {
   
   // Footer styles
   const styles = {
-    // Back to top button styles
     backToTop: {
       position: 'fixed',
       bottom: '30px',
@@ -53,7 +52,6 @@ const HomePage = () => {
       boxShadow: '0 2px 10px rgba(0, 0, 0, 0.2)',
       fontSize: '20px'
     },
-    // Footer styles
     footer: {
       background: 'linear-gradient(to right, rgba(25, 26, 26, 0.4), rgb(0, 0, 0))',
       color: '#f5f5f5',
@@ -179,10 +177,33 @@ const HomePage = () => {
       width: '100%',
       height: '100%',
       objectFit: 'cover'
+    },
+    contentSection: {
+      padding: '60px 0',
+      backgroundImage: 'linear-gradient(to right,rgb(62, 61, 61),rgb(0, 0, 0))', // Two-color gradient
+    },
+    
+    sectionTitle: {
+      textAlign: 'center',
+      marginBottom: '40px',
+      fontWeight: '600',
+      color: '#FFFFFF'
+    },
+    card: {
+      height: '100%',
+      transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+      backgroundColor: '#ffffff', // Added background color for individual cards
+      '&:hover': {
+        transform: 'translateY(-5px)',
+        boxShadow: '0 10px 20px rgba(0, 0, 0, 0.1)'
+      }
+    },
+    cardBody: {
+      backgroundColor: '#f8f9fa' // Added background color for card body
     }
   };
-  
-  // Footer link component for better code organization
+
+  // Footer link component
   const FooterLink = ({ href, text }) => {
     const [isHovered, setIsHovered] = useState(false);
     
@@ -233,6 +254,7 @@ const HomePage = () => {
     href: PropTypes.string.isRequired,
     icon: PropTypes.string.isRequired,
   };
+
   return (
     <div className="home-page">
       {/* Back to top button */}
@@ -246,15 +268,77 @@ const HomePage = () => {
       
       {/* Video Container Section */}
       <div style={styles.videoContainer}>
-        {/* Background Video */}
         <video style={styles.video} autoPlay muted loop playsInline>
           <source src="src/assets/backgroundVedeo.mp4" type="video/mp4" />
         </video>
       </div>
+
+      {/* Content Section with Three Specific Cards */}
+      <div style={styles.contentSection}>
+        <Container>
+          <h2 style={styles.sectionTitle}>Our Features</h2>
+          <Row className="g-4">
+            {/* Card 1 - Analytics Feature */}
+            <Col md={4}>
+              <Card style={styles.card}>
+                <Card.Img 
+                  variant="top" 
+                  src="src/assets/product.png" 
+                  alt="Analytics Dashboard"
+                  height="200px"
+                  style={{ objectFit: 'cover' }}
+                />
+                <Card.Body style={styles.cardBody}>
+                  <Card.Title>🛒 Product & Purchase Features</Card.Title>
+                  <Card.Text>
+                  Browse and Search Products by Category: Easily find fruits, vegetables, grains, etc., with category filters and search functionality.</Card.Text>
+                </Card.Body>
+              </Card>
+            </Col>
+
+            {/* Card 2 - Collaboration Feature */}
+            <Col md={4}>
+              <Card style={styles.card}>
+                <Card.Img 
+                  variant="top" 
+                  src="src/assets/location.jpg" 
+                  alt="Team Collaboration"
+                  height="200px"
+                  style={{ objectFit: 'cover' }}
+                />
+                <Card.Body style={styles.cardBody}>
+                  <Card.Title>📍 Product Origin & Traceability</Card.Title>
+                  <Card.Text>
+                  Browse and Search Products by Category: Easily find fruits, vegetables, grains, etc., with category filters and search functionality.
+                  </Card.Text>
+                </Card.Body>
+              </Card>
+            </Col>
+
+            {/* Card 3 - Security Feature */}
+            <Col md={4}>
+              <Card style={styles.card}>
+                <Card.Img 
+                  variant="top" 
+                  src="src/assets/faramerchat.jpg" 
+                  alt="Security Features"
+                  height="200px"
+                  style={{ objectFit: 'cover' }}
+                />
+                <Card.Body style={styles.cardBody}>
+                  <Card.Title>👥 Customer-Farmer Interaction</Card.Title>
+                  <Card.Text>
+                  Direct Chat with Farmers: Customers can communicate directly with farmers via an integrated chat system to ask questions, negotiate, or build trust.
+                  </Card.Text>
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+        </Container>
+      </div>
       
       {/* Footer Section */}
       <footer style={styles.footer}>
-        {/* Colorful top border */}
         <div style={styles.footerBefore}></div>
         
         <div style={styles.container}>
@@ -313,9 +397,7 @@ const HomePage = () => {
                 <input type="email" placeholder="Your email" required style={styles.input} />
                 <button 
                   type="submit" 
-                  style={{
-                    ...styles.button,
-                  }}
+                  style={styles.button}
                   onMouseOver={(e) => {e.target.style.backgroundColor = '#2980b9'}}
                   onMouseOut={(e) => {e.target.style.backgroundColor = '#3498db'}}
                 >
