@@ -246,7 +246,7 @@ const EnhancedUserModal = ({ user, onClose }) => {
     className="review-button" 
     onClick={() => navigate(`/farmerfeedback/${user.id}`)}
     style={{ 
-      backgroundColor: "#0000FF", 
+      backgroundColor: "#90EE90", 
       color: "white", 
       padding: "10px 10px", 
       border: "none", 
@@ -275,13 +275,16 @@ const EnhancedUserModal = ({ user, onClose }) => {
       else if (user.id === 5) {
         navigate('/message5');
       }
+      else if (user.id == 6) {
+        navigate('/message6');
+      }
       else{
         // Default case for other farmers
         navigate('/message');
       }
     }}
     style={{ 
-      backgroundColor: "#0000FF", 
+      backgroundColor: "#90EE90", 
       color: "white", 
       padding: "10px 10px", 
       border: "none", 
