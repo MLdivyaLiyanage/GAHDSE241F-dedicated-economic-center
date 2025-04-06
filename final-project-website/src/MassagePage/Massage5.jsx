@@ -245,8 +245,8 @@ function App() {
 
   // Sample product data for the farmer's marketplace
   const productInfo = {
-    name: "Bell pepperS",
-    farmer: "Sri Kumara",
+    name: "Lettuce",
+    farmer: "Kelum",
     location: "Anuradhapura",
     price: "Rs. 180/kg",
     available: true,

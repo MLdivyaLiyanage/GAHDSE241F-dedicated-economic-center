@@ -245,9 +245,9 @@ function App() {
 
   // Sample product data for the farmer's marketplace
   const productInfo = {
-    name: "Bell pepperS",
-    farmer: "Sri Kumara",
-    location: "Anuradhapura",
+    name: "Amandanie-Potato",
+    farmer: "Saman Perera",
+    location: "Mathara",
     price: "Rs. 180/kg",
     available: true,
     quantity: "500kg",

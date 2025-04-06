@@ -18,6 +18,7 @@ import BuyCardAndPayment8 from "./PaymentPage/BuyCardAndPayment8";
 import BuyCardAndPayment9 from "./PaymentPage/BuyCardAndPayment9";
 import LoginPage from "./LoginPage/LoginPage";
 import ProductFeedback from "./ProductReviewRating/ProductFeedback";
+import Location from "./LocationPage/Location";
 
 // Layout component that conditionally renders NavBar
 const Layout = ({ children, showNavBar = true }) => (
@@ -55,6 +56,7 @@ const App = () => (
       <Route path="/beetroot" element={<Layout><BuyCardAndPayment8 /></Layout>} />
       <Route path="/savoy-cabbage" element={<Layout><BuyCardAndPayment9 /></Layout>} />
       <Route path="/feedback/:productId" element={<Layout showNavBar={false}><ProductFeedback /></Layout>} />
+      <Route path="/location" element={<Layout showNavBar={false}><Location /></Layout>} />
     </Routes>
   </Router>
 );
