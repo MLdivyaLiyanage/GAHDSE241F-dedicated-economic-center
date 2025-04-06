@@ -8,6 +8,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import './payment.css';
 import axios from 'axios';
 import Swal from 'sweetalert2';
+import { useNavigate } from 'react-router-dom';
 
 // Payment Status Alert Component
 const PaymentStatusAlert = ({ isDataStored, orderNumber = "OR23451", onContinueShopping }) => {
@@ -77,6 +78,8 @@ PaymentStatusAlert.propTypes = {
 };
 
 function App() {
+  const navigate = useNavigate();  
+  
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
   const [isFavorite, setIsFavorite] = useState(false);
@@ -121,8 +124,7 @@ function App() {
 
   // Add this function to handle feedback button click
   const handleFeedbackClick = () => {
-    // This will navigate to your existing feedback page
-    window.location.href = '/feedback'; // or use your routing method
+    navigate(`/feedback/${product.id}`);
   };
 
   // Fetch product data

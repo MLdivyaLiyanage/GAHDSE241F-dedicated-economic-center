@@ -11,7 +11,7 @@ import { createRoot } from "react-dom/client";
 // import BuyCardAndPayment from "./PaymentPage/BuyCardAndPayment.jsx";
  //import LoginPage from "./LoginPage/LoginPage.jsx";
 // import FeedBack from "./RivevAndFeedBack/FeedBack.jsx";
-import Massage from "./MassagePage/Massage.jsx";
+// import Massage from "./MassagePage/Massage.jsx";
 // import FarmerCard from "./FarmerCard/FarmerCard.jsx";
 //  import ProductCard01 from "./FarmerProductCards/ProductCard01.jsx";
 //  import Profile01 from "./FarmerProfils/Profile01.jsx";
@@ -27,8 +27,7 @@ import Massage from "./MassagePage/Massage.jsx";
 //import BuyCardAndPayment7 from "./PaymentPage/BuyCardAndPayment7"
 //import BuyCardAndPayment8 from "./PaymentPage/BuyCardAndPayment8"
 // import BuyCardAndPayment9 from "./PaymentPage/BuyCardAndPayment9"
-// import Location from "./LocationPage/Location.jsx";
-// import HomeFirstPage from "./Home/HomeFirstPage.jsx";
+import Location from "./LocationPage/Location.jsx";
 
 
 
@@ -38,8 +37,8 @@ import Massage from "./MassagePage/Massage.jsx";
 
 createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-          {/* <HomeFirstPage/> */}
-        {/* <Location/> */}
+
+        <Location/>
       {/* <BuyCardAndPayment/> */}
       {/* <LoginPage/> */}
     {/* <FoodSlider/> */}
@@ -57,7 +56,7 @@ createRoot(document.getElementById("root")).render(
      {/*<Profile01/> */}
     {/* {/<BuyCardAndPayment/>/} */}
     {/* <FeedBack/> */}
-    <Massage/>
+    {/* <Massage/> */}
     {/* <genraete/> */}
     {/* <BuyCardAndPayment2/> */}
     {/* <BuyCardAndPayment3/> */}
