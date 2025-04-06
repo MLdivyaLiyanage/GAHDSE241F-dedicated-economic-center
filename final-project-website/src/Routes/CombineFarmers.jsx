@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import styled from 'styled-components';
 import Container from "react-bootstrap/Container";
+import { useNavigate } from "react-router-dom";
 
 // Card Component for Image Slider
 const SliderCard = () => {
@@ -47,6 +48,7 @@ const FarmerCards = ({ imageUrls }) => {
   const [error, setError] = useState(null);
   const [retryCount, setRetryCount] = useState(0);
   
+  
   const fetchUserDetails = async (id) => {
     setIsLoading(true);
     setError(null);
@@ -86,6 +88,36 @@ const FarmerCards = ({ imageUrls }) => {
     'Grows Potato', 'Grows Brinjals', 'Grows Bell Pepper', 'Grows Pumpkin', 'Grows Beetroot'
   ];
 
+const CardItems = Array.from({ length: 15 }, (_, index) => {
+    const imageUrl = imageUrls[index] || `https://placeimg.com/240/130/tech?${index}`;
+    const farmerName = farmerNames[index % farmerNames.length];
+    const productName = productNames[index % productNames.length];
+    const userId = index + 1;
+
+
+    return (
+      <div className="card" key={index}>
+        <div className="image-container">
+          <img src={imageUrl} alt={`Farmer ${index + 1}`} className="image" />
+        </div>
+
+        <div className="content">
+          <div className="brand">{farmerName}</div>
+          <div className="product-name">{productName}</div>
+        </div>
+        <div className="button-container">
+          <button onClick={() => fetchUserDetails(userId)}>
+            <span className="shadow" />
+            <span className="edge" />
+            <span className="front text">View Details</span>
+          </button>
+        </div>
+      </div>
+    );
+});
+
+const FarmerCards = ({ imageUrls }) => {
+  // Create cards with proper farmer IDs
   const CardItems = Array.from({ length: 15 }, (_, index) => {
     const imageUrl = imageUrls[index] || `https://placeimg.com/240/130/tech?${index}`;
     const farmerName = farmerNames[index % farmerNames.length];
@@ -112,6 +144,9 @@ const FarmerCards = ({ imageUrls }) => {
       </div>
     );
   });
+
+  return <div className="cards-container">{CardItems}</div>;
+};
 
   return (
     <div>
@@ -151,6 +186,36 @@ const FarmerCards = ({ imageUrls }) => {
 // Enhanced Modal to show user details and related data
 const EnhancedUserModal = ({ user, onClose }) => {
   const [activeTab, setActiveTab] = useState('profile');
+  const navigate = useNavigate();
+  const [feedback, setFeedback] = useState([]);
+  const [isLoadingFeedback, setIsLoadingFeedback] = useState(false);
+  const [feedbackError, setFeedbackError] = useState(null);
+  
+
+  useEffect(() => {
+    if (activeTab === 'reviews' && user) {
+      fetchFeedback();
+    }
+  }, [activeTab, user]);
+
+  const fetchFeedback = async () => {
+    setIsLoadingFeedback(true);
+    setFeedbackError(null);
+    try {
+      const response = await fetch(`http://localhost:5000/api/feedback?farmerId=${user.id}`);
+      if (!response.ok) throw new Error('Failed to fetch reviews');
+      const data = await response.json();
+      setFeedback(data);
+    } catch (error) {
+      setFeedbackError(error.message);
+    } finally {
+      setIsLoadingFeedback(false);
+    }
+  };
+
+  const handleNewFeedback = (newFeedback) => {
+    setFeedback(prev => [newFeedback, ...prev]);
+  };
 
   if (!user) return null;
 
@@ -176,6 +241,61 @@ const EnhancedUserModal = ({ user, onClose }) => {
             <div className="user-basic-info">
               <h3>{user.username || user.name || 'User'}</h3>
               <p className="user-location">{user.location || 'No location'}</p>
+              <div className="button-container" style={{ display: "flex", gap: "10px" }}>
+  <button 
+    className="review-button" 
+    onClick={() => navigate(`/farmerfeedback/${user.id}`)}
+    style={{ 
+      backgroundColor: "#90EE90", 
+      color: "white", 
+      padding: "10px 10px", 
+      border: "none", 
+      borderRadius: "5px", 
+      cursor: "pointer",
+      fontWeight: "bold"
+    }}
+  > 
+    Review
+  </button>
+  
+  <button 
+    className="chat-button" 
+    onClick={() => {
+      // Navigate to different routes based on farmer ID
+      if (user.id === 1) {
+        navigate('/message');
+      } else if (user.id === 2) {
+        navigate('/message2');
+      } else if (user.id === 3) {
+        navigate('/message3');
+      }
+      else if (user.id === 4) {
+        navigate('/message4');
+      }
+      else if (user.id === 5) {
+        navigate('/message5');
+      }
+      else if (user.id == 6) {
+        navigate('/message6');
+      }
+      else{
+        // Default case for other farmers
+        navigate('/message');
+      }
+    }}
+    style={{ 
+      backgroundColor: "#90EE90", 
+      color: "white", 
+      padding: "10px 10px", 
+      border: "none", 
+      borderRadius: "5px", 
+      cursor: "pointer",
+      fontWeight: "bold"
+    }}
+  > 
+    Chat with Me
+  </button>
+</div>
             </div>
           </div>
 
@@ -197,6 +317,12 @@ const EnhancedUserModal = ({ user, onClose }) => {
               onClick={() => setActiveTab('social')}
             >
               Social Media
+            </button>
+            <button 
+              className={`tab-button ${activeTab === 'review' ? 'active' : ''}`}
+              onClick={() => setActiveTab('review')}
+            >
+               Review
             </button>
           </div>
 
@@ -300,6 +426,38 @@ const EnhancedUserModal = ({ user, onClose }) => {
                 )}
               </div>
             )}
+            <div className="tab-content">
+              {activeTab === 'reviews' && (
+                <div className="reviews-content">
+                  <RatingAndFeedback 
+                    farmerId={user.id} 
+                    onNewFeedback={handleNewFeedback} 
+                  />
+                  {isLoadingFeedback && <p>Loading reviews...</p>}
+                  {feedbackError && <p className="error">{feedbackError}</p>}
+                  <div className="reviews-list">
+                    {feedback.map((review) => (
+                      <div key={review.id} className="review-item">
+                        <div className="review-header">
+                          <span className="review-author">{review.name}</span>
+                          <span className="review-date">
+                            {new Date(review.date).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <div className="stars">
+                          {[...Array(5)].map((_, i) => (
+                            <span key={i} className={`star ${i < review.rating ? 'filled' : ''}`}>
+                              {i < review.rating ? '★' : '☆'}
+                            </span>
+                          ))}
+                        </div>
+                        <p className="review-comment">{review.comment}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </EnhancedModalContent>
@@ -1052,5 +1210,6 @@ const MainContainer = styled.div`
     }
   }
 `;
+
 
 export default CombinedFarmersComponent;

@@ -32,10 +32,12 @@ async function initializeDatabase() {
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS feedback (
         id INT AUTO_INCREMENT PRIMARY KEY,
+        product_id INT NOT NULL,
         name VARCHAR(100) NOT NULL,
         rating INT NOT NULL,
         comment TEXT NOT NULL,
-        date DATETIME DEFAULT CURRENT_TIMESTAMP
+        date DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
       )
     `);
     
@@ -51,11 +53,18 @@ async function initializeDatabase() {
 initializeDatabase();
 
 // Routes
-// GET all feedback
+// GET all feedback for a specific product
 app.get('/api/feedback', async (req, res) => {
+  const { productId } = req.query;
+  
+  if (!productId) {
+    return res.status(400).json({ message: 'Product ID is required' });
+  }
+  
   try {
     const [rows] = await pool.execute(
-      'SELECT * FROM feedback ORDER BY date DESC'
+      'SELECT * FROM feedback WHERE product_id = ? ORDER BY date DESC',
+      [productId]
     );
     res.json(rows);
   } catch (error) {
@@ -66,17 +75,17 @@ app.get('/api/feedback', async (req, res) => {
 
 // POST new feedback
 app.post('/api/feedback', async (req, res) => {
-  const { name, rating, comment } = req.body;
+  const { productId, name, rating, comment } = req.body;
   
   // Validate input
-  if (!name || !rating || !comment) {
-    return res.status(400).json({ message: 'Please provide name, rating, and comment' });
+  if (!productId || !name || !rating || !comment) {
+    return res.status(400).json({ message: 'Please provide product ID, name, rating, and comment' });
   }
   
   try {
     const [result] = await pool.execute(
-      'INSERT INTO feedback (name, rating, comment) VALUES (?, ?, ?)',
-      [name, rating, comment]
+      'INSERT INTO feedback (product_id, name, rating, comment) VALUES (?, ?, ?, ?)',
+      [productId, name, rating, comment]
     );
     
     const [newFeedback] = await pool.execute(
@@ -88,6 +97,25 @@ app.post('/api/feedback', async (req, res) => {
   } catch (error) {
     console.error('Error saving feedback:', error);
     res.status(500).json({ message: 'Error saving feedback', error: error.message });
+  }
+});
+
+// GET product details
+app.get('/api/products/:id', async (req, res) => {
+  try {
+    const [rows] = await pool.execute(
+      'SELECT * FROM products WHERE id = ?',
+      [req.params.id]
+    );
+    
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+    
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('Error fetching product:', error);
+    res.status(500).json({ message: 'Error fetching product', error: error.message });
   }
 });
 
