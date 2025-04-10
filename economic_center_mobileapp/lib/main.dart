@@ -1,4 +1,5 @@
-import 'package:economic_center_mobileapp/pages/signup.dart';
+import 'package:economic_center_mobileapp/pages/signin.dart';
+//import 'package:economic_center_mobileapp/pages/signup.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -33,7 +34,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const SignUp()
+      home: const LoginPage()
     );
   }
 }

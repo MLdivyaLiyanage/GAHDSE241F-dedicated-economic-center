@@ -63,6 +63,7 @@ flutter:
     - images/leaf_logo.png
     - images/farmers.png
     - images/plant_icon.png
+    - images/presentation.png
     
 
   # An image asset can refer to one or more resolution-specific "variants", see
