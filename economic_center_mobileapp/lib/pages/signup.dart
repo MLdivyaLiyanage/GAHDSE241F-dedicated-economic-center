@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class SignUp extends StatefulWidget {
   const SignUp({super.key});
@@ -12,6 +14,7 @@ class _SignUpState extends State<SignUp> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   String? _selectedRole;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -19,6 +22,68 @@ class _SignUpState extends State<SignUp> {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _signUp() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final response = await http.post(
+        Uri.parse('http://10.0.2.2:3001/api/signup'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'username': _nameController.text,
+          'email': _emailController.text,
+          'password': _passwordController.text,
+          'role': _selectedRole?.toLowerCase(),
+        }),
+      );
+
+      final responseData = jsonDecode(response.body);
+
+      if (response.statusCode == 201) {
+        // Success - Show message and navigate to SignIn
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Registered successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        // Navigate to SignIn screen
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const SignIn(), // Changed to SignIn
+          ),
+        );
+      } else {
+        // Error
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(responseData['error'] ?? 'Registration failed'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -32,8 +97,8 @@ class _SignUpState extends State<SignUp> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color.fromARGB(255, 168, 231, 178), // Teal/turquoise
-              Color.fromARGB(255, 168, 231, 178), // Green
+              Color.fromARGB(255, 168, 231, 178),
+              Color.fromARGB(255, 168, 231, 178),
             ],
           ),
         ),
@@ -51,8 +116,9 @@ class _SignUpState extends State<SignUp> {
                   children: [
                     // Three green dots
                     Row(
-                      children: [
-                        Container(
+                      children: List.generate(3, (index) => Padding(
+                        padding: const EdgeInsets.only(right: 5),
+                        child: Container(
                           width: 10,
                           height: 10,
                           decoration: const BoxDecoration(
@@ -60,25 +126,7 @@ class _SignUpState extends State<SignUp> {
                             shape: BoxShape.circle,
                           ),
                         ),
-                        const SizedBox(width: 5),
-                        Container(
-                          width: 10,
-                          height: 10,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF4CDA64),
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 5),
-                        Container(
-                          width: 10,
-                          height: 10,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF4CDA64),
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                      ],
+                      )),
                     ),
                     
                     // Logo circle
@@ -168,8 +216,8 @@ class _SignUpState extends State<SignUp> {
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        Color(0xFF00A19D), // Darker teal
-                        Color(0xFF4CDA64), // Brighter green
+                        Color(0xFF00A19D),
+                        Color(0xFF4CDA64),
                       ],
                     ),
                     borderRadius: BorderRadius.circular(20),
@@ -269,7 +317,7 @@ class _SignUpState extends State<SignUp> {
                             border: InputBorder.none,
                           ),
                           items: const [
-                            DropdownMenuItem(value: 'Framer', child: Text('Framer')),
+                            DropdownMenuItem(value: 'Farmer', child: Text('Farmer')),
                             DropdownMenuItem(value: 'Customer', child: Text('Customer')),
                           ],
                           onChanged: (value) {
@@ -344,57 +392,53 @@ class _SignUpState extends State<SignUp> {
                       
                       const SizedBox(height: 20),
                       
-                      // Next Button
+                      // Register Button
                       Center(
-                        child: GestureDetector(
-                          onTap: () {
-                            if (_nameController.text.isEmpty ||
-                                _emailController.text.isEmpty ||
-                                _passwordController.text.isEmpty ||
-                                _selectedRole == null) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Please fill all fields'),
-                                  backgroundColor: Colors.red,
-                                ),
-                              );
-                            } else {
-                              // Proceed with sign up
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const NextScreen(),
-                                ),
-                              );
-                            }
-                          },
-                          child: Container(
-                            width: 120,
-                            padding: const EdgeInsets.symmetric(vertical: 10),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(25),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
-                                  spreadRadius: 1,
-                                  blurRadius: 3,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: const Center(
-                              child: Text(
-                                "Next",
-                                style: TextStyle(
-                                  color: Color(0xFF00A19D),
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
+                        child: _isLoading
+                            ? const CircularProgressIndicator(color: Colors.white)
+                            : GestureDetector(
+                                onTap: () {
+                                  if (_nameController.text.isEmpty ||
+                                      _emailController.text.isEmpty ||
+                                      _passwordController.text.isEmpty ||
+                                      _selectedRole == null) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('Please fill all fields'),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                  } else {
+                                    _signUp();
+                                  }
+                                },
+                                child: Container(
+                                  width: 120,
+                                  padding: const EdgeInsets.symmetric(vertical: 10),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(25),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.1),
+                                        spreadRadius: 1,
+                                        blurRadius: 3,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: const Center(
+                                    child: Text(
+                                      "Register",
+                                      style: TextStyle(
+                                        color: Color(0xFF00A19D),
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ),
-                            ),
-                          ),
-                        ),
                       ),
                     ],
                   ),
@@ -416,7 +460,12 @@ class _SignUpState extends State<SignUp> {
                       ),
                       GestureDetector(
                         onTap: () {
-                          Navigator.pop(context);
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const SignIn(),
+                            ),
+                          );
                         },
                         child: const Text(
                           'Sign in',
@@ -442,8 +491,8 @@ class _SignUpState extends State<SignUp> {
   }
 }
 
-class NextScreen extends StatelessWidget {
-  const NextScreen({super.key});
+class SignIn extends StatelessWidget {
+  const SignIn({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -454,14 +503,14 @@ class NextScreen extends StatelessWidget {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFF00A19D), // Teal/turquoise
-              Color(0xFF4CDA64), // Green
+              Color(0xFF00A19D),
+              Color(0xFF4CDA64),
             ],
           ),
         ),
         child: const Center(
           child: Text(
-            'Next Screen',
+            'Sign In Screen',
             style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
           ),
         ),
