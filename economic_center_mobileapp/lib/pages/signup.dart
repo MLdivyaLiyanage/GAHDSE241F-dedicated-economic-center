@@ -109,41 +109,45 @@ class _SignUpState extends State<SignUp> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 SizedBox(height: MediaQuery.of(context).size.height * 0.03),
-                
+
                 // Top Row - Dots and Logo
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     // Three green dots
                     Row(
-                      children: List.generate(3, (index) => Padding(
-                        padding: const EdgeInsets.only(right: 5),
-                        child: Container(
-                          width: 10,
-                          height: 10,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF4CDA64),
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                      )),
+                      children: List.generate(
+                          3,
+                          (index) => Padding(
+                                padding: const EdgeInsets.only(right: 5),
+                                child: Container(
+                                  width: 10,
+                                  height: 10,
+                                  decoration: const BoxDecoration(
+                                    color: Color(0xFF4CDA64),
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                              )),
                     ),
-                    
+
                     // Logo circle
                     Container(
                       width: 50,
                       height: 50,
                       decoration: BoxDecoration(
+                        // ignore: deprecated_member_use
                         color: Colors.white.withOpacity(0.9),
                         shape: BoxShape.circle,
                         border: Border.all(color: Colors.grey.shade300),
                       ),
                       child: Center(
                         child: Image.asset(
-                          'images/leaf_logo.png', 
+                          'images/leaf_logo.png',
                           width: 30,
                           height: 30,
-                          errorBuilder: (context, error, stackTrace) => const Icon(
+                          errorBuilder: (context, error, stackTrace) =>
+                              const Icon(
                             Icons.eco,
                             color: Color(0xFF4CDA64),
                             size: 30,
@@ -153,9 +157,9 @@ class _SignUpState extends State<SignUp> {
                     ),
                   ],
                 ),
-                
+
                 const SizedBox(height: 10),
-                
+
                 // Header
                 const Text(
                   'DEDICATED',
@@ -180,9 +184,9 @@ class _SignUpState extends State<SignUp> {
                     fontSize: 20,
                   ),
                 ),
-                
+
                 const SizedBox(height: 15),
-                
+
                 // Farmers illustration
                 Center(
                   child: Image.asset(
@@ -192,6 +196,7 @@ class _SignUpState extends State<SignUp> {
                       height: 120,
                       width: double.infinity,
                       decoration: BoxDecoration(
+                        // ignore: deprecated_member_use
                         color: Colors.white.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -205,9 +210,9 @@ class _SignUpState extends State<SignUp> {
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: 20),
-                
+
                 // Green container for signup fields
                 Container(
                   padding: const EdgeInsets.all(15),
@@ -247,7 +252,8 @@ class _SignUpState extends State<SignUp> {
                               'images/plant_icon.png',
                               height: 30,
                               width: 30,
-                              errorBuilder: (context, error, stackTrace) => const Icon(
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const Icon(
                                 Icons.spa,
                                 size: 24,
                                 color: Colors.white,
@@ -256,9 +262,9 @@ class _SignUpState extends State<SignUp> {
                           ),
                         ],
                       ),
-                      
+
                       const SizedBox(height: 20),
-                      
+
                       // Name Field
                       const Padding(
                         padding: EdgeInsets.only(left: 5.0, bottom: 5.0),
@@ -273,6 +279,7 @@ class _SignUpState extends State<SignUp> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 15),
                         decoration: BoxDecoration(
+                          // ignore: deprecated_member_use
                           color: Colors.white.withOpacity(0.9),
                           borderRadius: BorderRadius.circular(30),
                         ),
@@ -286,9 +293,9 @@ class _SignUpState extends State<SignUp> {
                           ),
                         ),
                       ),
-                      
+
                       const SizedBox(height: 12),
-                      
+
                       // Role Field
                       const Padding(
                         padding: EdgeInsets.only(left: 5.0, bottom: 5.0),
@@ -303,6 +310,7 @@ class _SignUpState extends State<SignUp> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 15),
                         decoration: BoxDecoration(
+                          // ignore: deprecated_member_use
                           color: Colors.white.withOpacity(0.9),
                           borderRadius: BorderRadius.circular(30),
                         ),
@@ -317,8 +325,10 @@ class _SignUpState extends State<SignUp> {
                             border: InputBorder.none,
                           ),
                           items: const [
-                            DropdownMenuItem(value: 'Farmer', child: Text('Farmer')),
-                            DropdownMenuItem(value: 'Customer', child: Text('Customer')),
+                            DropdownMenuItem(
+                                value: 'Farmer', child: Text('Farmer')),
+                            DropdownMenuItem(
+                                value: 'Customer', child: Text('Customer')),
                           ],
                           onChanged: (value) {
                             setState(() {
@@ -327,9 +337,9 @@ class _SignUpState extends State<SignUp> {
                           },
                         ),
                       ),
-                      
+
                       const SizedBox(height: 12),
-                      
+
                       // Email Field
                       const Padding(
                         padding: EdgeInsets.only(left: 5.0, bottom: 5.0),
@@ -344,6 +354,7 @@ class _SignUpState extends State<SignUp> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 15),
                         decoration: BoxDecoration(
+                          // ignore: deprecated_member_use
                           color: Colors.white.withOpacity(0.9),
                           borderRadius: BorderRadius.circular(30),
                         ),
@@ -358,9 +369,9 @@ class _SignUpState extends State<SignUp> {
                           ),
                         ),
                       ),
-                      
+
                       const SizedBox(height: 12),
-                      
+
                       // Password Field
                       const Padding(
                         padding: EdgeInsets.only(left: 5.0, bottom: 5.0),
@@ -375,6 +386,7 @@ class _SignUpState extends State<SignUp> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 15),
                         decoration: BoxDecoration(
+                          // ignore: deprecated_member_use
                           color: Colors.white.withOpacity(0.9),
                           borderRadius: BorderRadius.circular(30),
                         ),
@@ -389,13 +401,14 @@ class _SignUpState extends State<SignUp> {
                           ),
                         ),
                       ),
-                      
+
                       const SizedBox(height: 20),
-                      
+
                       // Register Button
                       Center(
                         child: _isLoading
-                            ? const CircularProgressIndicator(color: Colors.white)
+                            ? const CircularProgressIndicator(
+                                color: Colors.white)
                             : GestureDetector(
                                 onTap: () {
                                   if (_nameController.text.isEmpty ||
@@ -414,12 +427,14 @@ class _SignUpState extends State<SignUp> {
                                 },
                                 child: Container(
                                   width: 120,
-                                  padding: const EdgeInsets.symmetric(vertical: 10),
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 10),
                                   decoration: BoxDecoration(
                                     color: Colors.white,
                                     borderRadius: BorderRadius.circular(25),
                                     boxShadow: [
                                       BoxShadow(
+                                        // ignore: deprecated_member_use
                                         color: Colors.black.withOpacity(0.1),
                                         spreadRadius: 1,
                                         blurRadius: 3,
@@ -443,9 +458,9 @@ class _SignUpState extends State<SignUp> {
                     ],
                   ),
                 ),
-                
+
                 const SizedBox(height: 15),
-                
+
                 // Sign In Link
                 Center(
                   child: Row(
@@ -480,7 +495,7 @@ class _SignUpState extends State<SignUp> {
                     ],
                   ),
                 ),
-                
+
                 const SizedBox(height: 20),
               ],
             ),
@@ -511,7 +526,8 @@ class SignIn extends StatelessWidget {
         child: const Center(
           child: Text(
             'Sign In Screen',
-            style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+            style: TextStyle(
+                color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
           ),
         ),
       ),
