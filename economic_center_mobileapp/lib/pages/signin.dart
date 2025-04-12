@@ -11,7 +11,7 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  
+
   @override
   void dispose() {
     _emailController.dispose();
@@ -42,7 +42,7 @@ class _LoginPageState extends State<LoginPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 SizedBox(height: MediaQuery.of(context).size.height * 0.03),
-                
+
                 // Top Row - Dots and Logo
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -78,22 +78,24 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ],
                     ),
-                    
+
                     // Logo circle
                     Container(
                       width: 50,
                       height: 50,
                       decoration: BoxDecoration(
+                        // ignore: deprecated_member_use
                         color: Colors.white.withOpacity(0.9),
                         shape: BoxShape.circle,
                         border: Border.all(color: Colors.grey.shade300),
                       ),
                       child: Center(
                         child: Image.asset(
-                          'images/leaf_logo.png', 
+                          'images/leaf_logo.png',
                           width: 30,
                           height: 30,
-                          errorBuilder: (context, error, stackTrace) => const Icon(
+                          errorBuilder: (context, error, stackTrace) =>
+                              const Icon(
                             Icons.eco,
                             color: Color(0xFF4CDA64),
                             size: 30,
@@ -103,9 +105,9 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ],
                 ),
-                
+
                 const SizedBox(height: 10),
-                
+
                 // Header
                 const Text(
                   'DEDICATED',
@@ -130,7 +132,7 @@ class _LoginPageState extends State<LoginPage> {
                     fontSize: 20,
                   ),
                 ),
-                
+
                 // Green login container
                 Container(
                   margin: const EdgeInsets.symmetric(vertical: 30),
@@ -149,7 +151,8 @@ class _LoginPageState extends State<LoginPage> {
                           Image.asset(
                             'images/presentation.png',
                             height: 100,
-                            errorBuilder: (context, error, stackTrace) => Container(
+                            errorBuilder: (context, error, stackTrace) =>
+                                Container(
                               height: 100,
                               width: 80,
                               decoration: BoxDecoration(
@@ -159,7 +162,8 @@ class _LoginPageState extends State<LoginPage> {
                               child: const Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(Icons.person, size: 40, color: Colors.white),
+                                  Icon(Icons.person,
+                                      size: 40, color: Colors.white),
                                 ],
                               ),
                             ),
@@ -176,9 +180,9 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                         ],
                       ),
-                      
+
                       const SizedBox(height: 20),
-                      
+
                       // Email Field
                       const Padding(
                         padding: EdgeInsets.only(left: 5.0, bottom: 5.0),
@@ -193,6 +197,7 @@ class _LoginPageState extends State<LoginPage> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 15),
                         decoration: BoxDecoration(
+                          // ignore: deprecated_member_use
                           color: Colors.white.withOpacity(0.9),
                           borderRadius: BorderRadius.circular(30),
                         ),
@@ -207,9 +212,9 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                         ),
                       ),
-                      
+
                       const SizedBox(height: 15),
-                      
+
                       // Password Field
                       const Padding(
                         padding: EdgeInsets.only(left: 5.0, bottom: 5.0),
@@ -224,6 +229,7 @@ class _LoginPageState extends State<LoginPage> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 15),
                         decoration: BoxDecoration(
+                          // ignore: deprecated_member_use
                           color: Colors.white.withOpacity(0.9),
                           borderRadius: BorderRadius.circular(30),
                         ),
@@ -241,7 +247,7 @@ class _LoginPageState extends State<LoginPage> {
                     ],
                   ),
                 ),
-                
+
                 // Login Button
                 Center(
                   child: Container(
@@ -257,6 +263,7 @@ class _LoginPageState extends State<LoginPage> {
                       borderRadius: BorderRadius.circular(25),
                       boxShadow: [
                         BoxShadow(
+                          // ignore: deprecated_member_use
                           color: Colors.black.withOpacity(0.1),
                           spreadRadius: 1,
                           blurRadius: 3,
@@ -266,7 +273,8 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     child: TextButton(
                       onPressed: () {
-                        if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+                        if (_emailController.text.isEmpty ||
+                            _passwordController.text.isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text('Please fill all fields'),
@@ -288,9 +296,9 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: 20),
-                
+
                 // Forgot Password Link
                 Center(
                   child: GestureDetector(
@@ -307,9 +315,9 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: 20),
-                
+
                 // Sign Up Link
                 Center(
                   child: Row(
