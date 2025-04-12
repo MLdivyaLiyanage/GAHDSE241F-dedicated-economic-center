@@ -30,59 +30,59 @@ import Message6 from "./MessagePage/Message6";
 import FarmerCards from "./Routes/FarmerCards";
 
 
-// Layout component that conditionally renders NavBar
-const Layout = ({ children, showNavBar = true }) => (
-  <>
-    {showNavBar && <NavBar />}
-    {children}
-  </>
-);
+// // Layout component that conditionally renders NavBar
+// const Layout = ({ children, showNavBar = true }) => (
+//   <>
+//     {showNavBar && <NavBar />}
+//     {children}
+//   </>
+// );
 
-const App = () => (
-  <Router>
-    <Routes>
-      {/* Login page route without NavBar */}
-      <Route 
-        path="/" 
-        element={
-          <Layout showNavBar={false}>
-            <LoginPage />
-          </Layout>
-        } 
-      />
+// const App = () => (
+//   <Router>
+//     <Routes>
+//       {/* Login page route without NavBar */}
+//       <Route 
+//         path="/" 
+//         element={
+//           <Layout showNavBar={false}>
+//             <LoginPage />
+//           </Layout>
+//         } 
+//       />
       
-      {/* All other routes with NavBar */}
-      <Route path="/home" element={<Layout><HomeFirstPage /></Layout>} />
-      {/* <Route path="/farmer" element={<Layout><FarmerCards /></Layout>} /> */}
-      <Route path="/farmer" element={<Layout><CombineFarmers /></Layout>} />
-      <Route path="/product" element={<Layout><CombineFoods /></Layout>} />
-      <Route path="/profile" element={<Layout><FarmerProfile /></Layout>} />
-      <Route path="/bellpepper" element={<Layout><BuyCardAndPayment /></Layout>} />
-      <Route path="/cucumber" element={<Layout><BuyCardAndPayment2 /></Layout>} />
-      <Route path="/amandine-potato" element={<Layout><BuyCardAndPayment3 /></Layout>} />
-      <Route path="/carrot" element={<Layout><BuyCardAndPayment4 /></Layout>} />
-      <Route path="/pineapple" element={<Layout><BuyCardAndPayment5 /></Layout>} />
-      <Route path="/butterhead-lettuce" element={<Layout><BuyCardAndPayment6 /></Layout>} />
-      <Route path="/cauliflower" element={<Layout><BuyCardAndPayment7 /></Layout>} />
-      <Route path="/beetroot" element={<Layout><BuyCardAndPayment8 /></Layout>} />
-      <Route path="/savoy-cabbage" element={<Layout><BuyCardAndPayment9 /></Layout>} />
-      <Route path="/feedback/:productId" element={<Layout showNavBar={false}><ProductFeedback /></Layout>} />
-      <Route path="/location" element={<Layout showNavBar={false}><Location /></Layout>} />
-      <Route path="/farmerfeedback/:farmerId" element={<Layout showNavBar={false}><FarmerFeedback /></Layout>} />
-      <Route path="/message" element={<Layout showNavBar={false}><Message /></Layout>} />
-      <Route path="/message2" element={<Layout showNavBar={false}><Message2 /></Layout>} />
-      <Route path="/message3" element={<Layout showNavBar={false}><Message3 /></Layout>} />
-      <Route path="/message4" element={<Layout showNavBar={false}><Message4 /></Layout>} />
-      <Route path="/message5" element={<Layout showNavBar={false}><Message5 /></Layout>} />
-      <Route path="/message6" element={<Layout showNavBar={false}><Message6 /></Layout>} />
+//       {/* All other routes with NavBar */}
+//       <Route path="/home" element={<Layout><HomeFirstPage /></Layout>} />
+//       {/* <Route path="/farmer" element={<Layout><FarmerCards /></Layout>} /> */}
+//       <Route path="/farmer" element={<Layout><CombineFarmers /></Layout>} />
+//       <Route path="/product" element={<Layout><CombineFoods /></Layout>} />
+//       <Route path="/profile" element={<Layout><FarmerProfile /></Layout>} />
+//       <Route path="/bellpepper" element={<Layout><BuyCardAndPayment /></Layout>} />
+//       <Route path="/cucumber" element={<Layout><BuyCardAndPayment2 /></Layout>} />
+//       <Route path="/amandine-potato" element={<Layout><BuyCardAndPayment3 /></Layout>} />
+//       <Route path="/carrot" element={<Layout><BuyCardAndPayment4 /></Layout>} />
+//       <Route path="/pineapple" element={<Layout><BuyCardAndPayment5 /></Layout>} />
+//       <Route path="/butterhead-lettuce" element={<Layout><BuyCardAndPayment6 /></Layout>} />
+//       <Route path="/cauliflower" element={<Layout><BuyCardAndPayment7 /></Layout>} />
+//       <Route path="/beetroot" element={<Layout><BuyCardAndPayment8 /></Layout>} />
+//       <Route path="/savoy-cabbage" element={<Layout><BuyCardAndPayment9 /></Layout>} />
+//       <Route path="/feedback/:productId" element={<Layout showNavBar={false}><ProductFeedback /></Layout>} />
+//       <Route path="/location" element={<Layout showNavBar={false}><Location /></Layout>} />
+//       <Route path="/farmerfeedback/:farmerId" element={<Layout showNavBar={false}><FarmerFeedback /></Layout>} />
+//       <Route path="/message" element={<Layout showNavBar={false}><Message /></Layout>} />
+//       <Route path="/message2" element={<Layout showNavBar={false}><Message2 /></Layout>} />
+//       <Route path="/message3" element={<Layout showNavBar={false}><Message3 /></Layout>} />
+//       <Route path="/message4" element={<Layout showNavBar={false}><Message4 /></Layout>} />
+//       <Route path="/message5" element={<Layout showNavBar={false}><Message5 /></Layout>} />
+//       <Route path="/message6" element={<Layout showNavBar={false}><Message6 /></Layout>} />
 
-    </Routes>
-  </Router>
-);
+//     </Routes>
+//   </Router>
+// );
 
 const root = createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
-    <App />
+    <FarmerCards />
   </React.StrictMode>
 );
