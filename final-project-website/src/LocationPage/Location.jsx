@@ -5,7 +5,7 @@ function App() {
   const [errorMsg, setErrorMsg] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [markers, setMarkers] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);                                                                                                                       
   
   // Sri Lanka coordinates (center of the country)
   const sriLankaCoords = { lat: 7.8731, lng: 80.7718 };

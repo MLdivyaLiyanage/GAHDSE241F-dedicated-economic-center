@@ -1,4 +1,4 @@
-import React from "react";
+import  "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import styled from 'styled-components';
 import { useNavigate } from "react-router-dom";
