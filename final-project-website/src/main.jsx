@@ -5,6 +5,7 @@ import NavBar from "./NavBar/NavBar";
 
 import HomeFirstPage from "./Home/HomeFirstPage";
 import CombineFarmers from "./Routes/CombineFarmers";
+//import FarmerCards from "./Routes/FarmerCards";
 import CombineFoods from "./Routes/CombineFoods";
 import FarmerProfile from "./UserProfiles/FarmerProfile";
 import BuyCardAndPayment from "./PaymentPage/BuyCardAndPayment";
@@ -26,6 +27,7 @@ import Message3 from "./MessagePage/Message3";
 import Message4 from "./MessagePage/Message4";
 import Message5 from "./MessagePage/Message5";
 import Message6 from "./MessagePage/Message6";
+import FarmerCards from "./Routes/FarmerCards";
 
 
 // Layout component that conditionally renders NavBar
@@ -51,6 +53,7 @@ const App = () => (
       
       {/* All other routes with NavBar */}
       <Route path="/home" element={<Layout><HomeFirstPage /></Layout>} />
+      {/* <Route path="/farmer" element={<Layout><FarmerCards /></Layout>} /> */}
       <Route path="/farmer" element={<Layout><CombineFarmers /></Layout>} />
       <Route path="/product" element={<Layout><CombineFoods /></Layout>} />
       <Route path="/profile" element={<Layout><FarmerProfile /></Layout>} />
