@@ -67,7 +67,7 @@ const Layout = ({ children, showNavBar = true }) => (
        <Route path="/savoy-cabbage" element={<Layout><BuyCardAndPayment9 /></Layout>} />
        <Route path="/feedback/:productId" element={<Layout showNavBar={false}><ProductFeedback /></Layout>} />
        <Route path="/location" element={<Layout showNavBar={false}><Location /></Layout>} />
-       <Route path="/farmerfeedback/:farmerId" element={<Layout showNavBar={false}><FarmerFeedback /></Layout>} />
+       <Route path="/farmerfeedback" element={<Layout showNavBar={false}><FarmerFeedback /></Layout>} />
        <Route path="/message" element={<Layout showNavBar={false}><Message /></Layout>} />
        <Route path="/message2" element={<Layout showNavBar={false}><Message2 /></Layout>} />
        <Route path="/message3" element={<Layout showNavBar={false}><Message3 /></Layout>} />

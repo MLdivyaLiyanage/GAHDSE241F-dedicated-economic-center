@@ -1,20 +1,189 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import styled from "styled-components";
 import ReactDOM from "react-dom";
+import styled from "styled-components";
+import "react";
+import "bootstrap/dist/css/bootstrap.min.css";
+import Container from "react-bootstrap/Container";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFacebookF, faInstagram } from '@fortawesome/free-brands-svg-icons';
-import "bootstrap/dist/css/bootstrap.min.css";
+import { useNavigate } from "react-router-dom"; // Import useNavigate hook for navigation
+
+// Styled Components with shared background
+const PageWrapper = styled.div`
+  /* Adding background image for entire page */
+  background-image: url('src/assets/backimg1.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed; /* This keeps the background fixed while scrolling */
+  min-height: 100vh;
+  width: 100%;
+`;
+
+// Slider Section with adjusted positioning
+const SliderSection = styled.div`
+  height: 60vh;
+  position: relative;
+  display: flex;
+  align-items: center; /* Center vertically */
+  padding-top: 50px; /* Add padding to move slider down */
+`;
+
+// Slider Component
+const SliderWrapper = styled.div`
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+
+  .slider {
+    width: 100%;
+    height: var(--height);
+    overflow: hidden;
+    mask-image: linear-gradient(to right, transparent, #000 10% 90%, transparent);
+    position: relative;
+    /* Removed the top: -30% to prevent pushing slider up */
+  }
+
+  .slider .list {
+    display: flex;
+    width: 100%;
+    min-width: calc(var(--width) * var(--quantity));
+    position: relative;
+    transition: all 0.5s ease;
+  }
+
+  .slider .list .item {
+    width: var(--width);
+    height: var(--height);
+    position: absolute;
+    left: 100%;
+    animation: autoRun 12s linear infinite;
+    transition: filter 0.5s;
+    animation-delay: calc((12s / var(--quantity)) * (var(--position) - 1) - 12s);
+  }
+
+  .slider .list .item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  @keyframes autoRun {
+    from {
+      left: 100%;
+    }
+    to {
+      left: calc(var(--width) * -1);
+    }
+  }
+
+  .slider:hover .item {
+    animation-play-state: paused !important;
+    filter: grayscale(1);
+  }
+
+  .slider .item:hover {
+    filter: grayscale(0);
+  }
+
+  .slider[reverse="true"] .item {
+    animation: reversePlay 12s linear infinite;
+  }
+
+  @keyframes reversePlay {
+    from {
+      left: calc(var(--width) * -1);
+    }
+    to {
+      left: 100%;
+    }
+  }
+
+  /* Mobile responsiveness */
+  @media (max-width: 768px) {
+    .slider {
+      height: 150px;
+    }
+
+    .slider .list .item {
+      width: 150px;
+      height: 150px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .slider {
+      height: 120px;
+    }
+
+    .slider .list .item {
+      width: 120px;
+      height: 120px;
+    }
+  }
+`;
+
+// Card Component (Image Slider)
+const SliderCard = () => {
+  return (
+    <SliderWrapper>
+      <div className="slider" style={{ '--width': '200px', '--height': '200px', '--quantity': 9 }}>
+        <div className="list">
+          <div className="item" style={{ '--position': 1 }}>
+            <img src="src/assets/Farmer1.jpg" alt="Image 1" />
+          </div>
+          <div className="item" style={{ '--position': 2 }}>
+            <img src="src/assets/Farmer2.jpg" alt="Image 2" />
+          </div>
+          <div className="item" style={{ '--position': 3 }}>
+            <img src="src/assets/Farmer15.jpg" alt="Image 3" />
+          </div>
+          <div className="item" style={{ '--position': 4 }}>
+            <img src="src/assets/Farmer13.jpg" alt="Image 4" />
+          </div>
+          <div className="item" style={{ '--position': 5 }}>
+            <img src="src/assets/Farmer5.jpg" alt="Image 5" />
+          </div>
+          <div className="item" style={{ '--position': 6 }}>
+            <img src="src/assets/Farmer14.jpg" alt="Image 6" />
+          </div>
+          <div className="item" style={{ '--position': 7 }}>
+            <img src="src/assets/Farmer15.jpg" alt="Image 7" />
+          </div>
+          <div className="item" style={{ '--position': 8 }}>
+            <img src="src/assets/Farmer12.jpg" alt="Image 8" />
+          </div>
+          <div className="item" style={{ '--position': 9 }}>
+            <img src="src/assets/Farmer9.jpg" alt="Image 9" />
+          </div>
+        </div>
+      </div>
+    </SliderWrapper>
+  );
+};
+
+// Main component for the slider section
+function FarmerSlider() {
+  return (
+    <Container fluid className="p-0">
+      <SliderCard />
+    </Container>
+  );
+}
 
 const API_BASE_URL = "http://localhost:5000/api";
 
-// Styled Components
+// Styled Components for Farmer Cards
 const CardsContainer = styled.div`
   padding: 20px;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 20px;
-  background-color: #23d947;
+  /* Semi-transparent background */
+  background-color: rgba(20, 38, 99, 0.72);
 `
 
 const FarmerCard = styled.div`
@@ -33,7 +202,7 @@ const FarmerCard = styled.div`
 const ProfileHeader = styled.div`
   position: relative;
   height: 150px;
-  background: linear-gradient(45deg, #4158D0, #C850C0);
+  background: linear-gradient(45deg,rgb(65, 208, 132),rgb(80, 200, 156));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -128,6 +297,8 @@ const LoadingMessage = styled.div`
   padding: 40px;
   font-size: 1.1rem;
   color: #666;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
 `;
 
 const ErrorMessage = styled.div`
@@ -135,10 +306,12 @@ const ErrorMessage = styled.div`
   padding: 40px;
   font-size: 1.1rem;
   color: #f44336;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
 `;
 
 const ViewProfileButton = styled.button`
-  background: #4158D0;
+  background:rgb(65, 208, 120);
   color: white;
   border: none;
   padding: 8px 16px;
@@ -150,7 +323,7 @@ const ViewProfileButton = styled.button`
   font-size: 0.9rem;
 
   &:hover {
-    background: #C850C0;
+    background:rgb(65, 208, 120);
   }
 `;
 
@@ -211,11 +384,43 @@ const AboutMeText = styled.p`
   margin: 0;
 `;
 
-export default function FarmerCards() {
+// New styled components for the buttons
+const ButtonsContainer = styled.div`
+  display: flex;
+  gap: 15px;
+  margin-top: 20px;
+  justify-content: center;
+`;
+
+const ActionButton = styled.button`
+  background: ${props => props.primary ? 'rgb(65, 208, 120)' : '#4158D0'};
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease;
+  font-size: 1rem;
+  font-weight: 500;
+  flex: 1;
+  max-width: 200px;
+
+  &:hover {
+    background: ${props => props.primary ? 'rgb(55, 188, 110)' : '#3648B0'};
+    transform: translateY(-2px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+`;
+
+function FarmerCards() {
   const [profiles, setProfiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedProfile, setSelectedProfile] = useState(null);
+  const navigate = useNavigate(); // Initialize the navigate function
 
   useEffect(() => {
     const fetchProfiles = async () => {
@@ -241,6 +446,22 @@ export default function FarmerCards() {
 
   const closeModal = () => {
     setSelectedProfile(null);
+  };
+
+  // Navigate to the feedback page with the farmer's ID when Review button is clicked
+  const handleReview = () => {
+    if (selectedProfile) {
+      // Close the modal
+      closeModal();
+      // Navigate to the feedback page with the farmer ID as a parameter
+      navigate('/farmerfeedback');
+      // navigate(`/farmerfeedback?farmerId=${selectedProfile.id}&farmerName=${encodeURIComponent(selectedProfile.username)}`);
+    }
+  };
+
+  const handleChatMe = () => {
+    // Chat Me functionality could be implemented here
+    alert(`Starting chat with ${selectedProfile.username}`);
   };
 
   // Dummy data for testing
@@ -336,7 +557,7 @@ export default function FarmerCards() {
               )}
 
               <ViewProfileButton onClick={() => handleViewProfile(profile)}>
-                View Full Profile
+                View Profile
               </ViewProfileButton>
             </ProfileBody>
           </FarmerCard>
@@ -387,6 +608,16 @@ export default function FarmerCards() {
                 )}
               </SocialLinks>
 
+              {/* Updated buttons with proper event handlers */}
+              <ButtonsContainer>
+                <ActionButton primary onClick={handleReview}>
+                  Review
+                </ActionButton>
+                <ActionButton onClick={handleChatMe}>
+                  Chat Me
+                </ActionButton>
+              </ButtonsContainer>
+
               {selectedProfile.products?.length > 0 && (
                 <ProductsSection>
                   <h3>Products</h3>
@@ -421,3 +652,22 @@ export default function FarmerCards() {
     </>
   );
 }
+
+// Combined Component with shared background and adjusted slider position
+function CombinedFarmerPage() {
+  return (
+    <PageWrapper>
+      {/* Slider Section with adjusted position */}
+      <SliderSection>
+        <FarmerSlider />
+      </SliderSection>
+      
+      {/* Cards Section */}
+      <div>
+        <FarmerCards />
+      </div>
+    </PageWrapper>
+  );
+}
+
+export default CombinedFarmerPage;
