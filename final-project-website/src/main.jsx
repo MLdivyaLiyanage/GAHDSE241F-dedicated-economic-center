@@ -27,6 +27,7 @@ import Message3 from "./MessagePage/Message3";
 import Message4 from "./MessagePage/Message4";
 import Message5 from "./MessagePage/Message5";
 import Message6 from "./MessagePage/Message6";
+import CardMsg from "./MessageBox/CardMsg";
 
 
  // Layout component that conditionally renders NavBar
@@ -74,6 +75,7 @@ const Layout = ({ children, showNavBar = true }) => (
        <Route path="/message4" element={<Layout showNavBar={false}><Message4 /></Layout>} />
        <Route path="/message5" element={<Layout showNavBar={false}><Message5 /></Layout>} />
        <Route path="/message6" element={<Layout showNavBar={false}><Message6 /></Layout>} />
+       {/* <Route path="/message" element={<Layout><CardMsg /></Layout>} /> */}
 
      </Routes>
    </Router>

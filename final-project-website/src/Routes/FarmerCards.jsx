@@ -449,19 +449,49 @@ function FarmerCards() {
   };
 
   // Navigate to the feedback page with the farmer's ID when Review button is clicked
-  const handleReview = () => {
-    if (selectedProfile) {
-      // Close the modal
-      closeModal();
-      // Navigate to the feedback page with the farmer ID as a parameter
-      navigate('/farmerfeedback');
-      // navigate(`/farmerfeedback?farmerId=${selectedProfile.id}&farmerName=${encodeURIComponent(selectedProfile.username)}`);
-    }
+  // const handleReview = () => {
+  //   if (selectedProfile) {
+  //     // Close the modal
+  //     closeModal();
+  //     // Navigate to the feedback page with the farmer ID as a parameter
+  //     navigate('/farmerfeedback');
+  //     // navigate(`/farmerfeedback?farmerId=${selectedProfile.id}&farmerName=${encodeURIComponent(selectedProfile.username)}`);
+  //   }
+  // };
+
+  const handleReview = (profile) => {
+    navigate('/farmerfeedback', { 
+      state: { 
+        farmerId: profile.id,
+        farmerName: profile.username 
+      }
+    });
+    // OR using URL params:
+    // navigate(`/farmerfeedback?farmerId=${profile.id}&farmerName=${encodeURIComponent(profile.username)}`);
   };
 
   const handleChatMe = () => {
-    // Chat Me functionality could be implemented here
-    alert(`Starting chat with ${selectedProfile.username}`);
+    if (selectedProfile) {
+      closeModal();
+      // navigate('/message', { state: { farmer: selectedProfile } });
+      // Navigate to different routes based on selectedProfile.id
+      if (selectedProfile.id === 1) {
+        navigate('/message');
+      } else if (selectedProfile.id === 2) {
+        navigate('/message2');
+      } else if (selectedProfile.id === 3) {
+        navigate('/message3');
+      } else if (selectedProfile.id === 4) {
+        navigate('/message4');
+      } else if (selectedProfile.id === 5) {
+        navigate('/message5');
+      } else if (selectedProfile.id === 6) {
+        navigate('/message6');
+      } else {
+        // Default case for other IDs
+        navigate('/message');
+      }
+    }
   };
 
   // Dummy data for testing
