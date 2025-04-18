@@ -156,6 +156,7 @@ class _LoginPageState extends State<LoginPage> {
                               height: 100,
                               width: 80,
                               decoration: BoxDecoration(
+                                // ignore: deprecated_member_use
                                 color: Colors.white.withOpacity(0.2),
                                 borderRadius: BorderRadius.circular(10),
                               ),
