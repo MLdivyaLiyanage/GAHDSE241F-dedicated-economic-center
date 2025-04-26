@@ -17,7 +17,7 @@ const RatingAndFeedback = () => {
   const [error, setError] = useState(null);
   
   // API URL - Change this to match your server URL
-  const API_URL = 'http://localhost:5000/api';
+  const API_URL = 'http://localhost:5100/api';
   
   // Fetch existing feedback when component mounts
   useEffect(() => {

@@ -174,7 +174,7 @@ function FarmerSlider() {
   );
 }
 
-const API_BASE_URL = "http://localhost:5000/api";
+const API_BASE_URL = "http://localhost:5300/api";
 
 // Styled Components for Farmer Cards
 const CardsContainer = styled.div`

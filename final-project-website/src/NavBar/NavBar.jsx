@@ -150,6 +150,7 @@ const SearchButton = styled(Button)`
 const DropdownMenu = styled(NavDropdown)`
   .dropdown-toggle {
     color: rgba(255, 255, 255, 0.9) !important;
+    font-weight: 600 !important; /* Added bold font weight */
     &::after {
       transition: all 0.3s ease;
     }
@@ -315,9 +316,6 @@ function Home() {
               <NavDropdown.Item onClick={() => navigate("/farmer")}>Farmers</NavDropdown.Item>
               <NavDropdown.Item onClick={() => navigate("/product")}>Products</NavDropdown.Item>
               <NavDropdown.Divider />
-              <NavDropdown.Item onClick={() => navigate("/more-categories")}>
-                More Categories
-              </NavDropdown.Item>
             </DropdownMenu>
             
           </Nav>

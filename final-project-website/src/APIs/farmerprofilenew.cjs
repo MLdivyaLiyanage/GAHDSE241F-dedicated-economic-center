@@ -5,7 +5,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const app = express();
-const port = 5000;
+const port = 5300;
 
 // Middleware
 app.use(cors());

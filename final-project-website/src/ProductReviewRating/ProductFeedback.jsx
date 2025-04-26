@@ -14,7 +14,7 @@ const ProductFeedback = () => {
   const [error, setError] = useState(null);
   const [product, setProduct] = useState(null);
   
-  const API_URL = 'http://localhost:5000/api';
+  const API_URL = 'http://localhost:5200/api';
   
   useEffect(() => {
     const fetchData = async () => {
