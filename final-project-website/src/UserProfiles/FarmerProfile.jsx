@@ -7,6 +7,13 @@ import axios from "axios"; // Add axios for API calls
 // API base URL - change this to match your backend server address
 const API_BASE_URL = "http://localhost:5000/api";
 
+// Main container with gradient background
+const MainContainer = styled.div`
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 20px;
+`;
+
 const StyledButton = styled.button`
   display: inline-block;
   padding: 12px 30px;
@@ -36,6 +43,23 @@ const StyledButton = styled.button`
   &.secondary {
     background: linear-gradient(45deg, #FF8E53, #FE6B8B);
     margin-right: 15px;
+  }
+`;
+
+// Form container with glass morphism effect
+const FormContainer = styled.div`
+  background: linear-gradient(to right, rgba(58, 197, 27, 0.96), rgba(68, 72, 77, 0.9));
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 30px;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+  margin-bottom: 30px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px 0 rgba(31, 38, 135, 0.2);
   }
 `;
 
@@ -124,6 +148,16 @@ const Notification = styled.div`
       transform: translateX(0);
     }
   }
+`;
+
+// Section title with gradient text
+const SectionTitle = styled.h1`
+  font-size: 28px;
+  margin-bottom: 25px;
+  background: linear-gradient(45deg,rgb(237, 237, 237),rgb(255, 255, 255));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-align: center;
 `;
 
 export default function UserProfileForm() {
@@ -268,7 +302,6 @@ export default function UserProfileForm() {
 
   // Save product to server
   const saveProduct = async (userId, productImagePaths) => { // userId is used here
-
     try {
       const productData = {
         userId,
@@ -457,314 +490,316 @@ export default function UserProfileForm() {
   };
 
   return (
-    <div className="min-h-screen">
+    <MainContainer>
       {notification.show && (
         <Notification type={notification.type}>
           {notification.message}
         </Notification>
       )}
       
-      {/* Update Profile Search Section */}
-      <div className="form-section">
-        <h1 className="section-title">
-          {isEditMode ? "Update Profile" : "Create New Profile"}
-        </h1>
-        
-        <div className="search-container" style={{ display: 'flex', marginBottom: '20px' }}>
-          <input
-            type="text"
-            className="field-input"
-            placeholder="Enter username to update"
-            value={searchUsername}
-            onChange={(e) => setSearchUsername(e.target.value)}
-            style={{ marginRight: '10px', flex: 1 }}
-          />
-          <StyledButton 
-            type="button" 
-            className="secondary"
-            onClick={handleSearchUser}
-            disabled={loading}
-          >
-            Search
-          </StyledButton>
-          <StyledButton 
-            type="button"
-            onClick={handleResetForm}
-          >
-            New Form
-          </StyledButton>
-        </div>
-        
-        {/* Product Selection (only in edit mode) */}
-        {isEditMode && userProducts.length > 0 && (
-          <div className="product-selector" style={{ marginBottom: '20px' }}>
-            <label className="field-label">Select Product to Edit:</label>
-            <select 
-              className="field-input"
-              value={currentProductId || ''}
-              onChange={(e) => handleChangeProduct(Number(e.target.value))}
-            >
-              {userProducts.map(product => (
-                <option key={product.id} value={product.id}>
-                  {product.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-      </div>
-      
-      <form onSubmit={handleSubmit} className="form-container">
-        {/* User Profile Section */}
+      <FormContainer>
+        {/* Update Profile Search Section */}
         <div className="form-section">
-          <h1 className="section-title">User Profile</h1>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '30px' }}>
-            <div>
-              {/* Object-shaped Profile Box with custom position */}
-              <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
-                <ObjectShapedBox>
-                  <div
-                    onClick={() => document.getElementById("profileInput").click()}
-                  >
-                    {profileImage ? (
-                      <img
-                        src={profileImage}
-                        alt="Profile"
-                        className="profile-image"
-                      />
-                    ) : (
-                      <div className="profile-placeholder">
-                        <div>
-                          <i className="fas fa-user" style={{ fontSize: '32px', marginBottom: '10px' }}></i>
-                          <div>Click to Upload</div>
-                        </div>
-                      </div>
-                    )}
-                    <div className="profile-upload-icon">
-                      <i className="fas fa-camera"></i>
-                    </div>
-                  </div>
-                  <input
-                    id="profileInput"
-                    type="file"
-                    style={{ display: 'none' }}
-                    onChange={handleProfileImageChange}
-                    accept="image/*"
-                  />
-                </ObjectShapedBox>
-              </div>
-
-              {/* Personal Information */}
-              <div className="form-field">
-                <label className="field-label">Username</label>
-                <input
-                  type="text"
-                  className="field-input"
-                  placeholder="Enter Username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  required
-                  readOnly={isEditMode} // Make username readonly in edit mode
-                />
-              </div>
-
-              <div className="form-field">
-                <label className="field-label">Email Address</label>
-                <input
-                  type="email"
-                  className="field-input"
-                  placeholder="Enter Email Address"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="form-field">
-                <label className="field-label">Age</label>
-                <input
-                  type="number"
-                  className="field-input"
-                  placeholder="Enter Age"
-                  value={age}
-                  onChange={(e) => setAge(e.target.value)}
-                />
-              </div>
-
-              <div className="form-field">
-                <label className="field-label">About Me</label>
-                <textarea
-                  className="field-input"
-                  placeholder="Tell something about yourself"
-                  value={aboutMe}
-                  onChange={(e) => setAboutMe(e.target.value)}
-                ></textarea>
-              </div>
-            </div>
-
-            <div>
-              {/* Contact Information */}
-              <div className="form-field">
-                <label className="field-label">Address</label>
-                <input
-                  type="text"
-                  className="field-input"
-                  placeholder="Enter Address"
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                />
-              </div>
-
-              <div className="form-field">
-                <label className="field-label">ID Number</label>
-                <input
-                  type="text"
-                  className="field-input"
-                  placeholder="Enter ID Number"
-                  value={idNumber}
-                  onChange={(e) => setIdNumber(e.target.value)}
-                />
-              </div>
-
-              <div className="form-field">
-                <label className="field-label">Phone Number</label>
-                <input
-                  type="tel"
-                  className="field-input"
-                  placeholder="Enter Phone Number"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                />
-              </div>
-
-              <div className="form-field">
-                <label className="field-label">Location</label>
-                <input
-                  type="text"
-                  className="field-input"
-                  placeholder="Enter Location"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                />
-              </div>
-
-              <div className="form-field">
-                <label className="field-label">Work Experience</label>
-                <textarea
-                  className="field-input"
-                  placeholder="Describe your work experience"
-                  value={workExperience}
-                  onChange={(e) => setWorkExperience(e.target.value)}
-                ></textarea>
-              </div>
-
-              <div className="form-field">
-                <label className="field-label">Social Media Links</label>
-                <div className="social-media-inputs">
-                  <div className="social-media-input">
-                    <input
-                      type="url"
-                      className="field-input social-media-field"
-                      placeholder="Facebook Profile URL"
-                      value={facebookLink}
-                      onChange={(e) => setFacebookLink(e.target.value)}
-                    />
-                  </div>
-                  <div className="social-media-input">
-                    <input
-                      type="url"
-                      className="field-input social-media-field"
-                      placeholder="Instagram Profile URL"
-                      value={instagramLink}
-                      onChange={(e) => setInstagramLink(e.target.value)}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Product Section */}
-        <div className="form-section">
-          <h1 className="section-title">
-            {isEditMode && currentProductId ? "Update Product" : "Add Product"}
-          </h1>
+          <SectionTitle>
+            {isEditMode ? "Update Profile" : "Create New Profile"}
+          </SectionTitle>
           
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '30px' }}>
-            <div>
-              <div className="form-field">
-                <label className="field-label">Product Images</label>
-                <div className="file-input-container">
-                  <label className="file-input-label">
-                    Choose Product Images
+          <div className="search-container" style={{ display: 'flex', marginBottom: '20px' }}>
+            <input
+              type="text"
+              className="field-input"
+              placeholder="Enter username to update"
+              value={searchUsername}
+              onChange={(e) => setSearchUsername(e.target.value)}
+              style={{ marginRight: '10px', flex: 1 }}
+            />
+            <StyledButton 
+              type="button" 
+              className="secondary"
+              onClick={handleSearchUser}
+              disabled={loading}
+            >
+              Search
+            </StyledButton>
+            <StyledButton 
+              type="button"
+              onClick={handleResetForm}
+            >
+              New Form
+            </StyledButton>
+          </div>
+          
+          {/* Product Selection (only in edit mode) */}
+          {isEditMode && userProducts.length > 0 && (
+            <div className="product-selector" style={{ marginBottom: '20px' }}>
+              <label className="field-label">Select Product to Edit:</label>
+              <select 
+                className="field-input"
+                value={currentProductId || ''}
+                onChange={(e) => handleChangeProduct(Number(e.target.value))}
+              >
+                {userProducts.map(product => (
+                  <option key={product.id} value={product.id}>
+                    {product.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
+        
+        <form onSubmit={handleSubmit}>
+          {/* User Profile Section */}
+          <div className="form-section">
+            <SectionTitle>User Profile</SectionTitle>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '30px' }}>
+              <div>
+                {/* Object-shaped Profile Box with custom position */}
+                <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+                  <ObjectShapedBox>
+                    <div
+                      onClick={() => document.getElementById("profileInput").click()}
+                    >
+                      {profileImage ? (
+                        <img
+                          src={profileImage}
+                          alt="Profile"
+                          className="profile-image"
+                        />
+                      ) : (
+                        <div className="profile-placeholder">
+                          <div>
+                            <i className="fas fa-user" style={{ fontSize: '32px', marginBottom: '10px' }}></i>
+                            <div>Click to Upload</div>
+                          </div>
+                        </div>
+                      )}
+                      <div className="profile-upload-icon">
+                        <i className="fas fa-camera"></i>
+                      </div>
+                    </div>
                     <input
+                      id="profileInput"
                       type="file"
-                      multiple
-                      className="file-input"
-                      onChange={handleProductImagesChange}
+                      style={{ display: 'none' }}
+                      onChange={handleProfileImageChange}
                       accept="image/*"
                     />
-                  </label>
+                  </ObjectShapedBox>
                 </div>
-                <div className="product-gallery">
-                  {productImages.map((src, index) => (
-                    <img
-                      key={index}
-                      src={src}
-                      alt="Product"
-                      className="product-image"
-                    />
-                  ))}
+
+                {/* Personal Information */}
+                <div className="form-field">
+                  <label className="field-label">Username</label>
+                  <input
+                    type="text"
+                    className="field-input"
+                    placeholder="Enter Username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    required
+                    readOnly={isEditMode} // Make username readonly in edit mode
+                  />
+                </div>
+
+                <div className="form-field">
+                  <label className="field-label">Email Address</label>
+                  <input
+                    type="email"
+                    className="field-input"
+                    placeholder="Enter Email Address"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="form-field">
+                  <label className="field-label">Age</label>
+                  <input
+                    type="number"
+                    className="field-input"
+                    placeholder="Enter Age"
+                    value={age}
+                    onChange={(e) => setAge(e.target.value)}
+                  />
+                </div>
+
+                <div className="form-field">
+                  <label className="field-label">About Me</label>
+                  <textarea
+                    className="field-input"
+                    placeholder="Tell something about yourself"
+                    value={aboutMe}
+                    onChange={(e) => setAboutMe(e.target.value)}
+                  ></textarea>
                 </div>
               </div>
 
-              <div className="form-field">
-                <label className="field-label">Product Name</label>
-                <input
-                  type="text"
-                  className="field-input"
-                  placeholder="Enter Product Name"
-                  value={productName}
-                  onChange={(e) => setProductName(e.target.value)}
-                />
-              </div>
-            </div>
+              <div>
+                {/* Contact Information */}
+                <div className="form-field">
+                  <label className="field-label">Address</label>
+                  <input
+                    type="text"
+                    className="field-input"
+                    placeholder="Enter Address"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                  />
+                </div>
 
-            <div>
-              <div className="form-field">
-                <label className="field-label">Product Price</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  className="field-input"
-                  placeholder="Enter Product Price"
-                  value={productPrice}
-                  onChange={(e) => setProductPrice(e.target.value)}
-                />
-              </div>
+                <div className="form-field">
+                  <label className="field-label">ID Number</label>
+                  <input
+                    type="text"
+                    className="field-input"
+                    placeholder="Enter ID Number"
+                    value={idNumber}
+                    onChange={(e) => setIdNumber(e.target.value)}
+                  />
+                </div>
 
-              <div className="form-field">
-                <label className="field-label">Product Details</label>
-                <textarea
-                  className="field-input"
-                  placeholder="Enter Product Details"
-                  value={productDetails}
-                  onChange={(e) => setProductDetails(e.target.value)}
-                ></textarea>
+                <div className="form-field">
+                  <label className="field-label">Phone Number</label>
+                  <input
+                    type="tel"
+                    className="field-input"
+                    placeholder="Enter Phone Number"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                  />
+                </div>
+
+                <div className="form-field">
+                  <label className="field-label">Location</label>
+                  <input
+                    type="text"
+                    className="field-input"
+                    placeholder="Enter Location"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                  />
+                </div>
+
+                <div className="form-field">
+                  <label className="field-label">Work Experience</label>
+                  <textarea
+                    className="field-input"
+                    placeholder="Describe your work experience"
+                    value={workExperience}
+                    onChange={(e) => setWorkExperience(e.target.value)}
+                  ></textarea>
+                </div>
+
+                <div className="form-field">
+                  <label className="field-label">Social Media Links</label>
+                  <div className="social-media-inputs">
+                    <div className="social-media-input">
+                      <input
+                        type="url"
+                        className="field-input social-media-field"
+                        placeholder="Facebook Profile URL"
+                        value={facebookLink}
+                        onChange={(e) => setFacebookLink(e.target.value)}
+                      />
+                    </div>
+                    <div className="social-media-input">
+                      <input
+                        type="url"
+                        className="field-input social-media-field"
+                        placeholder="Instagram Profile URL"
+                        value={instagramLink}
+                        onChange={(e) => setInstagramLink(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Submit Button */}
-        <div className="button-container">
-          <StyledButton type="submit" disabled={loading}>
-            {loading ? 'Saving...' : isEditMode ? 'Update' : 'Upload'}
-          </StyledButton>
-        </div>
-      </form>
-    </div>
+          {/* Product Section */}
+          <div className="form-section">
+            <SectionTitle>
+              {isEditMode && currentProductId ? "Update Product" : "Add Product"}
+            </SectionTitle>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '30px' }}>
+              <div>
+                <div className="form-field">
+                  <label className="field-label">Product Images</label>
+                  <div className="file-input-container">
+                    <label className="file-input-label">
+                      Choose Product Images
+                      <input
+                        type="file"
+                        multiple
+                        className="file-input"
+                        onChange={handleProductImagesChange}
+                        accept="image/*"
+                      />
+                    </label>
+                  </div>
+                  <div className="product-gallery">
+                    {productImages.map((src, index) => (
+                      <img
+                        key={index}
+                        src={src}
+                        alt="Product"
+                        className="product-image"
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                <div className="form-field">
+                  <label className="field-label">Product Name</label>
+                  <input
+                    type="text"
+                    className="field-input"
+                    placeholder="Enter Product Name"
+                    value={productName}
+                    onChange={(e) => setProductName(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <div className="form-field">
+                  <label className="field-label">Product Price</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    className="field-input"
+                    placeholder="Enter Product Price"
+                    value={productPrice}
+                    onChange={(e) => setProductPrice(e.target.value)}
+                  />
+                </div>
+
+                <div className="form-field">
+                  <label className="field-label">Product Details</label>
+                  <textarea
+                    className="field-input"
+                    placeholder="Enter Product Details"
+                    value={productDetails}
+                    onChange={(e) => setProductDetails(e.target.value)}
+                  ></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Submit Button */}
+          <div className="button-container" style={{ textAlign: 'center', marginTop: '30px' }}>
+            <StyledButton type="submit" disabled={loading}>
+              {loading ? 'Saving...' : isEditMode ? 'Update' : 'Upload'}
+            </StyledButton>
+          </div>
+        </form>
+      </FormContainer>
+    </MainContainer>
   );
 }

@@ -1,4 +1,4 @@
-import "react";
+import { useState, useEffect } from "react";
 import Button from "react-bootstrap/Button";
 import Container from "react-bootstrap/Container";
 import Form from "react-bootstrap/Form";
@@ -8,273 +8,342 @@ import NavDropdown from "react-bootstrap/NavDropdown";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 
-const StyledWrapper = styled.div`
-:root {
-    /* Color Palette */
-    --primary-bg-color: rgba(255, 255, 255, 0.39); /* Increased transparency */
-    --primary-bg-color-scrolled: rgba(10, 32, 92, 0.85);
-    --text-color: #ffffff;
-    --accent-color: #17a2b8;
-    --gradient-primary: linear-gradient(135deg, rgba(110, 142, 251, 0.6), rgba(167, 119, 227, 0.6));
-    --gradient-hover: linear-gradient(135deg, rgba(167, 119, 227, 0.8), rgba(110, 142, 251, 0.8));
+const GlassNavbar = styled(Navbar)`
+  background: rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(25px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(25px) saturate(180%) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1) !important;
+  padding: 15px 0;
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 1000;
 
-    /* Transition & Animation */
-    --transition-default: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-    --transition-ease: all 0.4s ease-in-out;
-
-    /* Glass Effect */
-    --blur-strength: blur(50px); /* Increased blur for a stronger frosted effect */
-    --border-color: rgba(255, 255, 255, 0.6); /* Softer frosted glass border */
-}
-
-/* Navbar Styling with Enhanced Glass Effect */
-.navbar.navbar {
-    background: var(--primary-bg-color);
-    backdrop-filter: var(--blur-strength);
-    -webkit-backdrop-filter: var(--blur-strength);
-    padding: 14px 30px;
-    width: 100%;
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 1000;
-    border-bottom: 1px solid var(--border-color);
-    border-radius: 12px;
-    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.57); /* More depth */
-    transition: var(--transition-default);
-}
-
-/* Navbar shrink effect when scrolling */
-.navbar.navbar.scrolled {
-    padding: 10px 25px;
-    background: var(--primary-bg-color-scrolled);
-    backdrop-filter: blur(40px); /* Even stronger blur when scrolling */
-}
-
-/* Navbar brand styling */
-.navbar-brand {
-    font-size: 2rem;
-    font-weight: bold;
-    color: var(--text-color);
-    letter-spacing: 1px;
-    position: relative;
-    transition: var(--transition-ease);
-}
-
-.navbar-brand:hover {
-    text-shadow: 0 0 25px rgba(255, 255, 255, 0.9);
-    transform: scale(1.05);
-}
-
-.navbar-brand::after {
-    content: '';
-    position: absolute;
-    bottom: -4px;
-    left: 0;
-    width: 50%;
-    height: 2px;
-    background: linear-gradient(90deg, #6e8efb, transparent);
-    transition: width 0.4s ease-in-out;
-}
-
-.navbar-brand:hover::after {
-    width: 100%;
-}
-
-/* Navbar links */
-.navbar-nav .nav-link {
-    color: #ffffff !important;
-    font-size: 1.2rem;
-    font-weight: 600;
-    margin-right: 20px;
-    transition: var(--transition-ease);
-    position: relative;
+  &.scrolled {
     padding: 8px 0;
-}
+    background: rgba(8, 15, 40, 0.85) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+  }
+`;
 
-.navbar-nav .nav-link:hover {
-    color: var(--accent-color) !important;
-    transform: translateY(-3px);
-}
+const Brand = styled(Navbar.Brand)`
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: 1.8rem;
+  background: linear-gradient(90deg, #fff 0%, #a5f8ff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  position: relative;
+  padding-left: 1rem;
+  transition: all 0.4s ease;
 
-.navbar-nav .nav-link::after {
+  &:hover {
+    transform: translateY(-2px);
+    text-shadow: 0 5px 15px rgba(165, 248, 255, 0.4);
+  }
+
+  &::before {
     content: '';
     position: absolute;
-    width: 0;
-    height: 2px;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 60%;
+    width: 4px;
+    background: linear-gradient(to bottom, #00d2ff, #3a7bd5);
+    border-radius: 4px;
+  }
+`;
+
+const NavLink = styled(Nav.Link)`
+  color: rgba(255, 255, 255, 0.9) !important;
+  font-weight: 500;
+  font-size: 1.1rem;
+  margin: 0 0.5rem;
+  padding: 0.5rem 1rem !important;
+  position: relative;
+  transition: all 0.3s ease;
+  border-radius: 8px;
+
+  &:hover {
+    color: #fff !important;
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
     bottom: 0;
     left: 50%;
-    background-color: var(--accent-color);
-    transition: width 0.4s ease-in-out;
     transform: translateX(-50%);
-}
+    width: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #00d2ff, #3a7bd5);
+    transition: width 0.3s ease;
+  }
 
-.navbar-nav .nav-link:hover::after {
+  &:hover::after {
+    width: 70%;
+  }
+`;
+
+const SearchForm = styled(Form)`
+  position: relative;
+  margin: 0 1rem;
+
+  @media (max-width: 992px) {
+    margin: 1rem 0;
     width: 100%;
-}
+  }
+`;
 
-/* Dropdown menu styling */
-.navbar-nav .dropdown-menu {
-    background: rgba(168, 177, 202, 0.35);
-    backdrop-filter: blur(25px); /* Stronger blur inside dropdown */
-    -webkit-backdrop-filter: blur(25px);
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.3);
-    padding: 10px;
-    margin-top: 6px;
-    border-radius: 10px;
-    transition: var(--transition-ease);
-}
+const SearchInput = styled(Form.Control)`
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: none !important;
+  border-radius: 50px !important;
+  color: white !important;
+  padding: 0.75rem 1.5rem !important;
+  width: 280px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 
-/* Navbar animation */
-@keyframes glassEffect {
+  &:focus {
+    background: rgba(255, 255, 255, 0.2) !important;
+    box-shadow: 0 4px 30px rgba(0, 210, 255, 0.3) !important;
+    outline: none !important;
+  }
+
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.6) !important;
+  }
+
+  @media (max-width: 992px) {
+    width: 100%;
+  }
+`;
+
+const SearchButton = styled(Button)`
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent !important;
+  border: none !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+  padding: 0.5rem 1rem !important;
+  transition: all 0.3s ease;
+
+  &:hover {
+    color: #00d2ff !important;
+    transform: translateY(-50%) scale(1.1);
+  }
+
+  &:focus {
+    box-shadow: none !important;
+  }
+`;
+
+const DropdownMenu = styled(NavDropdown)`
+  .dropdown-toggle {
+    color: rgba(255, 255, 255, 0.9) !important;
+    &::after {
+      transition: all 0.3s ease;
+    }
+  }
+
+  .dropdown-menu {
+    background: rgba(20, 30, 60, 0.9) !important;
+    backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 12px !important;
+    padding: 0.5rem 0;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    transform-origin: top center;
+    animation: fadeIn 0.3s ease-out forwards;
+    opacity: 0;
+    transform: translateY(10px);
+
+    .dropdown-item {
+      color: rgba(255, 255, 255, 0.8) !important;
+      padding: 0.5rem 1.5rem;
+      transition: all 0.2s ease;
+      position: relative;
+      overflow: hidden;
+
+      &:hover {
+        color: #fff !important;
+        background: rgba(0, 210, 255, 0.1) !important;
+        padding-left: 2rem;
+      }
+
+      &::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 3px;
+        background: linear-gradient(to bottom, #00d2ff, #3a7bd5);
+        transform: translateX(-10px);
+        transition: transform 0.3s ease;
+      }
+
+      &:hover::before {
+        transform: translateX(0);
+      }
+    }
+
+    .dropdown-divider {
+      border-color: rgba(255, 255, 255, 0.1) !important;
+      margin: 0.5rem 0;
+    }
+  }
+
+  &:hover .dropdown-menu {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  @keyframes fadeIn {
     from {
-        backdrop-filter: blur(20px);
+      opacity: 0;
+      transform: translateY(10px);
     }
     to {
-        backdrop-filter: blur(35px);
+      opacity: 1;
+      transform: translateY(0);
     }
-}
-.navbar.navbar {
-    animation: glassEffect 0.8s ease-in-out;
-}
+  }
+`;
 
-button {
-    align-items: center;
-    background-image: linear-gradient(144deg, #af40ff, #5b42f3 50%, #00ddeb);
-    border: 0;
-    border-radius: 8px;
-    box-shadow: rgba(151, 65, 252, 0.2) 0 15px 30px -5px;
-    box-sizing: border-box;
-    color: #ffffff;
-    display: flex;
-    font-size: 18px;
-    justify-content: center;
-    line-height: 1em;
-    max-width: 100%;
-    min-width: 140px;
-    padding: 3px;
-    text-decoration: none;
-    user-select: none;
-    -webkit-user-select: none;
-    touch-action: manipulation;
-    white-space: nowrap;
-    cursor: pointer;
-    transition: all 0.3s;
-}
+const ProfileButton = styled.div`
+  position: relative;
+  margin-left: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
 
-button:active,
-button:hover {
-    outline: 0;
-}
-
-button span {
-    background-color: rgb(5, 6, 45);
-    padding: 16px 24px;
-    border-radius: 6px;
-    width: 100%;
-    height: 100%;
-    transition: 300ms;
-}
-
-button:hover span {
-    background: none;
-}
-
-button:active {
-    transform: scale(0.9);
-}
-
-/* Profile Button Styling */
-.profile-btn {
-    position: absolute;
-    top: 20px; /* Adjust top distance */
-    right: -50px; /* Adjust right distance */
-    background: none;
-    border: none;
-    padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: var(--transition-ease);
-}
-
-.profile-btn svg {
-    color: var(--text-color);
+  .profile-icon {
     width: 40px;
     height: 40px;
-    transition: var(--transition-ease);
-}
+    border-radius: 50%;
+    background: linear-gradient(135deg, #00d2ff, #3a7bd5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.2rem;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 210, 255, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+  }
 
-.profile-btn:hover svg {
-    color: var(--accent-color);
-    transform: scale(1.1);
-    filter: drop-shadow(0 0 5px rgba(23, 162, 184, 0.5));
-}
+  &:hover .profile-icon {
+    transform: scale(1.1) rotate(10deg);
+    box-shadow: 0 6px 20px rgba(0, 210, 255, 0.4);
+  }
 
-.profile-btn:active svg {
-    transform: scale(0.95);
-}
+  .notification-badge {
+    position: absolute;
+    top: -3px;
+    right: -3px;
+    width: 12px;
+    height: 12px;
+    background: #ff4757;
+    border-radius: 50%;
+    border: 2px solid rgba(8, 15, 40, 0.9);
+    animation: pulse 1.5s infinite;
+  }
 
-/* Accessibility and Focus States */
-.profile-btn:focus {
-    outline: 2px solid var(--accent-color);
-    outline-offset: 2px;
-}
+  @keyframes pulse {
+    0% {
+      transform: scale(0.95);
+      box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.7);
+    }
+    70% {
+      transform: scale(1.1);
+      box-shadow: 0 0 0 8px rgba(255, 71, 87, 0);
+    }
+    100% {
+      transform: scale(0.95);
+      box-shadow: 0 0 0 0 rgba(255, 71, 87, 0);
+    }
+  }
 `;
 
 function Home() {
   const navigate = useNavigate();
+  const [scrolled, setScrolled] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const isScrolled = window.scrollY > 20;
+      if (isScrolled !== scrolled) {
+        setScrolled(isScrolled);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [scrolled]);
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
+    }
+  };
 
   return (
-    <StyledWrapper>
-      <Navbar expand="lg" className="navbar">
-        <Container fluid>
-          <Navbar.Brand href="#" className="navbar-brand">
-            Dedicated Economic Center
-          </Navbar.Brand>
-          <Navbar.Toggle aria-controls="navbarScroll" />
-          <Navbar.Collapse id="navbarScroll">
-            <Nav className="me-auto my-2 my-lg-0 navbar-nav" navbarScroll>
-            <Nav.Link onClick={() => navigate("/home")}>Home</Nav.Link>
-            <NavDropdown.Item onClick={() => navigate("/location")}>Services</NavDropdown.Item>
-              <NavDropdown title="Category" id="navbarScrollingDropdown">
-              <NavDropdown.Item onClick={() => navigate("/farmer")}>Farmer</NavDropdown.Item>
-              <NavDropdown.Item onClick={() => navigate("/product")}>Product</NavDropdown.Item>
-                <NavDropdown.Divider />
-              </NavDropdown>
-            </Nav>
-            <Form className="d-flex me-2">
-              <Form.Control
-                type="search"
-                placeholder="Search"
-                className="me-2"
-                aria-label="Search"
-              />
-              <Button className="search-btn">Search</Button>
-            </Form>
-            <Nav className="profile-nav">
-            <Button className="profile-btn" onClick={() => navigate("/profile")} aria-label="User Profile">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="40"
-                  height="24"
-                  fill="currentColor"
-                  className="bi bi-person-circle"
-                  viewBox="0 0 16 16"
-                >
-                  <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" />
-                  <path
-                    fillRule="evenodd"
-                    d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"
-                  />
-                </svg>
-              </Button>
-            </Nav>
-          </Navbar.Collapse>
-        </Container>
-      </Navbar>
-    </StyledWrapper>
+    <GlassNavbar expand="lg" className={scrolled ? 'scrolled' : ''}>
+      <Container fluid>
+        <Brand href="#" onClick={() => navigate("/home")}>
+          Dedicated Economic Center
+        </Brand>
+        <Navbar.Toggle aria-controls="navbarScroll" className="text-white" />
+        <Navbar.Collapse id="navbarScroll">
+          <Nav className="me-auto my-2 my-lg-0">
+            <NavLink onClick={() => navigate("/home")}>Home</NavLink>
+            <NavLink onClick={() => navigate("/location")}>Location</NavLink>
+            <DropdownMenu title="Categories" id="navbarScrollingDropdown">
+              <NavDropdown.Item onClick={() => navigate("/farmer")}>Farmers</NavDropdown.Item>
+              <NavDropdown.Item onClick={() => navigate("/product")}>Products</NavDropdown.Item>
+              <NavDropdown.Divider />
+              <NavDropdown.Item onClick={() => navigate("/more-categories")}>
+                More Categories
+              </NavDropdown.Item>
+            </DropdownMenu>
+            
+          </Nav>
+          
+          <SearchForm className="d-flex" onSubmit={handleSearch}>
+            <SearchInput
+              type="search"
+              placeholder="Search products, farmers..."
+              aria-label="Search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <SearchButton type="submit">
+              <i className="bi bi-search"></i>
+            </SearchButton>
+          </SearchForm>
+          
+          <ProfileButton onClick={() => navigate("/profile")}>
+            <div className="profile-icon">
+              <i className="bi bi-person-fill"></i>
+            </div>
+            <div className="notification-badge"></div>
+          </ProfileButton>
+        </Navbar.Collapse>
+      </Container>
+    </GlassNavbar>
   );
 }
 

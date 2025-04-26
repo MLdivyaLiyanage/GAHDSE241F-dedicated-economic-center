@@ -251,7 +251,7 @@ function App() {
 
   return (
     <>
-      {/* Inline CSS */}
+      {/* Inline CSS - Optimized for full screen */}
       <style>
         {`
 :root {
@@ -260,8 +260,11 @@ function App() {
   --primary-hover: #1d4ed8;
   --accent-color: #dc2626;       /* Red from the flag */
   --accent-hover: #b91c1c;
-  --light-bg: #f8fafc;
-  --dark-bg: #1e293b;
+  
+  /* Two main background colors */
+  --bg-primary: #f8fafc;         /* Main background */
+  --bg-secondary: #e2e8f0;       /* Secondary background for cards, boxes, etc. */
+  
   --text-color: #334155;
   --light-text: #f1f5f9;
   --success: #10b981;
@@ -279,34 +282,46 @@ function App() {
   padding: 0;
 }
 
+html, body {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
 body {
   font-family: 'Inter', 'Roboto', 'Segoe UI', system-ui, sans-serif;
   line-height: 1.6;
   color: var(--text-color);
-  background-color: var(--light-bg);
+  background-color: var(--bg-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 .app-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem;
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background-color: var(--bg-primary);
 }
 
 /* Sri Lanka-styled header with decorative elements */
 header {
   text-align: center;
-  margin-bottom: 2.5rem;
+  padding: 1.5rem 2rem;
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
+  background-color: var(--bg-primary);
+  border-bottom: 1px solid #e2e8f0;
+  z-index: 10;
 }
 
 header h1 {
   color: var(--primary-color);
-  font-size: 2.75rem;
+  font-size: 2.5rem;
   font-weight: 700;
   letter-spacing: -0.025em;
   position: relative;
@@ -369,19 +384,58 @@ header:hover h1::after {
   flex: 1;
 }
 
+main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+.dashboard-layout {
+  display: flex;
+  height: 100%;
+  overflow: hidden;
+}
+
+.sidebar {
+  width: 30%;
+  max-width: 450px;
+  min-width: 300px;
+  padding: 1.5rem;
+  overflow-y: auto;
+  border-right: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  background-color: var(--bg-primary);
+}
+
+.map-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
 /* Enhanced search section with better spacing and visual feedback */
 .search-section {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
+  flex-direction: column;
   gap: 1rem;
+  padding: 1rem;
+  border-bottom: 1px solid #e2e8f0;
+  background-color: var(--bg-primary);
+}
+
+.search-row {
+  display: flex;
+  gap: 0.5rem;
 }
 
 form {
   display: flex;
   flex: 1;
-  max-width: 700px;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.05));
 }
 
@@ -437,7 +491,6 @@ button:disabled {
 }
 
 .clear-btn {
-  margin-left: 0.75rem;
   background-color: #64748b;
   border-radius: 0.5rem;
   padding: 0.75rem 1rem;
@@ -449,23 +502,15 @@ button:disabled {
 
 /* Enhanced map container with depth and visual interest */
 .map-container {
-  height: 600px;
+  flex: 1;
   position: relative;
-  border-radius: 1rem;
   overflow: hidden;
-  margin-bottom: 2rem;
-  box-shadow: var(--card-shadow);
-  border: 1px solid #e2e8f0;
-  transition: box-shadow var(--transition-standard);
+  background-color: var(--bg-secondary);
 }
 
 #google-map {
   width: 100%;
   height: 100%;
-}
-
-.map-container:hover {
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
 }
 
 .map-info {
@@ -533,6 +578,7 @@ button:disabled {
   text-align: center;
   font-size: 1.2rem;
   gap: 1rem;
+  background-color: var(--bg-secondary);
 }
 
 .error-message button {
@@ -541,78 +587,47 @@ button:disabled {
 }
 
 /* Enhanced location list with hover effects */
-.location-list {
-  background-color: white;
-  border-radius: 1rem;
-  padding: 1.5rem;
-  box-shadow: var(--card-shadow);
-  border: 1px solid #e2e8f0;
+.content-section {
+  padding: 1rem;
+  background-color: var(--bg-secondary);
+  border-radius: 0.75rem;
+  margin-bottom: 1rem;
 }
 
-.location-list h3 {
-  margin-bottom: 1.25rem;
+.content-section h3 {
+  margin-bottom: 1rem;
   color: var(--primary-color);
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 600;
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
-.location-list ul {
-  list-style: none;
-}
-
-.location-list li {
-  display: flex;
-  justify-content: space-between;
-  padding: 0.875rem 0.75rem;
-  border-bottom: 1px solid #e2e8f0;
-  transition: background-color var(--transition-fast);
-  border-radius: 0.5rem;
-  margin-bottom: 0.25rem;
-}
-
-.location-list li:hover {
-  background-color: #f1f5f9;
-}
-
-.location-list li:last-child {
-  border-bottom: none;
-  margin-bottom: 0;
-}
-
-.location-name {
-  font-weight: 500;
-}
-
 .country-info {
-  background-color: white;
-  border-radius: 1rem;
-  padding: 1.5rem;
-  box-shadow: var(--card-shadow);
-  border: 1px solid #e2e8f0;
-  margin-bottom: 2rem;
+  background-color: var(--bg-secondary);
+  border-radius: 0.75rem;
+  padding: 1.25rem;
 }
 
 .country-info h3 {
   margin-bottom: 1rem;
   color: var(--primary-color);
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 600;
 }
 
 .facts-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: 1fr;
+  gap: 1rem;
 }
 
 .fact-card {
   border: 1px solid #e2e8f0;
   border-radius: 0.75rem;
   padding: 1rem;
-  background-color: #f8fafc;
+  background-color: var(--bg-primary);
   transition: transform var(--transition-standard);
 }
 
@@ -627,16 +642,59 @@ button:disabled {
   margin-bottom: 0.25rem;
 }
 
+.location-list {
+  background-color: var(--bg-secondary);
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+}
+
+.location-list h3 {
+  margin-bottom: 1.25rem;
+  color: var(--primary-color);
+  font-size: 1.25rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.location-list ul {
+  list-style: none;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.location-list li {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.875rem 0.75rem;
+  border-bottom: 1px solid #e2e8f0;
+  transition: background-color var(--transition-fast);
+  border-radius: 0.5rem;
+  margin-bottom: 0.25rem;
+  background-color: var(--bg-primary);
+}
+
+.location-list li:hover {
+  background-color: var(--bg-secondary);
+}
+
+.location-list li:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.location-name {
+  font-weight: 500;
+}
+
 footer {
-  margin-top: 2.5rem;
   text-align: center;
   color: #64748b;
-  padding: 1.5rem 0;
+  padding: 0.75rem;
   border-top: 1px solid #e2e8f0;
   font-size: 0.875rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  background-color: var(--bg-primary);
 }
 
 .footer-note {
@@ -644,8 +702,29 @@ footer {
 }
 
 /* Advanced responsive design */
+@media (max-width: 1200px) {
+  .dashboard-layout {
+    flex-direction: column;
+  }
+  
+  .sidebar {
+    width: 100%;
+    max-width: none;
+    border-right: none;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 1rem;
+    flex: 0 0 auto;
+    max-height: 40vh;
+    overflow-y: auto;
+  }
+  
+  .map-column {
+    flex: 1;
+  }
+}
+
 @media (max-width: 768px) {
-  .app-container {
+  header {
     padding: 1rem;
   }
   
@@ -653,56 +732,39 @@ footer {
     font-size: 2rem;
   }
   
-  .search-section {
+  .search-row {
     flex-direction: column;
-    align-items: stretch;
   }
   
   form {
-    max-width: 100%;
-    margin-bottom: 0.75rem;
-  }
-  
-  .clear-btn {
-    margin-left: 0;
     width: 100%;
   }
   
-  .map-container {
-    height: 400px;
-    border-radius: 0.75rem;
+  input, button {
+    border-radius: 0.5rem;
   }
   
-  .location-list {
-    padding: 1.25rem;
+  .clear-btn {
+    width: 100%;
   }
   
-  .location-list li {
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  
-  .facts-grid {
-    grid-template-columns: 1fr;
+  .sidebar {
+    max-height: 50vh;
   }
 }
 
-/* Dark mode support */
+/* Dark mode support with only two background colors */
 @media (prefers-color-scheme: dark) {
   :root {
-    --light-bg: #0f172a;
-    --dark-bg: #020617;
+    /* Two main background colors for dark mode */
+    --bg-primary: #0f172a;   /* Main dark background */
+    --bg-secondary: #1e293b; /* Secondary darker background */
     --text-color: #e2e8f0;
     --light-text: #f8fafc;
   }
   
-  body {
-    background-color: var(--light-bg);
-    color: var(--text-color);
-  }
-  
   input {
-    background-color: #1e293b;
+    background-color: var(--bg-primary);
     border-color: #334155;
     color: #f1f5f9;
   }
@@ -711,22 +773,8 @@ footer {
     color: #64748b;
   }
   
-  .country-info, .location-list {
-    background-color: #1e293b;
-    border-color: #334155;
-  }
-  
-  .fact-card {
-    background-color: #0f172a;
-    border-color: #334155;
-  }
-  
   .location-list li {
     border-color: #334155;
-  }
-  
-  .location-list li:hover, .fact-card:hover {
-    background-color: #0f172a;
   }
   
   footer {
@@ -737,7 +785,7 @@ footer {
         `}
       </style>
     
-      {/* App Content */}
+      {/* App Content - Restructured for full screen */}
       <div className="app-container">
         <header>
           <h1>Dedicated Economic Centre Sri Lanka</h1>
@@ -751,89 +799,96 @@ footer {
         </header>
         
         <main>
-          <div className="country-info">
-            <h3>About Sri Lanka</h3>
-            <div className="facts-grid">
-              <div className="fact-card">
-                <div className="fact-title">Capital</div>
-                <div>Colombo (commercial)<br/>Sri Jayawardenepura Kotte (administrative)</div>
-              </div>
-              <div className="fact-card">
-                <div className="fact-title">Languages</div>
-                <div>Sinhala, Tamil, English</div>
-              </div>
-              <div className="fact-card">
-                <div className="fact-title">Population</div>
-                <div>Approximately 22 million</div>
-              </div>
-              <div className="fact-card">
-                <div className="fact-title">Famous For</div>
-                <div>Ceylon Tea, Cinnamon, Ancient Ruins, Beaches</div>
-              </div>
-            </div>
-          </div>
-        
           <div className="search-section">
-            <form onSubmit={handleSearch}>
-              <input
-                type="text"
-                placeholder="Search for a location in Sri Lanka..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                disabled={isLoading || !map}
-              />
-              <button type="submit" disabled={isLoading || !searchQuery.trim() || !map}>
-                {isLoading ? 'Searching...' : 'Search'}
-              </button>
-            </form>
-            {markers.length > 0 && (
-              <button className="clear-btn" onClick={clearMarkers}>
-                Reset Map View
-              </button>
-            )}
-          </div>
-
-          <div className="map-container">
-            {isLoading && (
-              <div className="loading-overlay">
-                <div className="loading-spinner"></div>
-                <div>Loading map of Sri Lanka...</div>
-              </div>
-            )}
-            
-            {errorMsg ? (
-              <div className="error-message">
-                <div>{errorMsg}</div>
-                <button onClick={() => window.location.reload()}>Try Again</button>
-              </div>
-            ) : (
-              <div id="google-map"></div>
-            )}
-            
-            <div className="map-info">
-              <div>Sri Lanka - Island Nation</div>
-              <div>Total locations: {markers.length}</div>
+            <div className="search-row">
+              <form onSubmit={handleSearch}>
+                <input
+                  type="text"
+                  placeholder="Search for a location in Sri Lanka..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  disabled={isLoading || !map}
+                />
+                <button type="submit" disabled={isLoading || !searchQuery.trim() || !map}>
+                  {isLoading ? 'Searching...' : 'Search'}
+                </button>
+              </form>
+              {markers.length > 0 && (
+                <button className="clear-btn" onClick={clearMarkers}>
+                  Reset Map
+                </button>
+              )}
             </div>
           </div>
 
-          {markers.length > 0 && (
-            <div className="location-list">
-              <h3>Marked Locations</h3>
-              <ul>
-                {markers.map((marker) => (
-                  <li key={marker.id}>
-                    <strong className="location-name">{marker.name}</strong>
-                    <span>Lat: {marker.lat.toFixed(4)}, Lng: {marker.lng.toFixed(4)}</span>
-                  </li>
-                ))}
-              </ul>
+          <div className="dashboard-layout">
+            <div className="sidebar">
+              <div className="country-info">
+                <h3>About Sri Lanka</h3>
+                <div className="facts-grid">
+                  <div className="fact-card">
+                    <div className="fact-title">Capital</div>
+                    <div>Colombo (commercial)<br/>Sri Jayawardenepura Kotte (administrative)</div>
+                  </div>
+                  <div className="fact-card">
+                    <div className="fact-title">Languages</div>
+                    <div>Sinhala, Tamil, English</div>
+                  </div>
+                  <div className="fact-card">
+                    <div className="fact-title">Population</div>
+                    <div>Approximately 22 million</div>
+                  </div>
+                  <div className="fact-card">
+                    <div className="fact-title">Famous For</div>
+                    <div>Ceylon Tea, Cinnamon, Ancient Ruins, Beaches</div>
+                  </div>
+                </div>
+              </div>
+
+              {markers.length > 0 && (
+                <div className="location-list">
+                  <h3>Marked Locations</h3>
+                  <ul>
+                    {markers.map((marker) => (
+                      <li key={marker.id}>
+                        <strong className="location-name">{marker.name}</strong>
+                        <span>Lat: {marker.lat.toFixed(4)}, Lng: {marker.lng.toFixed(4)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
-          )}
+
+            <div className="map-column">
+              <div className="map-container">
+                {isLoading && (
+                  <div className="loading-overlay">
+                    <div className="loading-spinner"></div>
+                    <div>Loading map of Sri Lanka...</div>
+                  </div>
+                )}
+                
+                {errorMsg ? (
+                  <div className="error-message">
+                    <div>{errorMsg}</div>
+                    <button onClick={() => window.location.reload()}>Try Again</button>
+                  </div>
+                ) : (
+                  <div id="google-map"></div>
+                )}
+                
+                <div className="map-info">
+                  <div>Sri Lanka Explorer</div>
+                  <div>Total locations: {markers.length}</div>
+                </div>
+              </div>
+            </div>
+          </div>
         </main>
 
         <footer>
           <p>Sri Lanka Explorer © 2025</p>
-          <p className="footer-note">Replace &lsquo;YOUR_API_KEY&apos; with a valid Google Maps API key</p>
         </footer>
       </div>
     </>

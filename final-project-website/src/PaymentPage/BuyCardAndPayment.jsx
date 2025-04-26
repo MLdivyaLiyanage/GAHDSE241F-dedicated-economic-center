@@ -122,7 +122,6 @@ function App() {
 
   const API_BASE_URL = 'http://localhost:3001/api';
 
-  // Add this function to handle feedback button click
   const handleFeedbackClick = () => {
     navigate(`/feedback/${product.id}`);
   };
@@ -277,7 +276,7 @@ function App() {
   // Display loading state
   if (loading) {
     return (
-      <Container className="text-center my-5">
+      <Container className="text-center my-5 py-5" style={{ minHeight: '100vh' }}>
         <h2>Loading product data...</h2>
       </Container>
     );
@@ -288,17 +287,17 @@ function App() {
   }
 
   return (
-    <main>
-      <Container className="product-container">
+    <main style={{ minHeight: '100vh' }}>
+      <Container fluid className="px-5 py-4 product-container">
         {!showPayment ? (
           <Row className="product-content">
-            <Col lg={6}>
-              <div className="product-gallery">
-                <div className="main-image-container">
+            <Col lg={6} className="mb-4">
+              <div className="product-gallery h-100">
+                <div className="main-image-container" style={{ height: '500px' }}>
                   <img
                     src={images[activeImage]}
                     alt={product.name}
-                    className="main-image"
+                    className="main-image h-100 w-100 object-fit-cover"
                   />
                   <Button 
                     className="nav-button position-absolute top-50 start-0 translate-middle-y ms-2"
@@ -315,7 +314,7 @@ function App() {
                     <FaChevronRight />
                   </Button>
                 </div>
-                <div className="thumbnails-container">
+                <div className="thumbnails-container mt-3">
                   {images.map((img, idx) => (
                     <div 
                       key={idx} 
@@ -333,9 +332,9 @@ function App() {
               </div>
             </Col>
             
-            <Col lg={6}>
-              <div className="product-details">
-                <div className="product-header">
+            <Col lg={6} className="mb-4">
+              <div className="product-details h-100 d-flex flex-column">
+                <div className="product-header mb-4">
                   <h1 className="product-title">{product.name}</h1>
                   <div className="product-rating">
                     <div className="stars">
@@ -348,58 +347,59 @@ function App() {
                   </div>
                 </div>
                 
-                <div className="product-price-container">
+                <div className="product-price-container mb-4">
                   <h3 className="product-price">Rs.{product.price.toFixed(2)}</h3>
                   <span className={`stock-status ${product.inStock ? 'in-stock' : 'out-of-stock'}`}>
                     {product.inStock ? 'In Stock' : 'Out of Stock'}
                   </span>
                 </div>
                 
-                <p className="product-description">
+                <p className="product-description mb-4">
                   {product.description}
                 </p>
                 
-                <div className="quantity-container">
+                <div className="quantity-container mb-4">
                   <h5 className="section-title">Quantity</h5>
-                  <InputGroup className="quantity-input-group">
+                  <InputGroup className="quantity-input-group" style={{ width: '150px' }}>
                     <Button className="quantity-button" onClick={handleDecrement} disabled={quantity <= 1}>-</Button>
                     <Form.Control 
                       type="text" 
                       value={quantity} 
                       readOnly 
-                      className="quantity-input"
+                      className="quantity-input text-center"
                     />
                     <Button className="quantity-button" onClick={handleIncrement}>+</Button>
                   </InputGroup>
                 </div>
                 
-                <div className="product-actions">
-                  <Button className="buy-button" onClick={handleBuyNow}>
-                    Buy Now
-                  </Button>
-                  <Button className="cart-button">
-                    Add to Cart
-                  </Button>
-                  {/* Added Feedback button here */}
-                  <Button 
-                    className="feedback-button"
-                    onClick={handleFeedbackClick}
-                  >
-                    Feedback
-                  </Button>
-                  <Button 
-                    className={`favorite-button ${isFavorite ? 'active' : ''}`} 
-                    onClick={toggleFavorite}
-                    aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
-                  >
-                    <FaHeart />
-                  </Button>
-                  <Button className="share-button" aria-label="Share product">
-                    <FaShare />
-                  </Button>
+                <div className="product-actions mt-auto">
+                  <div className="d-flex flex-wrap gap-3">
+                    <Button className="buy-button flex-grow-1" onClick={handleBuyNow}>
+                      Buy Now
+                    </Button>
+                    <Button className="cart-button flex-grow-1">
+                      Add to Cart
+                    </Button>
+                    <Button 
+                      className="feedback-button flex-grow-1"
+                      onClick={handleFeedbackClick}
+                    >
+                      Feedback
+                    </Button>
+                    <Button 
+                      className={`favorite-button ${isFavorite ? 'active' : ''}`} 
+                      onClick={toggleFavorite}
+                      aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                    >
+                      <FaHeart />
+                    </Button>
+                    <Button className="share-button" aria-label="Share product">
+                      <FaShare />
+                    </Button>
+                  </div>
                 </div>
                 
-                <div className="product-meta">
+                <div className="product-meta mt-4">
                   <div className="meta-item">
                     <span className="meta-label">Category:</span>
                     <span className="meta-value">Fruits, Organic</span>
@@ -414,17 +414,17 @@ function App() {
           </Row>
         ) : (
           <Row className="payment-content">
-            <Col lg={8}>
+            <Col lg={8} className="mb-4">
               <div className="payment-section">
                 <Button className="back-button mb-4" onClick={handleBackToProduct}>
                   <FaChevronLeft /> Back to Product
                 </Button>
-                <h2>Checkout</h2>
+                <h2 className="mb-4">Checkout</h2>
                 
                 <Form onSubmit={handleSubmitOrder}>
                   <Card className="mb-4">
-                    <Card.Header>
-                      <h4>Shipping Information</h4>
+                    <Card.Header className="py-3">
+                      <h4 className="mb-0">Shipping Information</h4>
                     </Card.Header>
                     <Card.Body>
                       <Row>
@@ -437,6 +437,7 @@ function App() {
                               value={formData.name}
                               onChange={handleInputChange}
                               required
+                              className="py-2"
                             />
                           </Form.Group>
                         </Col>
@@ -449,6 +450,7 @@ function App() {
                               value={formData.email}
                               onChange={handleInputChange}
                               required
+                              className="py-2"
                             />
                           </Form.Group>
                         </Col>
@@ -461,6 +463,7 @@ function App() {
                           value={formData.address}
                           onChange={handleInputChange}
                           required
+                          className="py-2"
                         />
                       </Form.Group>
                       <Row>
@@ -473,6 +476,7 @@ function App() {
                               value={formData.city}
                               onChange={handleInputChange}
                               required
+                              className="py-2"
                             />
                           </Form.Group>
                         </Col>
@@ -485,6 +489,7 @@ function App() {
                               value={formData.zipCode}
                               onChange={handleInputChange}
                               required
+                              className="py-2"
                             />
                           </Form.Group>
                         </Col>
@@ -493,8 +498,8 @@ function App() {
                   </Card>
                   
                   <Card className="mb-4">
-                    <Card.Header>
-                      <h4>Shipping Method</h4>
+                    <Card.Header className="py-3">
+                      <h4 className="mb-0">Shipping Method</h4>
                     </Card.Header>
                     <Card.Body>
                       <Form.Group>
@@ -507,7 +512,7 @@ function App() {
                             value={key}
                             checked={shippingMethod === key}
                             onChange={() => setShippingMethod(key)}
-                            className="mb-2"
+                            className="mb-2 py-2"
                             key={key}
                           />
                         ))}
@@ -516,11 +521,11 @@ function App() {
                   </Card>
                   
                   <Card className="mb-4">
-                    <Card.Header>
-                      <h4>Payment Method</h4>
+                    <Card.Header className="py-3">
+                      <h4 className="mb-0">Payment Method</h4>
                     </Card.Header>
                     <Card.Body>
-                      <div className="payment-methods mb-4">
+                      <div className="payment-methods mb-4 d-flex flex-wrap gap-2">
                         <Button 
                           className={`payment-method-btn ${paymentMethod === 'card' ? 'active' : ''}`}
                           onClick={() => setPaymentMethod('card')}
@@ -560,6 +565,7 @@ function App() {
                                   onChange={handleInputChange}
                                   placeholder="1234 5678 9012 3456"
                                   required
+                                  className="py-2"
                                 />
                               </Form.Group>
                             </Col>
@@ -575,6 +581,7 @@ function App() {
                                   onChange={handleInputChange}
                                   placeholder="MM/YY"
                                   required
+                                  className="py-2"
                                 />
                               </Form.Group>
                             </Col>
@@ -588,6 +595,7 @@ function App() {
                                   onChange={handleInputChange}
                                   placeholder="123"
                                   required
+                                  className="py-2"
                                 />
                               </Form.Group>
                             </Col>
@@ -597,47 +605,47 @@ function App() {
                     </Card.Body>
                   </Card>
                   
-                  <Button type="submit" className="place-order-btn">
+                  <Button type="submit" className="place-order-btn w-100 py-3">
                     Place Order
                   </Button>
                 </Form>
               </div>
             </Col>
             
-            <Col lg={4}>
-              <div className="order-summary">
+            <Col lg={4} className="mb-4">
+              <div className="order-summary sticky-top" style={{ top: '20px' }}>
                 <Card>
-                  <Card.Header>
-                    <h4>Order Summary</h4>
+                  <Card.Header className="py-3">
+                    <h4 className="mb-0">Order Summary</h4>
                   </Card.Header>
                   <Card.Body>
-                    <div className="summary-item">
+                    <div className="summary-item d-flex justify-content-between py-2">
                       <span>Product:</span>
                       <span>{product.name}</span>
                     </div>
-                    <div className="summary-item">
+                    <div className="summary-item d-flex justify-content-between py-2">
                       <span>Quantity:</span>
                       <span>{quantity}</span>
                     </div>
-                    <div className="summary-item">
+                    <div className="summary-item d-flex justify-content-between py-2">
                       <span>Price per unit:</span>
                       <span>Rs.{product.price.toFixed(2)}</span>
                     </div>
                     <hr />
-                    <div className="summary-item">
+                    <div className="summary-item d-flex justify-content-between py-2">
                       <span>Subtotal:</span>
                       <span>Rs.{calculateSubtotal().toFixed(2)}</span>
                     </div>
-                    <div className="summary-item">
+                    <div className="summary-item d-flex justify-content-between py-2">
                       <span>Shipping:</span>
                       <span>Rs.{calculateShipping().toFixed(2)}</span>
                     </div>
-                    <div className="summary-item">
+                    <div className="summary-item d-flex justify-content-between py-2">
                       <span>Tax (5%):</span>
                       <span>Rs.{calculateTax().toFixed(2)}</span>
                     </div>
                     <hr />
-                    <div className="summary-total">
+                    <div className="summary-total d-flex justify-content-between py-2 fw-bold">
                       <span>Total:</span>
                       <span>Rs.{calculateTotal().toFixed(2)}</span>
                     </div>
@@ -645,8 +653,8 @@ function App() {
                 </Card>
                 
                 <Card className="mt-4">
-                  <Card.Header>
-                    <h4>Need Help?</h4>
+                  <Card.Header className="py-3">
+                    <h4 className="mb-0">Need Help?</h4>
                   </Card.Header>
                   <Card.Body>
                     <Accordion>
