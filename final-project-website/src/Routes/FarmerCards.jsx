@@ -514,8 +514,7 @@ function FarmerCards() {
           images: ["/images/tomatoes.jpg"],
           price: 3.99,
           details: "Heirloom variety, pesticide-free",
-          category: "Vegetables",
-          available_quantity: 50
+          stock_quantity: 50
         },
         {
           id: 2,
@@ -523,8 +522,7 @@ function FarmerCards() {
           images: ["/images/basil.jpg"],
           price: 2.99,
           details: "Grown in greenhouse",
-          category: "Herbs",
-          available_quantity: 100
+          stock_quantity: 100
         }
       ]
     }
@@ -599,17 +597,48 @@ function FarmerCards() {
           <ModalContent onClick={(e) => e.stopPropagation()}>
             <CloseButton onClick={closeModal}>&times;</CloseButton>
             
-            <div className="modal-header">
-              <ProfileImage
-                src={selectedProfile.profile_image ? 
-                  `${API_BASE_URL.replace('/api', '')}${selectedProfile.profile_image}` : 
-                  "https://via.placeholder.com/100"}
-                alt={selectedProfile.username}
-                style={{ width: '120px', height: '120px' }}
-              />
-              <ProfileName>{selectedProfile.username}</ProfileName>
-              <p>{selectedProfile.about_me || 'No description provided'}</p>
+          <div className="modal-header" style={{ 
+            display: 'flex', 
+            flexDirection: 'row',
+            alignItems: 'flex-start',
+            padding: '20px',
+            borderBottom: '1px solid #eaeaea',
+            textAlign: 'left'
+          }}>
+            <ProfileImage
+              src={selectedProfile.profile_image ? 
+                `${API_BASE_URL.replace('/api', '')}${selectedProfile.profile_image}` : 
+                "https://via.placeholder.com/100"}
+              alt={selectedProfile.username}
+              style={{ 
+                width: '120px', 
+                height: '120px',
+                borderRadius: '50%',
+                objectFit: 'cover',
+                border: '3px solid #fff',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                marginRight: '20px'
+              }}
+            />
+            <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <ProfileName style={{
+                fontSize: '22px',
+                fontWeight: '600',
+                margin: '0 0 10px 0'
+              }}>
+                {selectedProfile.username}
+              </ProfileName>
+              <p style={{
+                fontSize: '15px',
+                lineHeight: '1.6',
+                color: '#555',
+                margin: '0',
+                maxWidth: '400px'
+              }}>
+                {selectedProfile.about_me || 'No description provided'}
+              </p>
             </div>
+          </div>
 
             <div className="modal-body">
               <ProfileDetail>
@@ -661,13 +690,10 @@ function FarmerCards() {
                           />
                         )}
                         <ProductName>{product.name}</ProductName>
-                        <ProductPrice>${product.price}</ProductPrice>
+                        <ProductPrice>Rs.{product.price}</ProductPrice>
                         <p>{product.details}</p>
                         <ProfileDetail>
-                          <strong>Category:</strong> {product.category}
-                        </ProfileDetail>
-                        <ProfileDetail>
-                          <strong>Stock:</strong> {product.available_quantity}
+                          <strong>Stock:</strong> {product.stock_quantity}
                         </ProfileDetail>
                       </ProductCard>
                     ))}
@@ -701,3 +727,5 @@ function CombinedFarmerPage() {
 }
 
 export default CombinedFarmerPage;
+
+

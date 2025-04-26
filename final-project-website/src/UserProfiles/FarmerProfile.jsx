@@ -5,7 +5,7 @@ import styled from "styled-components";
 import axios from "axios"; // Add axios for API calls
 
 // API base URL - change this to match your backend server address
-const API_BASE_URL = "http://localhost:5000/api";
+const API_BASE_URL = "http://localhost:5400/api";
 
 // Main container with gradient background
 const MainContainer = styled.div`
@@ -188,6 +188,7 @@ export default function UserProfileForm() {
   const [productName, setProductName] = useState('');
   const [productPrice, setProductPrice] = useState('');
   const [productDetails, setProductDetails] = useState('');
+  const [stockQuantity, setStockQuantity] = useState('1'); // Added stock quantity
   
   // UI state
   const [loading, setLoading] = useState(false);
@@ -205,7 +206,7 @@ export default function UserProfileForm() {
     setNotification({ show: true, type, message });
     setTimeout(() => {
       setNotification({ show: false, type: '', message: '' });
-    }, 5000);
+    }, 5400);
   };
 
   // Handle profile image selection
@@ -306,13 +307,22 @@ export default function UserProfileForm() {
       const productData = {
         userId,
         productId: currentProductId, // This will be null for new products
-        productName,
-        productPrice: productPrice || 0,
-        productDetails,
+        name: productName,
+        description: productDetails,
+        price: productPrice || 0,
+        stock_quantity: stockQuantity || 1,
         productImagePaths
       };
+
+      let response;
+      if (currentProductId) {
+      // If we have a product ID, use PUT to update
+      response = await axios.put(`${API_BASE_URL}/update-product/${currentProductId}`, productData);
+      } else {
+      // Otherwise use POST to create new
+      response = await axios.post(`${API_BASE_URL}/add-product`, productData);
+      }
       
-      const response = await axios.post(`${API_BASE_URL}/add-product`, productData);
       return response.data.productId;
     } catch (error) {
       console.error('Error saving product:', error);
@@ -337,15 +347,18 @@ export default function UserProfileForm() {
       const uploadedProfileImagePath = await uploadProfileImage();
       
       // 2. Save user profile
-      const newUserId = await saveUserProfile(uploadedProfileImagePath);
+      const activeUserId = await saveUserProfile(uploadedProfileImagePath);
       
       // 3. Upload product images
       const uploadedProductImagePaths = await uploadProductImages();
       
       // 4. Save product (if name is provided)
       if (productName) {
-        await saveProduct(userId, uploadedProductImagePaths);
-      } else if (newUserId) await saveProduct(newUserId, uploadedProductImagePaths);
+        // Use the correct ID (either existing or new)
+        const userIdToUse = userId || activeUserId;
+        await saveProduct(userIdToUse, uploadedProductImagePaths);
+      }
+      
       showNotification('success', isEditMode ? 'Profile updated successfully!' : 'Data saved successfully!');
       
       if (!isEditMode) {
@@ -353,6 +366,7 @@ export default function UserProfileForm() {
         setProductName('');
         setProductPrice('');
         setProductDetails('');
+        setStockQuantity('1');
         setProductImages([]);
         setProductImageFiles([]);
         setProductImagePaths([]);
@@ -430,7 +444,8 @@ export default function UserProfileForm() {
     setCurrentProductId(product.id);
     setProductName(product.name || '');
     setProductPrice(product.price || '');
-    setProductDetails(product.details || '');
+    setProductDetails(product.description || '');
+    setStockQuantity(product.stock_quantity || '1');
     
     // Load product images
     if (product.images && product.images.length > 0) {
@@ -469,6 +484,7 @@ export default function UserProfileForm() {
     setProductName('');
     setProductPrice('');
     setProductDetails('');
+    setStockQuantity('1');
     setProductImages([]);
     setProductImageFiles([]);
     setProductImagePaths([]);
@@ -488,6 +504,59 @@ export default function UserProfileForm() {
       loadProductData(product);
     }
   };
+
+  const handleDeleteProduct = async () => {
+      if (!currentProductId || !userId) {
+        showNotification('error', 'No product selected to delete');
+        return;
+      }
+      
+      if (!confirm('Are you sure you want to delete this product?')) {
+        return;
+      }
+      
+      setLoading(true);
+      
+      try {
+        await axios.delete(`${API_BASE_URL}/delete-product/${currentProductId}?userId=${userId}`);
+        
+        // Remove product from list and reset form
+        setUserProducts(userProducts.filter(p => p.id !== currentProductId));
+        
+        // Load another product if available, otherwise reset form
+        if (userProducts.length > 1) {
+          const newProductId = userProducts.find(p => p.id !== currentProductId)?.id;
+          if (newProductId) {
+            handleChangeProduct(newProductId);
+          } else {
+            setProductName('');
+            setProductPrice('');
+            setProductDetails('');
+            setStockQuantity('1');
+            setProductImages([]);
+            setProductImageFiles([]);
+            setProductImagePaths([]);
+            setCurrentProductId(null);
+          }
+        } else {
+          setProductName('');
+          setProductPrice('');
+          setProductDetails('');
+          setStockQuantity('1');
+          setProductImages([]);
+          setProductImageFiles([]);
+          setProductImagePaths([]);
+          setCurrentProductId(null);
+        }
+        
+        showNotification('success', 'Product deleted successfully');
+      } catch (error) {
+        console.error('Error deleting product:', error);
+        showNotification('error', error.response?.data?.error || 'Failed to delete product');
+      } finally {
+        setLoading(false);
+      }
+    };
 
   return (
     <MainContainer>
@@ -544,6 +613,15 @@ export default function UserProfileForm() {
                   </option>
                 ))}
               </select>
+              {currentProductId && (
+              <StyledButton 
+                type="button" 
+                onClick={handleDeleteProduct}
+                style={{ marginLeft: '10px', background: 'linear-gradient(45deg, #FF416C, #FF4B2B)' }}
+              >
+                Delete Product
+              </StyledButton>
+            )}
             </div>
           )}
         </div>
@@ -776,6 +854,17 @@ export default function UserProfileForm() {
                     placeholder="Enter Product Price"
                     value={productPrice}
                     onChange={(e) => setProductPrice(e.target.value)}
+                  />
+                </div>
+
+                <div className="form-field">
+                  <label className="field-label">Stock Quantity</label>
+                  <input
+                    type="number"
+                    className="field-input"
+                    placeholder="Enter Stock Quantity"
+                    value={stockQuantity}
+                    onChange={(e) => setStockQuantity(e.target.value)}
                   />
                 </div>
 
