@@ -63,13 +63,13 @@ app.get('/api/feedback', async (req, res) => {
   
   try {
     const [rows] = await pool.execute(
-      'SELECT * FROM feedback WHERE product_id = ? ORDER BY date DESC',
+      'SELECT * FROM productfeedback WHERE product_id = ? ORDER BY date DESC',
       [productId]
     );
     res.json(rows);
   } catch (error) {
-    console.error('Error fetching feedback:', error);
-    res.status(500).json({ message: 'Error fetching feedback', error: error.message });
+    console.error('Error fetching productfeedback:', error);
+    res.status(500).json({ message: 'Error fetching productfeedback', error: error.message });
   }
 });
 
@@ -84,19 +84,19 @@ app.post('/api/feedback', async (req, res) => {
   
   try {
     const [result] = await pool.execute(
-      'INSERT INTO feedback (product_id, name, rating, comment) VALUES (?, ?, ?, ?)',
+      'INSERT INTO productfeedback (product_id, name, rating, comment) VALUES (?, ?, ?, ?)',
       [productId, name, rating, comment]
     );
     
     const [newFeedback] = await pool.execute(
-      'SELECT * FROM feedback WHERE id = ?',
+      'SELECT * FROM productfeedback WHERE id = ?',
       [result.insertId]
     );
     
     res.status(201).json(newFeedback[0]);
   } catch (error) {
-    console.error('Error saving feedback:', error);
-    res.status(500).json({ message: 'Error saving feedback', error: error.message });
+    console.error('Error saving productfeedback:', error);
+    res.status(500).json({ message: 'Error saving productfeedback', error: error.message });
   }
 });
 
@@ -123,3 +123,14 @@ app.get('/api/products/:id', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+
+// CREATE TABLE productfeedback (
+//   id INT AUTO_INCREMENT PRIMARY KEY,
+//   product_id INT NOT NULL,
+//   name VARCHAR(100) NOT NULL,
+//   rating INT NOT NULL CHECK (rating BETWEEN 1 AND 5),
+//   comment TEXT NOT NULL,
+//   date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+//   FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+// );
