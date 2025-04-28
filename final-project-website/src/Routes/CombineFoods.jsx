@@ -1,4 +1,5 @@
-import  "react";
+import { useState } from "react";
+import PropTypes from 'prop-types';
 import "bootstrap/dist/css/bootstrap.min.css";
 import styled from 'styled-components';
 import { useNavigate } from "react-router-dom";
@@ -15,9 +16,203 @@ const AppWrapper = styled.div`
   padding: 20px 0;
 `;
 
+// Cart component
+const Cart = ({ cartItems, removeFromCart, clearCart }) => {
+  Cart.propTypes = {
+    cartItems: PropTypes.array.isRequired,
+    removeFromCart: PropTypes.func.isRequired,
+    clearCart: PropTypes.func.isRequired,
+  };
+  const [isOpen, setIsOpen] = useState(false);
+
+  const totalPrice = cartItems.reduce((sum, item) => sum + parseFloat(item.price.replace('$', '')), 0);
+
+  return (
+    <CartWrapper>
+      <div className="cart-icon" onClick={() => setIsOpen(!isOpen)}>
+        🛒
+        {cartItems.length > 0 && <span className="cart-count">{cartItems.length}</span>}
+      </div>
+      
+      {isOpen && (
+        <div className="cart-dropdown">
+          <div className="cart-header">
+            <h4>Your Cart</h4>
+            <button onClick={clearCart} className="clear-btn">Clear All</button>
+          </div>
+          
+          {cartItems.length === 0 ? (
+            <p className="empty-cart">Your cart is empty</p>
+          ) : (
+            <>
+              <div className="cart-items">
+                {cartItems.map((item, index) => (
+                  <div key={index} className="cart-item">
+                    <img src={item.image} alt={item.name} />
+                    <div className="item-details">
+                      <span>{item.name}</span>
+                      <span>{item.price}</span>
+                    </div>
+                    <button onClick={() => removeFromCart(index)} className="remove-btn">×</button>
+                  </div>
+                ))}
+              </div>
+              <div className="cart-total">
+                <span>Total:</span>
+                <span>${totalPrice.toFixed(2)}</span>
+              </div>
+              <button className="checkout-btn">Proceed to Checkout</button>
+            </>
+          )}
+        </div>
+      )}
+    </CartWrapper>
+  );
+};
+
+const CartWrapper = styled.div`
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+
+  .cart-icon {
+    position: relative;
+    font-size: 2rem;
+    cursor: pointer;
+    color: white;
+    background: #4CAF50;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: scale(1.1);
+    }
+  }
+
+  .cart-count {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #ff5722;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: bold;
+  }
+
+  .cart-dropdown {
+    position: absolute;
+    top: 60px;
+    right: 0;
+    width: 300px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    padding: 15px;
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+
+  .cart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+  }
+
+  .clear-btn {
+    background: none;
+    border: none;
+    color: #ff5722;
+    cursor: pointer;
+    font-size: 0.8rem;
+    padding: 5px;
+  }
+
+  .empty-cart {
+    text-align: center;
+    padding: 20px 0;
+    color: #666;
+  }
+
+  .cart-items {
+    margin-bottom: 15px;
+  }
+
+  .cart-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+  }
+
+  .cart-item img {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 5px;
+    margin-right: 10px;
+  }
+
+  .item-details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .remove-btn {
+    background: none;
+    border: none;
+    color: #ff5722;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0 5px;
+  }
+
+  .cart-total {
+    display: flex;
+    justify-content: space-between;
+    font-weight: bold;
+    padding: 10px 0;
+    border-top: 1px solid #eee;
+    margin-top: 10px;
+  }
+
+  .checkout-btn {
+    width: 100%;
+    padding: 10px;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.3s;
+
+    &:hover {
+      background: #45a049;
+    }
+  }
+`;
+
 // Food Slider and Cards Component
 const FoodSlider = () => {
   const navigate = useNavigate();
+  const [cartItems, setCartItems] = useState([]);
 
   // Sample food data with improved structure
   const foodItems = [
@@ -99,8 +294,24 @@ const FoodSlider = () => {
     navigate(path);
   };
 
+  const addToCart = (item) => {
+    setCartItems([...cartItems, item]);
+  };
+
+  const removeFromCart = (index) => {
+    const newCartItems = [...cartItems];
+    newCartItems.splice(index, 1);
+    setCartItems(newCartItems);
+  };
+
+  const clearCart = () => {
+    setCartItems([]);
+  };
+
   return (
     <StyledWrapper>
+      <Cart cartItems={cartItems} removeFromCart={removeFromCart} clearCart={clearCart} />
+      
       <div className="header">
         <h1 className="text-center text-white mb-4">Fresh Organic Produce</h1>
         <p className="text-center text-white mb-5">Discover our premium selection of farm-fresh vegetables and fruits</p>
@@ -121,18 +332,24 @@ const FoodSlider = () => {
       {/* Food Cards Section */}
       <div className="cards-container">
         {foodItems.map((item) => (
-          <div className="card" key={item.id} onClick={() => handleCardClick(item.path)}>
+          <div className="card" key={item.id}>
             <div className="image-container">
-              <img src={item.image} alt={`${item.name}`} className="image" />
+              <img src={item.image} alt={`${item.name}`} className="image" onClick={() => handleCardClick(item.path)} />
               <div className="price">{item.price}</div>
             </div>
-            <div className="content">
+            <div className="content" onClick={() => handleCardClick(item.path)}>
               <div className="product-name">{item.name}</div>
               <div className="description">{item.description}</div>
             </div>
             <div className="button-container">
-              <button>
+              <button onClick={() => handleCardClick(item.path)}>
                 <span className="front text">View Details</span>
+              </button>
+              <button className="add-to-cart" onClick={(e) => {
+                e.stopPropagation();
+                addToCart(item);
+              }}>
+                <span className="front text">Add to Cart</span>
               </button>
             </div>
           </div>
@@ -294,6 +511,7 @@ const StyledWrapper = styled.div`
     height: 100%;
     object-fit: cover;
     transition: transform 0.5s ease;
+    cursor: pointer;
   }
 
   .card:hover .image-container .image {
@@ -322,6 +540,7 @@ const StyledWrapper = styled.div`
   .card .content {
     padding: 0 0.8rem;
     margin-bottom: 1.5rem;
+    cursor: pointer;
   }
 
   .card .content .product-name {
@@ -340,13 +559,14 @@ const StyledWrapper = styled.div`
 
   .card .button-container {
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     margin-top: 1rem;
+    gap: 10px;
   }
 
   .card .button-container button {
     font-size: 16px;
-    padding: 10px 25px;
+    padding: 10px 15px;
     border-radius: 50px;
     background: var(--accent-color);
     color: white;
@@ -356,6 +576,11 @@ const StyledWrapper = styled.div`
     transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
+    flex: 1;
+  }
+
+  .card .button-container .add-to-cart {
+    background: #ff9800;
   }
 
   .card .button-container button:before {
@@ -427,6 +652,14 @@ const StyledWrapper = styled.div`
     .card {
       max-width: 100%;
       padding: 1rem;
+    }
+
+    .card .button-container {
+      flex-direction: column;
+    }
+
+    .card .button-container button {
+      width: 100%;
     }
   }
 
