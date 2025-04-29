@@ -31,10 +31,10 @@ class ProductDetailPage extends StatefulWidget {
 class _ProductDetailPageState extends State<ProductDetailPage> {
   // Sample images for product gallery
   final List<String> productImages = [
-    'https://img.freepik.com/free-photo/delicious-mango-still-life_23-2151542201.jpg?t=st=1745936057~exp=1745939657~hmac=6ccf28f5a15baaadee2709fca927c9010a78a519376b0c88156078d1a571695b&w=740',
-    'https://img.freepik.com/free-photo/mango-tree-with-nature_1150-12252.jpg?t=st=1745936083~exp=1745939683~hmac=fe67200408e3c7d04c2b5210c4d525ce870b891f156c574657ce01697b451e7a&w=996',
-    'https://img.freepik.com/free-photo/delicious-raw-mango-fruit-tree_23-2149204866.jpg?t=st=1745936106~exp=1745939706~hmac=5ff0cedacc4087d6f040f8b18b0c8784634e0cb5fc05c3730622e66c92c314a3&w=740',
-    'https://img.freepik.com/free-photo/delicious-mango-still-life_23-2151542199.jpg?t=st=1745936127~exp=1745939727~hmac=3b6e444d2f88b4247dcd3867628beed648db8861d194a0087414577624b96adf&w=740',
+    'https://img.freepik.com/free-photo/african-man-harvesting-vegetables_23-2151441237.jpg?t=st=1745926509~exp=1745930109~hmac=79073a6b36436c97259514fc3401655e4be0d74ba7b10a8117b58522c328e0fe&w=996',
+    'https://img.freepik.com/premium-photo/tree-with-bunch-fruits-that-says-pomegranate_653449-34350.jpg?w=1060',
+    'https://img.freepik.com/free-photo/top-view-wooden-spoon-with-cashew-black-background_141793-9346.jpg?t=st=1745926557~exp=1745930157~hmac=42143e69e0dbd5588d9ef0ac0c7ebda5630e331d120949de8952dd32101a97ef&w=740',
+    'https://img.freepik.com/premium-photo/tree-with-bunch-figs-it_653449-34423.jpg?w=1060',
   ];
 
   // Sample review data
@@ -166,7 +166,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 children: [
                   // Price
                   const Text(
-                    'Rs. 734',
+                    'Rs. 350',
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -177,7 +177,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
                   // Product Name
                   const Text(
-                    'Mango',
+                    'Devilled Cashews',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w500,
@@ -203,7 +203,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       ),
                       const SizedBox(width: 8),
                       const Text(
-                        '153 sold',
+                        '100 sold',
                         style: TextStyle(fontSize: 14),
                       ),
                     ],
@@ -224,7 +224,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
                   // Product description and specifications
                   const Text(
-                    'I sell fresh, juicy mangoes, handpicked from the best local farms. Known for their rich, tropical flavor and vibrant color, these mangoes are perfect for snacking, smoothies, salads, and desserts. ',
+                    'Selling devilled cashews online in Sri Lanka is a tasty business idea, as many people love spicy snacks.',
                     style: TextStyle(fontSize: 14),
                   ),
 
@@ -254,7 +254,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           ),
                           Padding(
                             padding: EdgeInsets.symmetric(vertical: 8.0),
-                            child: Text('Alphonso (Hapus) '),
+                            child: Text('Sweet & Spicy Cashews'),
                           ),
                         ],
                       ),
@@ -269,7 +269,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           ),
                           Padding(
                             padding: EdgeInsets.symmetric(vertical: 8.0),
-                            child: Text(' 5 to 10'),
+                            child: Text('10 '),
                           ),
                         ],
                       ),
@@ -284,7 +284,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           ),
                           Padding(
                             padding: EdgeInsets.symmetric(vertical: 8.0),
-                            child: Text('60–80%'),
+                            child: Text('70–85%'),
                           ),
                         ],
                       ),
@@ -299,7 +299,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           ),
                           Padding(
                             padding: EdgeInsets.symmetric(vertical: 8.0),
-                            child: Text('2 to 4 weeks'),
+                            child: Text('3–4 weeks'),
                           ),
                         ],
                       ),
@@ -314,7 +314,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           ),
                           Padding(
                             padding: EdgeInsets.symmetric(vertical: 8.0),
-                            child: Text('1 to 2 weeks'),
+                            child: Text('Up to 3 months'),
                           ),
                         ],
                       ),

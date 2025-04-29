@@ -31,10 +31,10 @@ class ProductDetailPage extends StatefulWidget {
 class _ProductDetailPageState extends State<ProductDetailPage> {
   // Sample images for product gallery
   final List<String> productImages = [
-    'https://img.freepik.com/free-photo/delicious-mango-still-life_23-2151542201.jpg?t=st=1745936057~exp=1745939657~hmac=6ccf28f5a15baaadee2709fca927c9010a78a519376b0c88156078d1a571695b&w=740',
-    'https://img.freepik.com/free-photo/mango-tree-with-nature_1150-12252.jpg?t=st=1745936083~exp=1745939683~hmac=fe67200408e3c7d04c2b5210c4d525ce870b891f156c574657ce01697b451e7a&w=996',
-    'https://img.freepik.com/free-photo/delicious-raw-mango-fruit-tree_23-2149204866.jpg?t=st=1745936106~exp=1745939706~hmac=5ff0cedacc4087d6f040f8b18b0c8784634e0cb5fc05c3730622e66c92c314a3&w=740',
-    'https://img.freepik.com/free-photo/delicious-mango-still-life_23-2151542199.jpg?t=st=1745936127~exp=1745939727~hmac=3b6e444d2f88b4247dcd3867628beed648db8861d194a0087414577624b96adf&w=740',
+    'https://img.freepik.com/free-photo/chopped-raw-pumpkin-put-wooden-cutting-board_1150-34573.jpg?t=st=1745935427~exp=1745939027~hmac=ae9804efc3ea4e7322f0f94dba37189f2a9c87bcc71a3723a811c32aead24a9c&w=996',
+    'https://img.freepik.com/premium-photo/high-angle-view-fruits-sale-market-stall_1048944-6527852.jpg?w=996',
+    'https://img.freepik.com/premium-photo/variety-stones_1048944-15153130.jpg?w=900',
+    'https://img.freepik.com/free-photo/autumn-pumpkin-wooden-table_1150-18407.jpg?t=st=1745935544~exp=1745939144~hmac=42b6ea5e06c18bbd0d761893a7af278c003489dfdbf491ef6f99fe6e156a077b&w=996',
   ];
 
   // Sample review data
@@ -166,7 +166,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 children: [
                   // Price
                   const Text(
-                    'Rs. 734',
+                    'Rs. 334',
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -177,7 +177,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
                   // Product Name
                   const Text(
-                    'Mango',
+                    'Pumpkin',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w500,
@@ -224,7 +224,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
                   // Product description and specifications
                   const Text(
-                    'I sell fresh, juicy mangoes, handpicked from the best local farms. Known for their rich, tropical flavor and vibrant color, these mangoes are perfect for snacking, smoothies, salads, and desserts. ',
+                    'I sell fresh, naturally grown pumpkins, rich in flavor and perfect for a variety of dishes—from soups and pies to salads and curries. Grown with care using sustainable farming practices, my pumpkins are guaranteed to be of the highest quality, with vibrant color and sweetness.  ',
                     style: TextStyle(fontSize: 14),
                   ),
 
@@ -254,7 +254,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           ),
                           Padding(
                             padding: EdgeInsets.symmetric(vertical: 8.0),
-                            child: Text('Alphonso (Hapus) '),
+                            child: Text('Butternut Squash '),
                           ),
                         ],
                       ),
@@ -269,7 +269,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           ),
                           Padding(
                             padding: EdgeInsets.symmetric(vertical: 8.0),
-                            child: Text(' 5 to 10'),
+                            child: Text('10g to 50g'),
                           ),
                         ],
                       ),
@@ -284,7 +284,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           ),
                           Padding(
                             padding: EdgeInsets.symmetric(vertical: 8.0),
-                            child: Text('60–80%'),
+                            child: Text('85–95%'),
                           ),
                         ],
                       ),
@@ -299,7 +299,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           ),
                           Padding(
                             padding: EdgeInsets.symmetric(vertical: 8.0),
-                            child: Text('2 to 4 weeks'),
+                            child: Text('7 to 14 days'),
                           ),
                         ],
                       ),
@@ -314,7 +314,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           ),
                           Padding(
                             padding: EdgeInsets.symmetric(vertical: 8.0),
-                            child: Text('1 to 2 weeks'),
+                            child: Text('6 to 12 months'),
                           ),
                         ],
                       ),
