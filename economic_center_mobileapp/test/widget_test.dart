@@ -7,7 +7,7 @@ void main() {
     // Build our app and trigger a frame
     await tester.pumpWidget(
       const MaterialApp(
-        home: HomePage(),
+        home: HomePage(userData: {}),
       ),
     );
 
@@ -40,7 +40,7 @@ void main() {
   testWidgets('Price updates section shows items', (WidgetTester tester) async {
     await tester.pumpWidget(
       const MaterialApp(
-        home: HomePage(),
+        home: HomePage(userData: {}),
       ),
     );
 
@@ -55,7 +55,7 @@ void main() {
   testWidgets('Bottom navigation changes index', (WidgetTester tester) async {
     await tester.pumpWidget(
       const MaterialApp(
-        home: HomePage(),
+        home: HomePage(userData: {}),
       ),
     );
 
@@ -75,7 +75,7 @@ void main() {
   testWidgets('Categories grid shows all items', (WidgetTester tester) async {
     await tester.pumpWidget(
       const MaterialApp(
-        home: HomePage(),
+        home: HomePage(userData: {}),
       ),
     );
 

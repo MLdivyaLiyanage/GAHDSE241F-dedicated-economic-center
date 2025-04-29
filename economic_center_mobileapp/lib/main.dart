@@ -1,3 +1,4 @@
+import 'package:economic_center_mobileapp/pages/signin.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -10,740 +11,570 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Product Details',
+      title: 'Sri Lanka Economic Center',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primarySwatch: Colors.green,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF0C4B33), // Sri Lankan green theme
+          brightness: Brightness.light,
+        ),
+        useMaterial3: true,
         fontFamily: 'Poppins',
       ),
-      home: const ProductDetailPage(),
+      home: const LoginPage(),
     );
   }
 }
 
-class ProductDetailPage extends StatefulWidget {
-  const ProductDetailPage({super.key});
+class Product {
+  final int id;
+  final String name;
+  final String description;
+  final double price;
+  final String imageUrl;
+  final String category;
+  final bool isLocal;
+  final double rating;
+  final String seller;
+  final int reviewCount;
 
-  @override
-  State<ProductDetailPage> createState() => _ProductDetailPageState();
+  Product({
+    required this.id,
+    required this.name,
+    required this.description,
+    required this.price,
+    required this.imageUrl,
+    required this.category,
+    this.isLocal = true,
+    this.rating = 4.0,
+    this.seller = 'Local Seller',
+    this.reviewCount = 0,
+  });
 }
 
-class _ProductDetailPageState extends State<ProductDetailPage> {
-  // Sample images for product gallery
-  final List<String> productImages = [
-    'https://img.freepik.com/free-photo/delicious-mango-still-life_23-2151542201.jpg?t=st=1745936057~exp=1745939657~hmac=6ccf28f5a15baaadee2709fca927c9010a78a519376b0c88156078d1a571695b&w=740',
-    'https://img.freepik.com/free-photo/mango-tree-with-nature_1150-12252.jpg?t=st=1745936083~exp=1745939683~hmac=fe67200408e3c7d04c2b5210c4d525ce870b891f156c574657ce01697b451e7a&w=996',
-    'https://img.freepik.com/free-photo/delicious-raw-mango-fruit-tree_23-2149204866.jpg?t=st=1745936106~exp=1745939706~hmac=5ff0cedacc4087d6f040f8b18b0c8784634e0cb5fc05c3730622e66c92c314a3&w=740',
-    'https://img.freepik.com/free-photo/delicious-mango-still-life_23-2151542199.jpg?t=st=1745936127~exp=1745939727~hmac=3b6e444d2f88b4247dcd3867628beed648db8861d194a0087414577624b96adf&w=740',
+class ProductScreen extends StatefulWidget {
+  const ProductScreen({super.key});
+
+  @override
+  State<ProductScreen> createState() => _ProductScreenState();
+}
+
+class _ProductScreenState extends State<ProductScreen> {
+  String selectedCategory = 'All';
+  bool showLocalOnly = true;
+
+  // Sri Lankan themed product data
+  final List<Product> products = [
+    Product(
+      id: 1,
+      name: 'Appel',
+      description:
+          'Finest high-grown Sri Lankan Appel leaves from Nuwara Eliya',
+      price: 397.47,
+      imageUrl:
+          'https://img.freepik.com/free-photo/fresh-apples-supermarket_1303-16018.jpg?t=st=1745139002~exp=1745142602~hmac=86d1baad086523ba7d6ed7c244ac99c8e376c61ad0d1f6cc74090959628ccddf&w=996',
+      category: 'Fruits',
+      rating: 4.8,
+      seller: 'Nuwara Eliya .',
+      reviewCount: 128,
+    ),
+    Product(
+      id: 2,
+      name: 'Tomato',
+      description: 'Traditional Sri Lankan ',
+      price: 390.00,
+      imageUrl:
+          'https://img.freepik.com/premium-photo/close-up-tomatoes_1048944-1518277.jpg?w=996',
+      category: 'Vegitables',
+      rating: 4.5,
+      seller: 'Handloom Crafts',
+      reviewCount: 86,
+    ),
+    Product(
+      id: 3,
+      name: 'Devilled Cashews',
+      description: 'Authentic Sri Lankan spices ',
+      price: 350.00,
+      imageUrl:
+          'https://img.freepik.com/free-photo/tasty-cashew-nuts-as-background_1150-45355.jpg?t=st=1745158007~exp=1745161607~hmac=16154198aba0578978fa521975a3762f98b6f7ad9a237ce7d92728ebd4e7c7fd&w=996',
+      category: 'Nuts',
+      rating: 4.7,
+      seller: 'Spice Island',
+      reviewCount: 215,
+    ),
+    Product(
+      id: 4,
+      name: 'green chilli',
+      description:
+          'Eco-friendly wooden artifacts made from sustainable materials',
+      price: 675.00,
+      imageUrl:
+          'https://img.freepik.com/premium-photo/full-frame-shot-green-chili-peppers_1048944-25440816.jpg?w=826',
+      category: 'Chilli',
+      rating: 4.6,
+      seller: 'Wood Artisans',
+      reviewCount: 42,
+    ),
+    Product(
+      id: 5,
+      name: 'Black pepper',
+      description: 'Pure virgin coconut oil 500ml - cold pressed and organic',
+      price: 340.00,
+      imageUrl:
+          'https://img.freepik.com/free-photo/black-milled-pepper-corns-as-background-high-quality-photo_114579-40514.jpg?t=st=1745158828~exp=1745162428~hmac=4b13a55451af83438329ec9bbe0b7f9778bc7c7c412521a401e2765186bb5cd7&w=996',
+      category: 'Pepper',
+      rating: 4.4,
+      seller: 'Coconut Paradise',
+      reviewCount: 178,
+    ),
+    Product(
+      id: 6,
+      name: 'Ginger',
+      description: 'Traditional Sri Lankan batik design - 100% cotton',
+      price: 1223.00,
+      imageUrl:
+          'https://img.freepik.com/free-photo/young-woman-buys-ginger-market-woman-choose-ginger-supermarket-woman-picking-fresh-produce-market_1391-643.jpg?t=st=1745159114~exp=1745162714~hmac=ffbcd5b11d6dc279221dbc9cc6cb3768e7912e065406c98689522b3fb5eb49a0&w=900',
+      category: 'Ginger',
+      rating: 4.3,
+      seller: 'Batik House',
+      reviewCount: 64,
+    ),
+    Product(
+      id: 7,
+      name: 'Banana',
+      description: 'Blue sapphire with silver chain - ethically sourced gems',
+      price: 212.00,
+      imageUrl:
+          'https://img.freepik.com/free-photo/bananas-hanging-rope_1122-1220.jpg?t=st=1745159206~exp=1745162806~hmac=906e44115c65904a876f2f619da4441c6c2c83ee87998fd956f981baf00d6229&w=900',
+      category: 'Fruits',
+      rating: 4.9,
+      seller: 'Ratnapura',
+      reviewCount: 53,
+    ),
+    Product(
+      id: 8,
+      name: 'Beetroot',
+      description: 'Traditional medicine set for holistic wellness',
+      price: 132.00,
+      imageUrl:
+          'https://img.freepik.com/premium-photo/close-up-plants_1048944-21388094.jpg?w=996',
+      category: 'Vegetable',
+      rating: 4.5,
+      seller: 'Ayurveda Lanka',
+      reviewCount: 97,
+    ),
+    Product(
+      id: 9,
+      name: 'Pumpkin',
+      description: 'Traditional woven Dumbara mats - unique Sri Lankan craft',
+      price: 334.00,
+      imageUrl:
+          'https://img.freepik.com/free-photo/various-striped-pumpkins-harvested-sunny-autumn-day-close-up-orange-green-pumpkins_7502-10551.jpg?t=st=1745159889~exp=1745163489~hmac=41b9f869261a485262b38d3ee74875019bcb711426f5cd5bf02b810a57622b3f&w=900',
+      category: 'Vegetable',
+      rating: 4.7,
+      seller: 'Dumbara Weavers',
+      reviewCount: 31,
+    ),
+    Product(
+      id: 10,
+      name: 'Mango',
+      description: 'Pure Ceylon cinnamon sticks 100g - sweet and aromatic',
+      price: 734.00,
+      imageUrl:
+          'https://img.freepik.com/premium-photo/selecting-ripe-mangoes-market_938295-3419.jpg?w=996',
+      category: 'Fruits',
+      rating: 4.8,
+      seller: 'Cinnamon Valley',
+      reviewCount: 203,
+    ),
   ];
 
-  // Sample review data
-  final List<Review> reviews = [
-    Review(
-      username: 'Gardening Enthusiast',
-      rating: 5,
-      date: '15 Apr 2025',
-      comment:
-          'Excellent germination rate! Almost all seeds sprouted within a week. Very happy with the purchase.',
-    ),
-    Review(
-      username: 'Green Thumb',
-      rating: 4,
-      date: '10 Apr 2025',
-      comment:
-          'Good quality seeds. Plants are growing well, but a few seeds didn\'t germinate.',
-    ),
-  ];
-
-  int _currentImageIndex = 0;
-  bool _showReviewForm = false;
-
-  // Overall rating calculation
-  double get averageRating {
-    if (reviews.isEmpty) return 0;
-    return reviews.map((r) => r.rating).reduce((a, b) => a + b) /
-        reviews.length;
+  List<String> get categories {
+    final categorySet =
+        products.map((product) => product.category).toSet().toList();
+    categorySet.sort();
+    return ['All', ...categorySet];
   }
 
-  // Rating distribution
-  Map<int, double> get ratingDistribution {
-    if (reviews.isEmpty) {
-      return {5: 0, 4: 0, 3: 0, 2: 0, 1: 0};
+  List<Product> get filteredProducts {
+    List<Product> filtered = products;
+
+    if (selectedCategory != 'All') {
+      filtered = filtered
+          .where((product) => product.category == selectedCategory)
+          .toList();
     }
 
-    Map<int, int> counts = {5: 0, 4: 0, 3: 0, 2: 0, 1: 0};
-    for (var review in reviews) {
-      counts[review.rating] = (counts[review.rating] ?? 0) + 1;
+    if (showLocalOnly) {
+      filtered = filtered.where((product) => product.isLocal).toList();
     }
 
-    Map<int, double> percentages = {};
-    for (var rating in counts.keys) {
-      percentages[rating] = counts[rating]! / reviews.length;
-    }
-
-    return percentages;
+    return filtered;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Product Details'),
+        title: const Text('Sri Lankan Marketplace'),
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Colors.white,
+        elevation: 0,
         centerTitle: true,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+            bottom: Radius.circular(20),
+          ),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.share),
+            icon: const Icon(Icons.search),
             onPressed: () {},
           ),
           IconButton(
-            icon: const Icon(Icons.favorite_border),
+            icon: const Icon(Icons.filter_list),
             onPressed: () {},
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Product Image Gallery with indicators
-            Stack(
-              alignment: Alignment.bottomCenter,
+      body: Column(
+        children: [
+          // Header with local products toggle
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Theme.of(context).colorScheme.primary,
+                  // ignore: deprecated_member_use
+                  Theme.of(context).colorScheme.primary.withOpacity(0.8),
+                ],
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+              ),
+            ),
+            child: Row(
               children: [
-                SizedBox(
-                  height: 300,
-                  child: PageView.builder(
-                    itemCount: productImages.length,
-                    onPageChanged: (index) {
+                const Icon(Icons.flag, size: 18, color: Colors.white),
+                const SizedBox(width: 8),
+                const Text(
+                  'Support Local Businesses',
+                  style: TextStyle(fontSize: 14, color: Colors.white),
+                ),
+                const Spacer(),
+                Transform.scale(
+                  scale: 0.8,
+                  child: Switch(
+                    value: showLocalOnly,
+                    onChanged: (value) {
                       setState(() {
-                        _currentImageIndex = index;
+                        showLocalOnly = value;
                       });
                     },
-                    itemBuilder: (context, index) {
-                      return Image.network(
-                        productImages[index],
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            color: Colors.grey[200],
-                            child: const Center(
-                              child: Icon(Icons.image_not_supported, size: 50),
-                            ),
-                          );
-                        },
-                      );
-                    },
-                  ),
-                ),
-                // Image indicators
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 16.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: productImages.asMap().entries.map((entry) {
-                      return Container(
-                        width: 8,
-                        height: 8,
-                        margin: const EdgeInsets.symmetric(horizontal: 4),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: _currentImageIndex == entry.key
-                              ? Colors.white
-                              // ignore: deprecated_member_use
-                              : Colors.white.withOpacity(0.5),
-                        ),
-                      );
-                    }).toList(),
+                    activeColor: Colors.white,
+                    // ignore: deprecated_member_use
+                    activeTrackColor: Colors.white.withOpacity(0.5),
                   ),
                 ),
               ],
             ),
+          ),
 
-            // Product Info Section
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Price
-                  const Text(
-                    'Rs. 734',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+          // FIXED: Category selector with proper sizing
+          Container(
+            height: 90, // Increased height to accommodate text
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  // ignore: deprecated_member_use
+                  color: Colors.grey.withOpacity(0.1),
+                  spreadRadius: 1,
+                  blurRadius: 3,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: categories.length,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              itemBuilder: (context, index) {
+                final category = categories[index];
+                final isSelected = category == selectedCategory;
 
-                  const SizedBox(height: 8),
-
-                  // Product Name
-                  const Text(
-                    'Mango',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Rating and Sold Count
-                  Row(
-                    children: [
-                      const Icon(Icons.star, color: Colors.amber, size: 20),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${averageRating.toStringAsFixed(1)} (${reviews.length})',
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        height: 16,
-                        width: 1,
-                        color: Colors.grey,
-                      ),
-                      const SizedBox(width: 8),
-                      const Text(
-                        '153 sold',
-                        style: TextStyle(fontSize: 14),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Product Details Section
-                  const Text(
-                    'Product Details',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // Product description and specifications
-                  const Text(
-                    'I sell fresh, juicy mangoes, handpicked from the best local farms. Known for their rich, tropical flavor and vibrant color, these mangoes are perfect for snacking, smoothies, salads, and desserts. ',
-                    style: TextStyle(fontSize: 14),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Product specifications in table format
-                  Table(
-                    border: TableBorder(
-                      horizontalInside: BorderSide(
-                        color: Colors.grey.shade300,
-                        width: 1,
-                      ),
-                    ),
-                    columnWidths: const {
-                      0: FlexColumnWidth(2),
-                      1: FlexColumnWidth(3),
+                return Padding(
+                  padding:
+                      const EdgeInsets.only(right: 12), // Increased padding
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        selectedCategory = category;
+                      });
                     },
-                    children: const [
-                      TableRow(
-                        children: [
-                          Padding(
-                            padding: EdgeInsets.symmetric(vertical: 8.0),
-                            child: Text(
-                              'Variety',
-                              style: TextStyle(fontWeight: FontWeight.w500),
-                            ),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.symmetric(vertical: 8.0),
-                            child: Text('Alphonso (Hapus) '),
-                          ),
-                        ],
-                      ),
-                      TableRow(
-                        children: [
-                          Padding(
-                            padding: EdgeInsets.symmetric(vertical: 8.0),
-                            child: Text(
-                              'Seeds per pack',
-                              style: TextStyle(fontWeight: FontWeight.w500),
-                            ),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.symmetric(vertical: 8.0),
-                            child: Text(' 5 to 10'),
-                          ),
-                        ],
-                      ),
-                      TableRow(
-                        children: [
-                          Padding(
-                            padding: EdgeInsets.symmetric(vertical: 8.0),
-                            child: Text(
-                              'Germination rate',
-                              style: TextStyle(fontWeight: FontWeight.w500),
-                            ),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.symmetric(vertical: 8.0),
-                            child: Text('60–80%'),
-                          ),
-                        ],
-                      ),
-                      TableRow(
-                        children: [
-                          Padding(
-                            padding: EdgeInsets.symmetric(vertical: 8.0),
-                            child: Text(
-                              'Growth time',
-                              style: TextStyle(fontWeight: FontWeight.w500),
-                            ),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.symmetric(vertical: 8.0),
-                            child: Text('2 to 4 weeks'),
-                          ),
-                        ],
-                      ),
-                      TableRow(
-                        children: [
-                          Padding(
-                            padding: EdgeInsets.symmetric(vertical: 8.0),
-                            child: Text(
-                              'Shelf life',
-                              style: TextStyle(fontWeight: FontWeight.w500),
-                            ),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.symmetric(vertical: 8.0),
-                            child: Text('1 to 2 weeks'),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-
-                  const Divider(height: 32),
-
-                  // Ratings & Reviews Section with Add Review Button
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Ratings & Reviews (${reviews.length})',
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                    child: Container(
+                      width: 80, // Fixed width to prevent overflow
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            // ignore: deprecated_member_use
+                            ? Theme.of(context)
+                                .colorScheme
+                                .primary
+                                // ignore: deprecated_member_use
+                                .withOpacity(0.1)
+                            // ignore: deprecated_member_use
+                            : Colors.grey.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: isSelected
+                              ? Theme.of(context).colorScheme.primary
+                              // ignore: deprecated_member_use
+                              : Colors.grey.withOpacity(0.2),
                         ),
                       ),
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          setState(() {
-                            _showReviewForm = true;
-                          });
-                        },
-                        icon: const Icon(Icons.rate_review, size: 16),
-                        label: const Text('Add Review'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 8),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Review submission form (conditionally displayed)
-                  if (_showReviewForm) _buildReviewForm(),
-
-                  // Rating stats
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Column(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(
-                            averageRating.toStringAsFixed(1),
-                            style: const TextStyle(
-                              fontSize: 36,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Row(
-                            children: List.generate(
-                              5,
-                              (index) {
-                                // Calculate full stars and half stars
-                                if (index < averageRating.floor()) {
-                                  return const Icon(Icons.star,
-                                      color: Colors.amber, size: 16);
-                                } else if (index < averageRating.ceil() &&
-                                    averageRating % 1 > 0) {
-                                  return const Icon(Icons.star_half,
-                                      color: Colors.amber, size: 16);
-                                } else {
-                                  return const Icon(Icons.star_border,
-                                      color: Colors.amber, size: 16);
-                                }
-                              },
-                            ),
+                          Icon(
+                            _getCategoryIcon(category),
+                            size: 24,
+                            color: isSelected
+                                ? Theme.of(context).colorScheme.primary
+                                : Colors.grey[600],
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '${reviews.length} reviews',
-                            style: const TextStyle(
-                              color: Colors.grey,
+                            category,
+                            style: TextStyle(
                               fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: isSelected
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Colors.grey[700],
                             ),
+                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ],
                       ),
-                      const SizedBox(width: 24),
-                      Expanded(
-                        child: Column(
-                          children: [
-                            _buildRatingBar(5, ratingDistribution[5] ?? 0),
-                            _buildRatingBar(4, ratingDistribution[4] ?? 0),
-                            _buildRatingBar(3, ratingDistribution[3] ?? 0),
-                            _buildRatingBar(2, ratingDistribution[2] ?? 0),
-                            _buildRatingBar(1, ratingDistribution[1] ?? 0),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Sample reviews
-                  ...reviews.map((review) {
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildReviewItem(
-                          username: review.username,
-                          rating: review.rating,
-                          date: review.date,
-                          comment: review.comment,
-                        ),
-                        const Divider(),
-                      ],
-                    );
-                    // ignore: unnecessary_to_list_in_spreads
-                  }).toList(),
-
-                  if (reviews.isNotEmpty)
-                    Center(
-                      child: TextButton(
-                        onPressed: () {},
-                        child: const Text('View All Reviews'),
-                      ),
                     ),
-
-                  const SizedBox(height: 16),
-
-                  // Action Buttons
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.orange,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          onPressed: () {},
-                          child: const Text(
-                            'Buy Now',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: OutlinedButton(
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            side: const BorderSide(color: Colors.orange),
-                          ),
-                          onPressed: () {},
-                          child: const Text(
-                            'Add to Cart',
-                            style: TextStyle(
-                              color: Colors.orange,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
                   ),
-                ],
-              ),
+                );
+              },
             ),
-          ],
+          ),
+
+          // Product grid - Enhanced visuals
+          Expanded(
+            child: filteredProducts.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.search_off,
+                            size: 50, color: Colors.grey[400]),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No products found',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Try changing your filters',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[500],
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : GridView.builder(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      childAspectRatio: 0.75, // Adjusted for better proportions
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 16,
+                    ),
+                    padding: const EdgeInsets.all(16),
+                    itemCount: filteredProducts.length,
+                    itemBuilder: (context, index) {
+                      final product = filteredProducts[index];
+                      return EnhancedProductCard(product: product);
+                    },
+                  ),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {},
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: const Badge(
+          label: Text('3'),
+          child: Icon(Icons.shopping_cart, color: Colors.white),
         ),
       ),
     );
   }
 
-  // Review form widget
-  Widget _buildReviewForm() {
-    // Controllers for form fields
-    final TextEditingController nameController = TextEditingController();
-    final TextEditingController commentController = TextEditingController();
-    int selectedRating = 5;
+  IconData _getCategoryIcon(String category) {
+    switch (category) {
+      case 'All':
+        return Icons.category;
+      case 'Beverages':
+        return Icons.local_cafe;
+      case 'Clothing':
+        return Icons.checkroom;
+      case 'Food':
+        return Icons.restaurant;
+      case 'Handicrafts':
+        return Icons.handyman;
+      case 'Jewelry':
+        return Icons.diamond;
+      case 'Wellness':
+        return Icons.spa;
+      default:
+        return Icons.shopping_bag;
+    }
+  }
+}
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 24),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.shade300),
+// Enhanced Product Card with improved visuals
+class EnhancedProductCard extends StatelessWidget {
+  final Product product;
+
+  const EnhancedProductCard({super.key, required this.product});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Card(
+      elevation: 3, // Slightly more elevation for better shadow
+      shadowColor: Colors.black26,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Write a Review',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+          // Product image with improved error handling
+          Container(
+            height: 140,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(16)),
+              color: Colors.grey[200],
+            ),
+            child: ClipRRect(
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(16)),
+              child: Image.network(
+                product.imageUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Center(
+                    child: Icon(Icons.image_not_supported,
+                        size: 40, color: Colors.grey[400]),
+                  );
+                },
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Center(
+                    child: CircularProgressIndicator(
+                      value: loadingProgress.expectedTotalBytes != null
+                          ? loadingProgress.cumulativeBytesLoaded /
+                              loadingProgress.expectedTotalBytes!
+                          : null,
+                      strokeWidth: 2,
+                      color: theme.colorScheme.primary,
+                    ),
+                  );
+                },
+              ),
             ),
           ),
-          const SizedBox(height: 16),
 
-          // Name field
-          TextField(
-            controller: nameController,
-            decoration: const InputDecoration(
-              labelText: 'Your Name',
-              border: OutlineInputBorder(),
-              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Rating selector
-          StatefulBuilder(
-            builder: (context, setState) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Your Rating:',
-                    style: TextStyle(fontWeight: FontWeight.w500),
+          // Product details with improved spacing
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Product name
+                Text(
+                  product.name,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
                   ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: List.generate(
-                      5,
-                      (index) => IconButton(
-                        onPressed: () {
-                          setState(() {
-                            selectedRating = index + 1;
-                          });
-                        },
-                        icon: Icon(
-                          index < selectedRating
-                              ? Icons.star
-                              : Icons.star_border,
-                          color: Colors.amber,
-                        ),
-                        constraints: const BoxConstraints(),
-                        padding: const EdgeInsets.only(right: 4),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+
+                // Product category
+                Text(
+                  product.category,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[600],
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 8),
+
+                // Price display
+                Row(
+                  children: [
+                    Text(
+                      'Rs. ${product.price.toStringAsFixed(0)}',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: theme.colorScheme.primary,
                       ),
                     ),
-                  ),
-                ],
-              );
-            },
-          ),
-          const SizedBox(height: 16),
-
-          // Comment field
-          TextField(
-            controller: commentController,
-            maxLines: 3,
-            decoration: const InputDecoration(
-              labelText: 'Your Review',
-              hintText: 'Share your experience with this product',
-              border: OutlineInputBorder(),
-              contentPadding: EdgeInsets.all(12),
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Submit and Cancel buttons
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                  onPressed: () {
-                    // Add new review
-                    if (nameController.text.isNotEmpty &&
-                        commentController.text.isNotEmpty) {
-                      setState(() {
-                        reviews.insert(
-                          0,
-                          Review(
-                            username: nameController.text,
-                            rating: selectedRating,
-                            date:
-                                '${DateTime.now().day} Apr 2025', // Simplified date
-                            comment: commentController.text,
+                    const Spacer(),
+                    // Rating display
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.star,
+                          size: 16,
+                          color: Colors.amber[700],
+                        ),
+                        const SizedBox(width: 2),
+                        Text(
+                          product.rating.toString(),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[700],
+                            fontWeight: FontWeight.w500,
                           ),
-                        );
-                        _showReviewForm = false;
-                      });
-                    }
-                  },
-                  child: const Text(
-                    'Submit Review',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              TextButton(
-                onPressed: () {
-                  setState(() {
-                    _showReviewForm = false;
-                  });
-                },
-                child: const Text('Cancel'),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Helper method to build rating bars
-  Widget _buildRatingBar(int stars, double percentage) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2.0),
-      child: Row(
-        children: [
-          Text(
-            '$stars',
-            style: const TextStyle(fontSize: 12),
-          ),
-          const SizedBox(width: 4),
-          const Icon(Icons.star, color: Colors.amber, size: 14),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Stack(
-              children: [
-                Container(
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                FractionallySizedBox(
-                  widthFactor: percentage,
-                  child: Container(
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Colors.amber,
-                      borderRadius: BorderRadius.circular(2),
+                        ),
+                      ],
                     ),
-                  ),
+                  ],
                 ),
               ],
             ),
           ),
-          const SizedBox(width: 8),
-          Text(
-            '${(percentage * 100).toInt()}%',
-            style: const TextStyle(fontSize: 12),
-          ),
         ],
       ),
     );
   }
-
-  // Helper method to build review items
-  Widget _buildReviewItem({
-    required String username,
-    required int rating,
-    required String date,
-    required String comment,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                username,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
-              ),
-              Text(
-                date,
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 12,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Row(
-            children: List.generate(
-              5,
-              (index) => Icon(
-                index < rating ? Icons.star : Icons.star_border,
-                color: Colors.amber,
-                size: 16,
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            comment,
-            style: const TextStyle(fontSize: 14),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// Review model class
-class Review {
-  final String username;
-  final int rating;
-  final String date;
-  final String comment;
-
-  Review({
-    required this.username,
-    required this.rating,
-    required this.date,
-    required this.comment,
-  });
 }

@@ -1,4 +1,6 @@
 import 'package:economic_center_mobileapp/pages/signup.dart';
+import 'package:economic_center_mobileapp/pages/home.dart'; // You'll need to create this
+import 'package:economic_center_mobileapp/services/api_service.dart';
 import 'package:flutter/material.dart';
 
 class LoginPage extends StatefulWidget {
@@ -9,14 +11,58 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  bool _isLoading = false;
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _login() async {
+    final username = _usernameController.text.trim();
+    final password = _passwordController.text.trim();
+
+    if (username.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please fill all fields'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final response = await ApiService.login(username, password);
+
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => HomePage(userData: response['user']),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   @override
@@ -30,8 +76,8 @@ class _LoginPageState extends State<LoginPage> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color.fromARGB(255, 168, 231, 178), // Teal/turquoise
-              Color.fromARGB(255, 168, 231, 178), // Teal in middle
+              Color.fromARGB(255, 168, 231, 178),
+              Color.fromARGB(255, 168, 231, 178),
             ],
           ),
         ),
@@ -49,34 +95,20 @@ class _LoginPageState extends State<LoginPage> {
                   children: [
                     // Three green dots
                     Row(
-                      children: [
-                        Container(
-                          width: 10,
-                          height: 10,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF4CDA64),
-                            shape: BoxShape.circle,
+                      children: List.generate(
+                        3,
+                        (index) => Padding(
+                          padding: const EdgeInsets.only(right: 5),
+                          child: Container(
+                            width: 10,
+                            height: 10,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFF4CDA64),
+                              shape: BoxShape.circle,
+                            ),
                           ),
                         ),
-                        const SizedBox(width: 5),
-                        Container(
-                          width: 10,
-                          height: 10,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF4CDA64),
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 5),
-                        Container(
-                          width: 10,
-                          height: 10,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF4CDA64),
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
 
                     // Logo circle
@@ -84,7 +116,6 @@ class _LoginPageState extends State<LoginPage> {
                       width: 50,
                       height: 50,
                       decoration: BoxDecoration(
-                        // ignore: deprecated_member_use
                         color: Colors.white.withOpacity(0.9),
                         shape: BoxShape.circle,
                         border: Border.all(color: Colors.grey.shade300),
@@ -138,7 +169,7 @@ class _LoginPageState extends State<LoginPage> {
                   margin: const EdgeInsets.symmetric(vertical: 30),
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF009688), // Teal/green color
+                    color: const Color(0xFF009688),
                     borderRadius: BorderRadius.circular(15),
                   ),
                   child: Column(
@@ -147,7 +178,6 @@ class _LoginPageState extends State<LoginPage> {
                       // Login illustration and text
                       Row(
                         children: [
-                          // Person with presentation board
                           Image.asset(
                             'images/presentation.png',
                             height: 100,
@@ -156,7 +186,6 @@ class _LoginPageState extends State<LoginPage> {
                               height: 100,
                               width: 80,
                               decoration: BoxDecoration(
-                                // ignore: deprecated_member_use
                                 color: Colors.white.withOpacity(0.2),
                                 borderRadius: BorderRadius.circular(10),
                               ),
@@ -170,7 +199,6 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                           ),
                           const SizedBox(width: 15),
-                          // Log in text
                           const Text(
                             'Log in',
                             style: TextStyle(
@@ -184,7 +212,7 @@ class _LoginPageState extends State<LoginPage> {
 
                       const SizedBox(height: 20),
 
-                      // Email Field
+                      // Username Field
                       const Padding(
                         padding: EdgeInsets.only(left: 5.0, bottom: 5.0),
                         child: Text(
@@ -198,13 +226,11 @@ class _LoginPageState extends State<LoginPage> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 15),
                         decoration: BoxDecoration(
-                          // ignore: deprecated_member_use
                           color: Colors.white.withOpacity(0.9),
                           borderRadius: BorderRadius.circular(30),
                         ),
                         child: TextFormField(
-                          controller: _emailController,
-                          keyboardType: TextInputType.emailAddress,
+                          controller: _usernameController,
                           style: const TextStyle(color: Colors.black87),
                           decoration: const InputDecoration(
                             hintText: 'Username',
@@ -230,7 +256,6 @@ class _LoginPageState extends State<LoginPage> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 15),
                         decoration: BoxDecoration(
-                          // ignore: deprecated_member_use
                           color: Colors.white.withOpacity(0.9),
                           borderRadius: BorderRadius.circular(30),
                         ),
@@ -251,49 +276,28 @@ class _LoginPageState extends State<LoginPage> {
 
                 // Login Button
                 Center(
-                  child: Container(
+                  child: SizedBox(
                     width: double.infinity,
                     height: 50,
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [
-                          Color(0xFF7B5BF2), // Purple
-                          Color(0xFF5D4AF3), // Darker purple
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(25),
-                      boxShadow: [
-                        BoxShadow(
-                          // ignore: deprecated_member_use
-                          color: Colors.black.withOpacity(0.1),
-                          spreadRadius: 1,
-                          blurRadius: 3,
-                          offset: const Offset(0, 2),
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _login,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF7B5BF2),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(25),
                         ),
-                      ],
-                    ),
-                    child: TextButton(
-                      onPressed: () {
-                        if (_emailController.text.isEmpty ||
-                            _passwordController.text.isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Please fill all fields'),
-                              backgroundColor: Colors.red,
+                        elevation: 3,
+                      ),
+                      child: _isLoading
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text(
+                              "Login",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
-                          );
-                        } else {
-                          // Handle login logic
-                        }
-                      },
-                      child: const Text(
-                        "Login",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
                     ),
                   ),
                 ),
@@ -302,8 +306,8 @@ class _LoginPageState extends State<LoginPage> {
 
                 // Forgot Password Link
                 Center(
-                  child: GestureDetector(
-                    onTap: () {
+                  child: TextButton(
+                    onPressed: () {
                       // Navigate to forgot password screen
                     },
                     child: const Text(
@@ -331,8 +335,8 @@ class _LoginPageState extends State<LoginPage> {
                           fontSize: 14,
                         ),
                       ),
-                      GestureDetector(
-                        onTap: () {
+                      TextButton(
+                        onPressed: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(

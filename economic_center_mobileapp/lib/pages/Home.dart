@@ -15,14 +15,14 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.green,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: const HomePage(),
+      home: const HomePage(userData: 'Sample User Data'),
       debugShowCheckedModeBanner: false,
     );
   }
 }
 
 class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+  const HomePage({super.key, required userData});
 
   @override
   Widget build(BuildContext context) {
