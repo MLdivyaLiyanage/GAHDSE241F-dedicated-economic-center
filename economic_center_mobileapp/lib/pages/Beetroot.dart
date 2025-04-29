@@ -31,10 +31,10 @@ class ProductDetailPage extends StatefulWidget {
 class _ProductDetailPageState extends State<ProductDetailPage> {
   // Sample images for product gallery
   final List<String> productImages = [
-    'https://img.freepik.com/free-photo/delicious-mango-still-life_23-2151542201.jpg?t=st=1745936057~exp=1745939657~hmac=6ccf28f5a15baaadee2709fca927c9010a78a519376b0c88156078d1a571695b&w=740',
-    'https://img.freepik.com/free-photo/mango-tree-with-nature_1150-12252.jpg?t=st=1745936083~exp=1745939683~hmac=fe67200408e3c7d04c2b5210c4d525ce870b891f156c574657ce01697b451e7a&w=996',
-    'https://img.freepik.com/free-photo/delicious-raw-mango-fruit-tree_23-2149204866.jpg?t=st=1745936106~exp=1745939706~hmac=5ff0cedacc4087d6f040f8b18b0c8784634e0cb5fc05c3730622e66c92c314a3&w=740',
-    'https://img.freepik.com/free-photo/delicious-mango-still-life_23-2151542199.jpg?t=st=1745936127~exp=1745939727~hmac=3b6e444d2f88b4247dcd3867628beed648db8861d194a0087414577624b96adf&w=740',
+    'https://img.freepik.com/premium-photo/closed-up-shot-beet-roots_53876-70654.jpg?w=826',
+    'https://img.freepik.com/free-photo/front-view-woman-living-healthy-life_23-2151201997.jpg?t=st=1745935204~exp=1745938804~hmac=c0e83fc2e461b486d6fbea9ffebb6847d4889d60d0f55c1858d012d68436dff3&w=996',
+    'https://img.freepik.com/premium-photo/freshly-dug-beets-are-spread-out-grass-sun_256302-619.jpg?w=900',
+    'https://img.freepik.com/free-photo/flat-lay-beets-table_23-2148678922.jpg?t=st=1745935254~exp=1745938854~hmac=760298dcdb37a28eb3c33fa235244d2e31271e764506fc3636a435c05eba3016&w=996',
   ];
 
   // Sample review data
@@ -166,7 +166,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 children: [
                   // Price
                   const Text(
-                    'Rs. 734',
+                    'Rs. 132',
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -177,7 +177,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
                   // Product Name
                   const Text(
-                    'Mango',
+                    'Beetroot',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w500,
@@ -203,7 +203,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       ),
                       const SizedBox(width: 8),
                       const Text(
-                        '153 sold',
+                        '176 sold',
                         style: TextStyle(fontSize: 14),
                       ),
                     ],
@@ -224,7 +224,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
                   // Product description and specifications
                   const Text(
-                    'I sell fresh, juicy mangoes, handpicked from the best local farms. Known for their rich, tropical flavor and vibrant color, these mangoes are perfect for snacking, smoothies, salads, and desserts. ',
+                    'I sell fresh, nutritious beetroot, grown using natural farming practices. Rich in vitamins and minerals, my beetroots are perfect for salads, juices, or cooking.  ',
                     style: TextStyle(fontSize: 14),
                   ),
 
@@ -254,7 +254,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           ),
                           Padding(
                             padding: EdgeInsets.symmetric(vertical: 8.0),
-                            child: Text('Alphonso (Hapus) '),
+                            child: Text('Detroit Dark Red '),
                           ),
                         ],
                       ),
@@ -269,7 +269,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           ),
                           Padding(
                             padding: EdgeInsets.symmetric(vertical: 8.0),
-                            child: Text(' 5 to 10'),
+                            child: Text('10g to 25g'),
                           ),
                         ],
                       ),
@@ -284,7 +284,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           ),
                           Padding(
                             padding: EdgeInsets.symmetric(vertical: 8.0),
-                            child: Text('60–80%'),
+                            child: Text('85–95%'),
                           ),
                         ],
                       ),
@@ -299,7 +299,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           ),
                           Padding(
                             padding: EdgeInsets.symmetric(vertical: 8.0),
-                            child: Text('2 to 4 weeks'),
+                            child: Text('5 to 10 days'),
                           ),
                         ],
                       ),
@@ -314,7 +314,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           ),
                           Padding(
                             padding: EdgeInsets.symmetric(vertical: 8.0),
-                            child: Text('1 to 2 weeks'),
+                            child: Text(' 2 to 3 weeks'),
                           ),
                         ],
                       ),

@@ -31,10 +31,10 @@ class ProductDetailPage extends StatefulWidget {
 class _ProductDetailPageState extends State<ProductDetailPage> {
   // Sample images for product gallery
   final List<String> productImages = [
-    'https://img.freepik.com/free-photo/delicious-mango-still-life_23-2151542201.jpg?t=st=1745936057~exp=1745939657~hmac=6ccf28f5a15baaadee2709fca927c9010a78a519376b0c88156078d1a571695b&w=740',
-    'https://img.freepik.com/free-photo/mango-tree-with-nature_1150-12252.jpg?t=st=1745936083~exp=1745939683~hmac=fe67200408e3c7d04c2b5210c4d525ce870b891f156c574657ce01697b451e7a&w=996',
-    'https://img.freepik.com/free-photo/delicious-raw-mango-fruit-tree_23-2149204866.jpg?t=st=1745936106~exp=1745939706~hmac=5ff0cedacc4087d6f040f8b18b0c8784634e0cb5fc05c3730622e66c92c314a3&w=740',
-    'https://img.freepik.com/free-photo/delicious-mango-still-life_23-2151542199.jpg?t=st=1745936127~exp=1745939727~hmac=3b6e444d2f88b4247dcd3867628beed648db8861d194a0087414577624b96adf&w=740',
+    'https://img.freepik.com/free-photo/delicious-bananas-nature_23-2150830512.jpg?t=st=1745934687~exp=1745938287~hmac=25374f028fa852c19bd4e2d32cc7b281707723676af62c22bea67cb7777c4cab&w=996',
+    'https://img.freepik.com/free-photo/bananas-hanging-from-store-india_1353-66.jpg?t=st=1745934709~exp=1745938309~hmac=96072064db6b19574b8210f67b8ad24d2e272da9d1b282e806aff75b2cc1bbed&w=900',
+    'https://img.freepik.com/free-photo/delicious-bananas-hanging-outdoors_23-2150830486.jpg?t=st=1745934732~exp=1745938332~hmac=315e0fb7e15221bfd6faef8f6c55ed7e080a905e27665dd51568b3100adb1b52&w=996',
+    'https://img.freepik.com/premium-photo/bananas-growing-banana-bushes-plantation-turkey_157912-4456.jpg?w=740',
   ];
 
   // Sample review data
@@ -166,7 +166,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 children: [
                   // Price
                   const Text(
-                    'Rs. 734',
+                    'Rs. 212',
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -177,7 +177,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
                   // Product Name
                   const Text(
-                    'Mango',
+                    'Banana',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w500,
@@ -203,7 +203,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       ),
                       const SizedBox(width: 8),
                       const Text(
-                        '153 sold',
+                        '90 sold',
                         style: TextStyle(fontSize: 14),
                       ),
                     ],
@@ -224,7 +224,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
                   // Product description and specifications
                   const Text(
-                    'I sell fresh, juicy mangoes, handpicked from the best local farms. Known for their rich, tropical flavor and vibrant color, these mangoes are perfect for snacking, smoothies, salads, and desserts. ',
+                    'I sell fresh, naturally ripened bananas grown using traditional methods without chemicals. Sweet, nutritious, and rich in energy, my bananas are perfect for daily consumption, smoothies, or desserts.  ',
                     style: TextStyle(fontSize: 14),
                   ),
 
@@ -254,7 +254,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           ),
                           Padding(
                             padding: EdgeInsets.symmetric(vertical: 8.0),
-                            child: Text('Alphonso (Hapus) '),
+                            child: Text('Anamalu '),
                           ),
                         ],
                       ),
@@ -269,7 +269,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           ),
                           Padding(
                             padding: EdgeInsets.symmetric(vertical: 8.0),
-                            child: Text(' 5 to 10'),
+                            child: Text('1 to 5 suckers per pack'),
                           ),
                         ],
                       ),
@@ -284,7 +284,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           ),
                           Padding(
                             padding: EdgeInsets.symmetric(vertical: 8.0),
-                            child: Text('60–80%'),
+                            child: Text('80–95%'),
                           ),
                         ],
                       ),
@@ -299,7 +299,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           ),
                           Padding(
                             padding: EdgeInsets.symmetric(vertical: 8.0),
-                            child: Text('2 to 4 weeks'),
+                            child: Text(' 2 to 4 months'),
                           ),
                         ],
                       ),
@@ -314,7 +314,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           ),
                           Padding(
                             padding: EdgeInsets.symmetric(vertical: 8.0),
-                            child: Text('1 to 2 weeks'),
+                            child: Text(' 2 to 5 days at room temperature'),
                           ),
                         ],
                       ),

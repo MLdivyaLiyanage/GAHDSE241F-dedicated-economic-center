@@ -31,10 +31,10 @@ class ProductDetailPage extends StatefulWidget {
 class _ProductDetailPageState extends State<ProductDetailPage> {
   // Sample images for product gallery
   final List<String> productImages = [
-    'https://img.freepik.com/free-photo/delicious-mango-still-life_23-2151542201.jpg?t=st=1745936057~exp=1745939657~hmac=6ccf28f5a15baaadee2709fca927c9010a78a519376b0c88156078d1a571695b&w=740',
-    'https://img.freepik.com/free-photo/mango-tree-with-nature_1150-12252.jpg?t=st=1745936083~exp=1745939683~hmac=fe67200408e3c7d04c2b5210c4d525ce870b891f156c574657ce01697b451e7a&w=996',
-    'https://img.freepik.com/free-photo/delicious-raw-mango-fruit-tree_23-2149204866.jpg?t=st=1745936106~exp=1745939706~hmac=5ff0cedacc4087d6f040f8b18b0c8784634e0cb5fc05c3730622e66c92c314a3&w=740',
-    'https://img.freepik.com/free-photo/delicious-mango-still-life_23-2151542199.jpg?t=st=1745936127~exp=1745939727~hmac=3b6e444d2f88b4247dcd3867628beed648db8861d194a0087414577624b96adf&w=740',
+    'https://img.freepik.com/premium-photo/close-up-hand-harvesting-fresh-peppercorn-garden_1048944-15614420.jpg?w=996',
+    'https://img.freepik.com/free-photo/white-sack-full-dried-pepper-gray-surface_114579-77242.jpg?t=st=1745930376~exp=1745933976~hmac=6f362a599a84fcb6704521e506490248b25265b1ce9df26c3973674ec8bfb279&w=996',
+    'https://img.freepik.com/premium-photo/high-angle-view-berries-white-background_1048944-3426887.jpg?w=900',
+    'https://img.freepik.com/free-photo/black-milled-pepper-corns-as-background-high-quality-photo_114579-40514.jpg?t=st=1745930419~exp=1745934019~hmac=216f029d1c91ca39827e56a3daec3b8fdef45a6f59be4b7b1baa11d0314918d6&w=996',
   ];
 
   // Sample review data
@@ -166,7 +166,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 children: [
                   // Price
                   const Text(
-                    'Rs. 734',
+                    'Rs. 340',
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -177,7 +177,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
                   // Product Name
                   const Text(
-                    'Mango',
+                    'Black Pepper',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w500,
@@ -203,7 +203,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       ),
                       const SizedBox(width: 8),
                       const Text(
-                        '153 sold',
+                        '200 sold',
                         style: TextStyle(fontSize: 14),
                       ),
                     ],
@@ -224,7 +224,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
                   // Product description and specifications
                   const Text(
-                    'I sell fresh, juicy mangoes, handpicked from the best local farms. Known for their rich, tropical flavor and vibrant color, these mangoes are perfect for snacking, smoothies, salads, and desserts. ',
+                    'I sell high-quality black pepper harvested from local farms, carefully dried and packed to preserve its strong aroma and flavor. Ideal for cooking, seasoning, or health use, my black pepper is 100% natural and free from chemicals. Available in small or bulk packs.',
                     style: TextStyle(fontSize: 14),
                   ),
 
@@ -254,7 +254,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           ),
                           Padding(
                             padding: EdgeInsets.symmetric(vertical: 8.0),
-                            child: Text('Alphonso (Hapus) '),
+                            child: Text('Sri Lankan Local Varieties '),
                           ),
                         ],
                       ),
@@ -269,7 +269,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           ),
                           Padding(
                             padding: EdgeInsets.symmetric(vertical: 8.0),
-                            child: Text(' 5 to 10'),
+                            child: Text('100 '),
                           ),
                         ],
                       ),
@@ -284,7 +284,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           ),
                           Padding(
                             padding: EdgeInsets.symmetric(vertical: 8.0),
-                            child: Text('60–80%'),
+                            child: Text('20–30%'),
                           ),
                         ],
                       ),
@@ -299,7 +299,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           ),
                           Padding(
                             padding: EdgeInsets.symmetric(vertical: 8.0),
-                            child: Text('2 to 4 weeks'),
+                            child: Text(' 2 to 3 years'),
                           ),
                         ],
                       ),
@@ -314,7 +314,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           ),
                           Padding(
                             padding: EdgeInsets.symmetric(vertical: 8.0),
-                            child: Text('1 to 2 weeks'),
+                            child: Text('Up to 3 months'),
                           ),
                         ],
                       ),
