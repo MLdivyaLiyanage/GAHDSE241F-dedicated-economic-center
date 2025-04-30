@@ -1,5 +1,8 @@
 import 'package:economic_center_mobileapp/pages/signin.dart';
 import 'package:flutter/material.dart';
+import 'package:economic_center_mobileapp/pages/AppelProduct.dart';
+import 'package:economic_center_mobileapp/pages/TomatoProduct.dart';
+import 'package:economic_center_mobileapp/pages/categary.dart';
 
 void main() {
   runApp(const MyApp());
@@ -21,7 +24,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
         fontFamily: 'Poppins',
       ),
-      home: const LoginPage(),
+      home: const Category(),
     );
   }
 }
@@ -67,7 +70,7 @@ class _ProductScreenState extends State<ProductScreen> {
   final List<Product> products = [
     Product(
       id: 1,
-      name: 'Appel',
+      name: 'Apple',
       description:
           'Finest high-grown Sri Lankan Appel leaves from Nuwara Eliya',
       price: 397.47,
