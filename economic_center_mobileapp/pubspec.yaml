@@ -31,6 +31,8 @@ dependencies:
   flutter:
     sdk: flutter
   http: ^0.13.6
+  
+
 
 
 
@@ -44,10 +46,12 @@ dependencies:
   google_fonts: ^4.0.4
   flutter_animate: ^4.5.2
   intl: ^0.20.2
+  image_picker: ^1.1.2
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+    
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is

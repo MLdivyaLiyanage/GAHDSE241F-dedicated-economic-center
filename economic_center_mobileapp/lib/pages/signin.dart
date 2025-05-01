@@ -116,6 +116,7 @@ class _LoginPageState extends State<LoginPage> {
                       width: 50,
                       height: 50,
                       decoration: BoxDecoration(
+                        // ignore: deprecated_member_use
                         color: Colors.white.withOpacity(0.9),
                         shape: BoxShape.circle,
                         border: Border.all(color: Colors.grey.shade300),
@@ -186,6 +187,7 @@ class _LoginPageState extends State<LoginPage> {
                               height: 100,
                               width: 80,
                               decoration: BoxDecoration(
+                                // ignore: deprecated_member_use
                                 color: Colors.white.withOpacity(0.2),
                                 borderRadius: BorderRadius.circular(10),
                               ),
@@ -226,6 +228,7 @@ class _LoginPageState extends State<LoginPage> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 15),
                         decoration: BoxDecoration(
+                          // ignore: deprecated_member_use
                           color: Colors.white.withOpacity(0.9),
                           borderRadius: BorderRadius.circular(30),
                         ),
@@ -256,6 +259,7 @@ class _LoginPageState extends State<LoginPage> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 15),
                         decoration: BoxDecoration(
+                          // ignore: deprecated_member_use
                           color: Colors.white.withOpacity(0.9),
                           borderRadius: BorderRadius.circular(30),
                         ),
