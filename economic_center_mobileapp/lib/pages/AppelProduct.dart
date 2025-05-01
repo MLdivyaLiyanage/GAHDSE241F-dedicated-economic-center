@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const Apple());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class Apple extends StatelessWidget {
+  const Apple({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -177,7 +177,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
                   // Product Name
                   const Text(
-                    'Appel',
+                    'Apple',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w500,

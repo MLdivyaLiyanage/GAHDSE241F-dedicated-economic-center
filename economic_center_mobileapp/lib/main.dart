@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:io';
-import 'package:image_picker/image_picker.dart';
 
 void main() {
   runApp(const MyApp());
@@ -14,19 +12,203 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Fresh Grocery',
       theme: ThemeData(
-        primarySwatch: Colors.green,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF0C4B33), // Sri Lankan green theme
+          brightness: Brightness.light,
+        ),
+        useMaterial3: true,
+        fontFamily: 'Poppins',
       ),
-      home: const HomePage(
-        userData: {},
-      ),
-      debugShowCheckedModeBanner: false,
+      home: const LoginPage(),
     );
   }
 }
 
-class HomePage extends StatelessWidget {
-  const HomePage({super.key, required Map userData});
+class Product {
+  final int id;
+  final String name;
+  final String description;
+  final double price;
+  final String imageUrl;
+  final String category;
+  final bool isLocal;
+  final double rating;
+  final String seller;
+  final int reviewCount;
+
+  Product({
+    required this.id,
+    required this.name,
+    required this.description,
+    required this.price,
+    required this.imageUrl,
+    required this.category,
+    this.isLocal = true,
+    this.rating = 4.0,
+    this.seller = 'Local Seller',
+    this.reviewCount = 0,
+  });
+}
+
+class ProductScreen extends StatefulWidget {
+  const ProductScreen({super.key});
+
+  @override
+  State<ProductScreen> createState() => _ProductScreenState();
+}
+
+class _ProductScreenState extends State<ProductScreen> {
+  String selectedCategory = 'All';
+  bool showLocalOnly = true;
+
+  // Sri Lankan themed product data
+  final List<Product> products = [
+    Product(
+      id: 1,
+      name: 'Appel',
+      description:
+          'Finest high-grown Sri Lankan Appel leaves from Nuwara Eliya',
+      price: 397.47,
+      imageUrl:
+          'https://img.freepik.com/free-photo/fresh-apples-supermarket_1303-16018.jpg?t=st=1745139002~exp=1745142602~hmac=86d1baad086523ba7d6ed7c244ac99c8e376c61ad0d1f6cc74090959628ccddf&w=996',
+      category: 'Fruits',
+      rating: 4.8,
+      seller: 'Nuwara Eliya .',
+      reviewCount: 128,
+    ),
+    Product(
+      id: 2,
+      name: 'Tomato',
+      description: 'Traditional Sri Lankan ',
+      price: 390.00,
+      imageUrl:
+          'https://img.freepik.com/premium-photo/close-up-tomatoes_1048944-1518277.jpg?w=996',
+      category: 'Vegitables',
+      rating: 4.5,
+      seller: 'Handloom Crafts',
+      reviewCount: 86,
+    ),
+    Product(
+      id: 3,
+      name: 'Devilled Cashews',
+      description: 'Authentic Sri Lankan spices ',
+      price: 350.00,
+      imageUrl:
+          'https://img.freepik.com/free-photo/tasty-cashew-nuts-as-background_1150-45355.jpg?t=st=1745158007~exp=1745161607~hmac=16154198aba0578978fa521975a3762f98b6f7ad9a237ce7d92728ebd4e7c7fd&w=996',
+      category: 'Nuts',
+      rating: 4.7,
+      seller: 'Spice Island',
+      reviewCount: 215,
+    ),
+    Product(
+      id: 4,
+      name: 'green chilli',
+      description:
+          'Eco-friendly wooden artifacts made from sustainable materials',
+      price: 675.00,
+      imageUrl:
+          'https://img.freepik.com/premium-photo/full-frame-shot-green-chili-peppers_1048944-25440816.jpg?w=826',
+      category: 'Chilli',
+      rating: 4.6,
+      seller: 'Wood Artisans',
+      reviewCount: 42,
+    ),
+    Product(
+      id: 5,
+      name: 'Black pepper',
+      description: 'Pure virgin coconut oil 500ml - cold pressed and organic',
+      price: 340.00,
+      imageUrl:
+          'https://img.freepik.com/free-photo/black-milled-pepper-corns-as-background-high-quality-photo_114579-40514.jpg?t=st=1745158828~exp=1745162428~hmac=4b13a55451af83438329ec9bbe0b7f9778bc7c7c412521a401e2765186bb5cd7&w=996',
+      category: 'Pepper',
+      rating: 4.4,
+      seller: 'Coconut Paradise',
+      reviewCount: 178,
+    ),
+    Product(
+      id: 6,
+      name: 'Ginger',
+      description: 'Traditional Sri Lankan batik design - 100% cotton',
+      price: 1223.00,
+      imageUrl:
+          'https://img.freepik.com/free-photo/young-woman-buys-ginger-market-woman-choose-ginger-supermarket-woman-picking-fresh-produce-market_1391-643.jpg?t=st=1745159114~exp=1745162714~hmac=ffbcd5b11d6dc279221dbc9cc6cb3768e7912e065406c98689522b3fb5eb49a0&w=900',
+      category: 'Ginger',
+      rating: 4.3,
+      seller: 'Batik House',
+      reviewCount: 64,
+    ),
+    Product(
+      id: 7,
+      name: 'Banana',
+      description: 'Blue sapphire with silver chain - ethically sourced gems',
+      price: 212.00,
+      imageUrl:
+          'https://img.freepik.com/free-photo/bananas-hanging-rope_1122-1220.jpg?t=st=1745159206~exp=1745162806~hmac=906e44115c65904a876f2f619da4441c6c2c83ee87998fd956f981baf00d6229&w=900',
+      category: 'Fruits',
+      rating: 4.9,
+      seller: 'Ratnapura',
+      reviewCount: 53,
+    ),
+    Product(
+      id: 8,
+      name: 'Beetroot',
+      description: 'Traditional medicine set for holistic wellness',
+      price: 132.00,
+      imageUrl:
+          'https://img.freepik.com/premium-photo/close-up-plants_1048944-21388094.jpg?w=996',
+      category: 'Vegetable',
+      rating: 4.5,
+      seller: 'Ayurveda Lanka',
+      reviewCount: 97,
+    ),
+    Product(
+      id: 9,
+      name: 'Pumpkin',
+      description: 'Traditional woven Dumbara mats - unique Sri Lankan craft',
+      price: 334.00,
+      imageUrl:
+          'https://img.freepik.com/free-photo/various-striped-pumpkins-harvested-sunny-autumn-day-close-up-orange-green-pumpkins_7502-10551.jpg?t=st=1745159889~exp=1745163489~hmac=41b9f869261a485262b38d3ee74875019bcb711426f5cd5bf02b810a57622b3f&w=900',
+      category: 'Vegetable',
+      rating: 4.7,
+      seller: 'Dumbara Weavers',
+      reviewCount: 31,
+    ),
+    Product(
+      id: 10,
+      name: 'Mango',
+      description: 'Pure Ceylon cinnamon sticks 100g - sweet and aromatic',
+      price: 734.00,
+      imageUrl:
+          'https://img.freepik.com/premium-photo/selecting-ripe-mangoes-market_938295-3419.jpg?w=996',
+      category: 'Fruits',
+      rating: 4.8,
+      seller: 'Cinnamon Valley',
+      reviewCount: 203,
+    ),
+  ];
+
+  List<String> get categories {
+    final categorySet =
+        products.map((product) => product.category).toSet().toList();
+    categorySet.sort();
+    return ['All', ...categorySet];
+  }
+
+  List<Product> get filteredProducts {
+    List<Product> filtered = products;
+
+    if (selectedCategory != 'All') {
+      filtered = filtered
+          .where((product) => product.category == selectedCategory)
+          .toList();
+    }
+
+    if (showLocalOnly) {
+      filtered = filtered.where((product) => product.isLocal).toList();
+    }
+
+    return filtered;
+  }
 
   @override
   Widget build(BuildContext context) {
