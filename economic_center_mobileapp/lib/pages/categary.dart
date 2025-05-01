@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:economic_center_mobileapp/pages/DevilledCashewsProduct.dart';
 import 'package:economic_center_mobileapp/pages/MangoProduct.dart';
 import 'package:flutter/material.dart';
