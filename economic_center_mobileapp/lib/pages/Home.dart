@@ -1,13 +1,18 @@
+// ignore_for_file: depend_on_referenced_packages, sort_child_properties_last
+
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:http_parser/http_parser.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const Home());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class Home extends StatelessWidget {
+  const Home({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +44,6 @@ class HomePage extends StatelessWidget {
           );
         },
         backgroundColor: Colors.green.shade600,
-        // ignore: sort_child_properties_last
         child: const Icon(Icons.add),
         tooltip: 'Add Product',
       ),
@@ -108,13 +112,8 @@ class HomePage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Offer Banner
                   _buildOfferBanner(),
-
-                  // Categories Section
                   _buildCategoriesSection(),
-
-                  // Popular Products Section
                   _buildProductsSection(),
                 ],
               ),
@@ -145,7 +144,6 @@ class HomePage extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              // ignore: deprecated_member_use
               color: Colors.deepOrange.withOpacity(0.3),
               blurRadius: 8,
               offset: const Offset(0, 4),
@@ -182,7 +180,6 @@ class HomePage extends StatelessWidget {
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      // ignore: deprecated_member_use
                       color: Colors.black.withOpacity(0.1),
                       blurRadius: 4,
                       offset: const Offset(0, 2),
@@ -270,7 +267,6 @@ class HomePage extends StatelessWidget {
               borderRadius: BorderRadius.circular(15),
               boxShadow: [
                 BoxShadow(
-                  // ignore: deprecated_member_use
                   color: Colors.black.withOpacity(0.1),
                   blurRadius: 5,
                   offset: const Offset(0, 3),
@@ -366,7 +362,6 @@ class HomePage extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            // ignore: deprecated_member_use
             color: Colors.black.withOpacity(0.08),
             spreadRadius: 1,
             blurRadius: 10,
@@ -398,7 +393,6 @@ class HomePage extends StatelessWidget {
                 margin: const EdgeInsets.all(8),
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  // ignore: deprecated_member_use
                   color: Colors.white.withOpacity(0.8),
                   shape: BoxShape.circle,
                 ),
@@ -462,7 +456,6 @@ class HomePage extends StatelessWidget {
                         borderRadius: BorderRadius.circular(8),
                         boxShadow: [
                           BoxShadow(
-                            // ignore: deprecated_member_use
                             color: Colors.green.withOpacity(0.3),
                             blurRadius: 5,
                             offset: const Offset(0, 2),
@@ -492,7 +485,6 @@ class HomePage extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            // ignore: deprecated_member_use
             color: Colors.black.withOpacity(0.1),
             blurRadius: 10,
             offset: const Offset(0, -2),
@@ -545,6 +537,11 @@ class _UploadProductPageState extends State<UploadProductPage> {
   final ImagePicker _picker = ImagePicker();
   bool _isUploading = false;
 
+  // For Android emulator
+  static const String _baseUrl = 'http://10.0.2.2:5000';
+  // For iOS simulator or physical device, use your computer's local IP
+  // static const String _baseUrl = 'http://192.168.x.x:5000';
+
   final List<String> _categories = [
     'Vegetables',
     'Fruits',
@@ -585,23 +582,60 @@ class _UploadProductPageState extends State<UploadProductPage> {
       _isUploading = true;
     });
 
-    // Simulate network request
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse('$_baseUrl/api/products'),
+      );
 
-    setState(() {
-      _isUploading = false;
-    });
+      // Add text fields
+      request.fields['name'] = _nameController.text;
+      request.fields['price'] = _priceController.text;
+      request.fields['category'] = _selectedCategory;
+      request.fields['description'] = _descriptionController.text;
 
-    if (!mounted) return;
+      // Add image file
+      var imageFile = await http.MultipartFile.fromPath(
+        'image',
+        _imageFile!.path,
+        contentType: MediaType('image', 'jpeg'), // Adjust if needed
+      );
+      request.files.add(imageFile);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Product uploaded successfully!'),
-        backgroundColor: Colors.green,
-      ),
-    );
+      // Send the request
+      var response = await request.send();
+      final responseBody = await response.stream.bytesToString();
+      final jsonResponse = json.decode(responseBody);
 
-    Navigator.pop(context);
+      if (response.statusCode == 201) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(jsonResponse['message']),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.pop(context);
+      } else {
+        _showErrorSnackbar(
+            'Failed to upload product: ${jsonResponse['error'] ?? 'Unknown error'}');
+      }
+    } on SocketException {
+      _showErrorSnackbar(
+          'Could not connect to the server. Please check your connection.');
+    } on HttpException {
+      _showErrorSnackbar('Could not reach the server. Please try again later.');
+    } on FormatException {
+      _showErrorSnackbar('Invalid server response. Please try again.');
+    } catch (e) {
+      _showErrorSnackbar('An unexpected error occurred: ${e.toString()}');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isUploading = false;
+        });
+      }
+    }
   }
 
   void _showErrorSnackbar(String message) {
@@ -645,7 +679,6 @@ class _UploadProductPageState extends State<UploadProductPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Product Image Uploader
                   GestureDetector(
                     onTap: _pickImage,
                     child: Container(
@@ -656,7 +689,6 @@ class _UploadProductPageState extends State<UploadProductPage> {
                         border: Border.all(color: Colors.grey.shade300),
                         boxShadow: [
                           BoxShadow(
-                            // ignore: deprecated_member_use
                             color: Colors.black.withOpacity(0.05),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
@@ -693,8 +725,6 @@ class _UploadProductPageState extends State<UploadProductPage> {
                     ),
                   ),
                   const SizedBox(height: 24),
-
-                  // Product Name
                   TextFormField(
                     controller: _nameController,
                     decoration: InputDecoration(
@@ -718,8 +748,6 @@ class _UploadProductPageState extends State<UploadProductPage> {
                     },
                   ),
                   const SizedBox(height: 16),
-
-                  // Product Price
                   TextFormField(
                     controller: _priceController,
                     decoration: InputDecoration(
@@ -747,8 +775,6 @@ class _UploadProductPageState extends State<UploadProductPage> {
                     },
                   ),
                   const SizedBox(height: 16),
-
-                  // Product Category Dropdown
                   DropdownButtonFormField<String>(
                     value: _selectedCategory,
                     decoration: InputDecoration(
@@ -774,8 +800,6 @@ class _UploadProductPageState extends State<UploadProductPage> {
                     },
                   ),
                   const SizedBox(height: 16),
-
-                  // Product Description
                   TextFormField(
                     controller: _descriptionController,
                     decoration: InputDecoration(
@@ -800,8 +824,6 @@ class _UploadProductPageState extends State<UploadProductPage> {
                     },
                   ),
                   const SizedBox(height: 24),
-
-                  // Upload Button
                   ElevatedButton(
                     onPressed: _isUploading ? null : _uploadProduct,
                     style: ElevatedButton.styleFrom(
