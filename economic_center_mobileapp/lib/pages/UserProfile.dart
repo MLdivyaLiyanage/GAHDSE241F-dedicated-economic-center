@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
@@ -100,7 +101,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   bool _isLoading = true;
   final String _baseUrl = 'http://10.0.2.2:3000';
   late SharedPreferences _prefs;
-  
+
   // Default email for the user - This will be editable now
   final String _defaultEmail = 'divya@gmail.com';
 
@@ -134,10 +135,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
 
   Future<void> _initializeApp() async {
     await _initSharedPreferences();
-    
+
     // First try to load from local storage
     final hasLocalData = await _loadProfileLocally();
-    
+
     // Then try to sync with server
     try {
       await _loadUserProfileFromServer();
@@ -219,7 +220,9 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         }
         return true;
       } catch (e) {
-        print('Error loading profile from local storage: $e');
+        if (kDebugMode) {
+          print('Error loading profile from local storage: $e');
+        }
         return false;
       }
     }
@@ -228,10 +231,13 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
 
   Future<void> _loadUserProfileFromServer() async {
     // Use the current email from the controller instead of the default email
-    String emailToFetch = _emailController.text.isNotEmpty ? _emailController.text : _defaultEmail;
-    
-    final response = await http.get(Uri.parse('$_baseUrl/api/user/$emailToFetch'));
-    
+    String emailToFetch = _emailController.text.isNotEmpty
+        ? _emailController.text
+        : _defaultEmail;
+
+    final response =
+        await http.get(Uri.parse('$_baseUrl/api/user/$emailToFetch'));
+
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
       setState(() {
@@ -272,7 +278,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   Future<void> _showImageSourceOptions() async {
     final result = await showModalBottomSheet<ImageSource>(
       context: context as BuildContext,
-      builder: ( BuildContext context) {
+      builder: (BuildContext context) {
         return SafeArea(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -302,10 +308,11 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     setState(() {
       _isLoading = true;
     });
-    
+
     try {
-      var request = http.MultipartRequest('POST', Uri.parse('$_baseUrl/api/user'));
-      
+      var request =
+          http.MultipartRequest('POST', Uri.parse('$_baseUrl/api/user'));
+
       request.fields['name'] = _nameController.text;
       request.fields['email'] = _emailController.text;
       request.fields['phone'] = _phoneController.text;
@@ -314,20 +321,20 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       request.fields['user_type'] = _userTypeController.text;
       request.fields['rating'] = userData.rating.toString();
       request.fields['posts'] = userData.posts.toString();
-      
+
       if (userData.profileImage != null) {
-        var stream = http.ByteStream(DelegatingStream.typed(userData.profileImage!.openRead()));
+        var stream = http.ByteStream(
+            // ignore: deprecated_member_use
+            DelegatingStream.typed(userData.profileImage!.openRead()));
         var length = await userData.profileImage!.length();
-        var multipartFile = http.MultipartFile(
-          'profile_image', stream, length,
-          filename: basename(userData.profileImage!.path)
-        );
+        var multipartFile = http.MultipartFile('profile_image', stream, length,
+            filename: basename(userData.profileImage!.path));
         request.files.add(multipartFile);
       }
-      
+
       var response = await request.send();
       final responseBody = await response.stream.bytesToString();
-      
+
       if (response.statusCode == 200) {
         final updatedUserData = json.decode(responseBody);
         setState(() {
@@ -336,7 +343,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           _updateControllers();
           _isLoading = false;
         });
-        
+
         await _saveProfileLocally();
         ScaffoldMessenger.of(context as BuildContext).showSnackBar(
           const SnackBar(content: Text('Profile updated successfully')),
@@ -358,21 +365,21 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     setState(() {
       _isLoading = true;
     });
-    
+
     try {
       final response = await http.delete(
         Uri.parse('$_baseUrl/api/user/${userData.email}'),
       );
-      
+
       if (response.statusCode == 200) {
         // Clear local storage
         await _prefs.remove('user_profile');
         await _prefs.remove('profile_image');
-        
+
         ScaffoldMessenger.of(context as BuildContext).showSnackBar(
           const SnackBar(content: Text('Profile deleted successfully')),
         );
-        
+
         setState(() {
           userData = UserData(
             name: '',
@@ -438,7 +445,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     );
   }
 
-  Widget _buildStatColumn(String value, String label, IconData? icon, Color color) {
+  Widget _buildStatColumn(
+      String value, String label, IconData? icon, Color color) {
     return Column(
       children: [
         Row(
@@ -733,16 +741,19 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                                       ),
                                       image: userData.profileImage != null
                                           ? DecorationImage(
-                                              image: FileImage(userData.profileImage!),
+                                              image: FileImage(
+                                                  userData.profileImage!),
                                               fit: BoxFit.cover,
                                             )
                                           : userData.profileImageUrl != null
                                               ? DecorationImage(
-                                                  image: NetworkImage(userData.profileImageUrl!),
+                                                  image: NetworkImage(userData
+                                                      .profileImageUrl!),
                                                   fit: BoxFit.cover,
                                                 )
                                               : const DecorationImage(
-                                                  image: AssetImage('assets/default_profile.png'),
+                                                  image: AssetImage(
+                                                      'assets/default_profile.png'),
                                                   fit: BoxFit.cover,
                                                 ),
                                     ),
@@ -811,7 +822,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                     _isEditing
                         ? _buildEditableAboutMe()
                         : _buildDisplayAboutMe(),
-                        
+
                     // Delete button only when in edit mode
                     if (_isEditing) ...[
                       const SizedBox(height: 24),
@@ -819,9 +830,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                         child: TextButton.icon(
                           onPressed: _showDeleteConfirmation,
                           icon: const Icon(Icons.delete, color: Colors.red),
-                          label: const Text('Delete Profile', 
-                            style: TextStyle(color: Colors.red)
-                          ),
+                          label: const Text('Delete Profile',
+                              style: TextStyle(color: Colors.red)),
                         ),
                       ),
                     ],
