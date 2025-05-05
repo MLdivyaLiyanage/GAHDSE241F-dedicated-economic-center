@@ -1,4 +1,4 @@
-// ignore_for_file: depend_on_referenced_packages, sort_child_properties_last
+// ignore_for_file: depend_on_referenced_packages, sort_child_properties_last, deprecated_member_use, unnecessary_string_escapes
 
 import 'package:flutter/material.dart';
 import 'dart:io';
@@ -8,11 +8,11 @@ import 'dart:convert';
 import 'package:http_parser/http_parser.dart';
 
 void main() {
-  runApp(const Home());
+  runApp(const MyApp());
 }
 
-class Home extends StatelessWidget {
-  const Home({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -144,7 +144,6 @@ class HomePage extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              // ignore: deprecated_member_use
               color: Colors.deepOrange.withOpacity(0.3),
               blurRadius: 8,
               offset: const Offset(0, 4),
@@ -181,7 +180,6 @@ class HomePage extends StatelessWidget {
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      // ignore: deprecated_member_use
                       color: Colors.black.withOpacity(0.1),
                       blurRadius: 4,
                       offset: const Offset(0, 2),
@@ -269,7 +267,6 @@ class HomePage extends StatelessWidget {
               borderRadius: BorderRadius.circular(15),
               boxShadow: [
                 BoxShadow(
-                  // ignore: deprecated_member_use
                   color: Colors.black.withOpacity(0.1),
                   blurRadius: 5,
                   offset: const Offset(0, 3),
@@ -365,7 +362,6 @@ class HomePage extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            // ignore: deprecated_member_use
             color: Colors.black.withOpacity(0.08),
             spreadRadius: 1,
             blurRadius: 10,
@@ -397,7 +393,6 @@ class HomePage extends StatelessWidget {
                 margin: const EdgeInsets.all(8),
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  // ignore: deprecated_member_use
                   color: Colors.white.withOpacity(0.8),
                   shape: BoxShape.circle,
                 ),
@@ -440,7 +435,7 @@ class HomePage extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
-                      '\$2.99',
+                      '\Rs.2.99',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
@@ -461,7 +456,6 @@ class HomePage extends StatelessWidget {
                         borderRadius: BorderRadius.circular(8),
                         boxShadow: [
                           BoxShadow(
-                            // ignore: deprecated_member_use
                             color: Colors.green.withOpacity(0.3),
                             blurRadius: 5,
                             offset: const Offset(0, 2),
@@ -491,7 +485,6 @@ class HomePage extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            // ignore: deprecated_member_use
             color: Colors.black.withOpacity(0.1),
             blurRadius: 10,
             offset: const Offset(0, -2),
@@ -538,6 +531,7 @@ class _UploadProductPageState extends State<UploadProductPage> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _priceController = TextEditingController();
+  final _stockController = TextEditingController();
   final _descriptionController = TextEditingController();
   String _selectedCategory = 'Vegetables';
   File? _imageFile;
@@ -598,6 +592,7 @@ class _UploadProductPageState extends State<UploadProductPage> {
       // Add text fields
       request.fields['name'] = _nameController.text;
       request.fields['price'] = _priceController.text;
+      request.fields['stock'] = _stockController.text;
       request.fields['category'] = _selectedCategory;
       request.fields['description'] = _descriptionController.text;
 
@@ -605,7 +600,7 @@ class _UploadProductPageState extends State<UploadProductPage> {
       var imageFile = await http.MultipartFile.fromPath(
         'image',
         _imageFile!.path,
-        contentType: MediaType('image', 'jpeg'), // Adjust if needed
+        contentType: MediaType('image', 'jpeg'),
       );
       request.files.add(imageFile);
 
@@ -658,6 +653,7 @@ class _UploadProductPageState extends State<UploadProductPage> {
   void dispose() {
     _nameController.dispose();
     _priceController.dispose();
+    _stockController.dispose();
     _descriptionController.dispose();
     super.dispose();
   }
@@ -696,7 +692,6 @@ class _UploadProductPageState extends State<UploadProductPage> {
                         border: Border.all(color: Colors.grey.shade300),
                         boxShadow: [
                           BoxShadow(
-                            // ignore: deprecated_member_use
                             color: Colors.black.withOpacity(0.05),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
@@ -759,7 +754,7 @@ class _UploadProductPageState extends State<UploadProductPage> {
                   TextFormField(
                     controller: _priceController,
                     decoration: InputDecoration(
-                      labelText: 'Price (\$)',
+                      labelText: 'Price (\Rs.)',
                       prefixIcon:
                           const Icon(Icons.attach_money, color: Colors.green),
                       border: OutlineInputBorder(
@@ -778,6 +773,33 @@ class _UploadProductPageState extends State<UploadProductPage> {
                       }
                       if (double.parse(value) <= 0) {
                         return 'Price must be greater than 0';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _stockController,
+                    decoration: InputDecoration(
+                      labelText: 'Stock Quantity(kg)',
+                      prefixIcon:
+                          const Icon(Icons.inventory, color: Colors.green),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      filled: true,
+                      fillColor: Colors.white,
+                    ),
+                    keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter stock quantity';
+                      }
+                      if (int.tryParse(value) == null) {
+                        return 'Please enter a valid number';
+                      }
+                      if (int.parse(value) < 0) {
+                        return 'Stock cannot be negative';
                       }
                       return null;
                     },
