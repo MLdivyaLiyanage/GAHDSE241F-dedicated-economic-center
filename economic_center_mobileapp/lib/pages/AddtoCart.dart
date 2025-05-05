@@ -779,7 +779,7 @@ class _ProductScreenState extends State<ProductScreen>
               top: 0,
               child: Container(
                 padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: Colors.red,
                   shape: BoxShape.circle,
                 ),
@@ -1159,7 +1159,7 @@ class _ProductCard extends StatelessWidget {
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      Icon(Icons.star, color: Colors.amber, size: 16),
+                      const Icon(Icons.star, color: Colors.amber, size: 16),
                       Text(
                         product.rating.toString(),
                         style: const TextStyle(fontSize: 12),

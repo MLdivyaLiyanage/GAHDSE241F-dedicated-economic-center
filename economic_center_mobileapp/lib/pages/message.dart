@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
@@ -72,6 +74,7 @@ class _FarmerMessagesPageState extends State<FarmerMessagesPage> {
         'https://images.unsplash.com/photo-1571939228382-b2f2b585ce15?ixlib=rb-4.0.3&q=85&fm=jpg&crop=entropy&cs=srgb'),
   ];
 
+  // ignore: unused_field
   final ImagePicker _picker = ImagePicker();
 
   void _showFarmerProfile(BuildContext context, Farmer farmer) {
@@ -808,7 +811,7 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
           const SizedBox(width: 8),
           Container(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: Colors.green,
               shape: BoxShape.circle,
             ),
