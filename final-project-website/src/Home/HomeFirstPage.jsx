@@ -268,7 +268,7 @@ const HomePage = () => {
       
       {/* Video Container Section */}
       <div style={styles.videoContainer}>
-        <video style={styles.video} autoPlay muted loop playsInline>
+        <video style={styles.video} autoPlay muted playsInline>
           <source src="src/assets/backgroundVedeo.mp4" type="video/mp4" />
         </video>
       </div>

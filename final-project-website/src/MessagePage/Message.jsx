@@ -1,5 +1,18 @@
 import { useState, useRef, useEffect } from "react";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
+import { FiArrowLeft, FiSend, FiCheck, FiClock, FiInfo } from "react-icons/fi";
+import { BsFlower1, BsTruck } from "react-icons/bs";
+
+const fadeIn = keyframes`
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+`;
+
+const pulse = keyframes`
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+`;
 
 const AppContainer = styled.div`
   display: flex;
@@ -8,8 +21,8 @@ const AppContainer = styled.div`
   justify-content: space-between;
   height: 100vh;
   width: 100vw;
-  background: linear-gradient(135deg, #e6f7e9, #c8e6c9);
-  font-family: "Poppins", sans-serif;
+  background: linear-gradient(135deg, #f5f7fa, #e4f5e8);
+  font-family: "Inter", sans-serif;
   padding: 0;
   overflow: hidden;
 `;
@@ -18,70 +31,103 @@ const Header = styled.header`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #2e7d32;
+  background: linear-gradient(135deg, #2e7d32, #43a047);
   color: #fff;
-  padding: 18px 25px;
+  padding: 16px 24px;
   width: 100%;
-  font-size: 1.6rem;
-  font-weight: bold;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  border-radius: 0 0 15px 15px;
+  font-size: 1.4rem;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   position: fixed;
   top: 0;
   z-index: 1000;
+  backdrop-filter: blur(5px);
 `;
 
-const HeaderInfo = styled.div`
+const HeaderContent = styled.div`
   display: flex;
-  flex-direction: column;
   align-items: center;
-`;
-
-const FarmerName = styled.span`
-  font-size: 1.6rem;
-  font-weight: bold;
-`;
-
-const FarmerStatus = styled.span`
-  font-size: 0.8rem;
-  color: #b9f6ca;
-  margin-top: 2px;
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
 `;
 
 const BackButton = styled.button`
-  background: none;
+  background: rgba(255, 255, 255, 0.2);
   border: none;
   color: white;
   font-size: 1rem;
   cursor: pointer;
-  padding: 10px 14px;
-  border-radius: 8px;
-  transition: all 0.3s ease-in-out;
-  font-weight: 500;
+  padding: 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  margin-right: 12px;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.25);
-    transform: scale(1.1);
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateX(-2px);
   }
 
   &:active {
-    transform: scale(0.95);
+    transform: scale(0.9);
   }
 `;
 
-const MessagesContainer = styled.div`
-  width: 90%;
-  max-width: 650px;
-  height: calc(100vh - 150px);
-  overflow-y: auto;
-  background: #ffffff;
-  border-radius: 15px;
-  padding: 20px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+const FarmerInfo = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 15px;
-  margin-top: 80px;
+  flex-grow: 1;
+`;
+
+const FarmerName = styled.span`
+  font-size: 1.2rem;
+  font-weight: 600;
+`;
+
+const FarmerStatus = styled.div`
+  display: flex;
+  align-items: center;
+  font-size: 0.75rem;
+  color: #e0f7fa;
+  margin-top: 2px;
+`;
+
+const StatusIndicator = styled.span`
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: ${props => props.online ? "#76ff03" : "#ff9100"};
+  margin-right: 6px;
+  box-shadow: 0 0 8px ${props => props.online ? "rgba(118, 255, 3, 0.5)" : "rgba(255, 145, 0, 0.5)"};
+`;
+
+const FarmerAvatar = styled.div`
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #a5d6a7, #43a047);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  margin-left: 12px;
+  border: 2px solid white;
+`;
+
+const MessagesContainer = styled.div`
+  width: 100%;
+  max-width: 800px;
+  height: calc(100vh - 160px);
+  overflow-y: auto;
+  padding: 80px 20px 90px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   scroll-behavior: smooth;
   
   &::-webkit-scrollbar {
@@ -89,149 +135,280 @@ const MessagesContainer = styled.div`
   }
 
   &::-webkit-scrollbar-thumb {
-    background: #43a047;
+    background: rgba(67, 160, 71, 0.5);
     border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(67, 160, 71, 0.1);
   }
 `;
 
 const EmptyMessage = styled.div`
-  text-align: center;
-  color: #555;
-  font-style: italic;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #78909c;
   font-size: 1rem;
+  text-align: center;
+  padding: 20px;
+`;
+
+const WelcomeMessage = styled.div`
+  background: #e8f5e9;
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 16px;
+  animation: ${fadeIn} 0.5s ease-out;
+  border: 1px solid #c8e6c9;
+`;
+
+const WelcomeHeader = styled.div`
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  color: #2e7d32;
+  font-weight: 600;
 `;
 
 const Message = styled.div`
-  background: ${(props) => (props.isFarmer ? "#43a047" : props.sent ? "#1e88e5" : "#e0e0e0")};
+  background: ${(props) => 
+    props.isFarmer ? "#43a047" : 
+    props.sent ? "#1e88e5" : "#f5f5f5"};
   color: ${(props) => (props.isFarmer || props.sent ? "#fff" : "#333")};
-  align-self: ${(props) => (props.isFarmer ? "flex-start" : props.sent ? "flex-end" : "flex-start")};
-  padding: 14px 18px;
-  border-radius: 20px;
-  max-width: 75%;
-  font-size: 1rem;
+  align-self: ${(props) => 
+    props.isFarmer ? "flex-start" : 
+    props.sent ? "flex-end" : "flex-start"};
+  padding: 12px 16px;
+  border-radius: 18px;
+  max-width: 80%;
+  font-size: 0.95rem;
   position: relative;
-  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  animation: ${fadeIn} 0.3s ease-out;
+  line-height: 1.4;
 
   &:hover {
-    transform: scale(1.02);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    ${props => props.isFarmer ? "left: -8px;" : "right: -8px;"}
+    width: 0;
+    height: 0;
+    border: 10px solid transparent;
+    border-${props => props.isFarmer ? "right" : "left"}-color: ${props => 
+      props.isFarmer ? "#43a047" : 
+      props.sent ? "#1e88e5" : "#f5f5f5"};
+    border-${props => props.isFarmer ? "left" : "right"}: 0;
+    border-bottom: 0;
+    margin-${props => props.isFarmer ? "left" : "right"}: -10px;
+    margin-bottom: 8px;
   }
 `;
 
 const MessageInfo = styled.div`
-  font-size: 0.75rem;
-  color: ${(props) => (props.isFarmer || props.sent ? "rgba(255, 255, 255, 0.8)" : "#555")};
   display: flex;
   justify-content: space-between;
-  margin-bottom: 5px;
-  opacity: 0.8;
+  font-size: 0.7rem;
+  color: ${(props) => (props.isFarmer || props.sent ? "rgba(255, 255, 255, 0.8)" : "#78909c")};
+  margin-bottom: 6px;
+`;
+
+const MessageStatus = styled.span`
+  display: flex;
+  align-items: center;
+  margin-left: 4px;
 `;
 
 const ProductUpdate = styled.div`
   background: #e8f5e9;
   border: 1px solid #a5d6a7;
-  border-radius: 12px;
-  padding: 12px 15px;
-  margin: 5px 0;
+  border-radius: 16px;
+  padding: 16px;
+  margin: 8px 0;
   font-size: 0.9rem;
+  color: #2e7d32;
+  animation: ${fadeIn} 0.5s ease-out;
+  position: relative;
+  overflow: hidden;
+`;
+
+const ProductHeader = styled.div`
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #1b5e20;
+`;
+
+const ProductDetail = styled.div`
+  display: flex;
+  align-items: center;
+  margin: 6px 0;
+`;
+
+const DetailIcon = styled.span`
+  margin-right: 8px;
   color: #2e7d32;
 `;
 
+// eslint-disable-next-line no-unused-vars
 const PriceTag = styled.span`
   background: #2e7d32;
   color: white;
   border-radius: 12px;
-  padding: 3px 8px;
-  font-weight: bold;
-  margin-left: 5px;
+  padding: 4px 10px;
+  font-weight: 500;
+  margin-left: 8px;
+  font-size: 0.8rem;
 `;
 
 const StockInfo = styled.span`
   background: ${props => props.inStock ? "#c8e6c9" : "#ffccbc"};
   color: ${props => props.inStock ? "#2e7d32" : "#d84315"};
   border-radius: 12px;
-  padding: 3px 8px;
+  padding: 4px 10px;
   font-weight: 500;
-  margin-left: 5px;
+  margin-left: 8px;
+  font-size: 0.8rem;
+`;
+
+const NoteBadge = styled.div`
+  background: #bbdefb;
+  color: #0d47a1;
+  border-radius: 12px;
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  margin-top: 8px;
+  display: inline-flex;
+  align-items: center;
+`;
+
+const TypingIndicator = styled.div`
+  align-self: flex-start;
+  background: #f5f5f5;
+  color: #78909c;
+  font-size: 0.85rem;
+  padding: 10px 16px;
+  border-radius: 18px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  animation: ${fadeIn} 0.3s ease-out;
+`;
+
+const TypingDots = styled.div`
+  display: flex;
+  margin-left: 8px;
+  
+  span {
+    width: 6px;
+    height: 6px;
+    background: #78909c;
+    border-radius: 50%;
+    display: inline-block;
+    margin: 0 2px;
+    animation: ${pulse} 1.5s infinite ease-in-out;
+    
+    &:nth-child(1) { animation-delay: 0s; }
+    &:nth-child(2) { animation-delay: 0.2s; }
+    &:nth-child(3) { animation-delay: 0.4s; }
+  }
 `;
 
 const MessageForm = styled.form`
   display: flex;
-  width: 90%;
-  max-width: 650px;
-  gap: 10px;
+  width: 100%;
+  max-width: 800px;
+  gap: 12px;
   position: fixed;
-  bottom: 10px;
+  bottom: 0;
   background: #fff;
-  padding: 10px 15px;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 16px 20px;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
+  z-index: 100;
 `;
 
 const Input = styled.input`
   flex: 1;
-  padding: 12px 15px;
-  border: none;
-  border-radius: 8px;
-  font-size: 1rem;
-  background: #f5f5f5;
-  transition: all 0.3s ease-in-out;
+  padding: 12px 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 24px;
+  font-size: 0.95rem;
+  background: #fafafa;
+  transition: all 0.3s ease;
 
   &:focus {
     outline: none;
+    border-color: #43a047;
     background: #fff;
-    box-shadow: 0 0 8px rgba(67, 160, 71, 0.5);
+    box-shadow: 0 0 0 3px rgba(67, 160, 71, 0.2);
   }
 `;
 
-const Button = styled.button`
+const SendButton = styled.button`
   background: linear-gradient(135deg, #43a047, #2e7d32);
   color: #fff;
   border: none;
-  padding: 12px 18px;
-  border-radius: 8px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
   cursor: pointer;
-  font-size: 1rem;
-  transition: all 0.3s ease-in-out;
-  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 
   &:hover {
     background: linear-gradient(135deg, #388e3c, #1b5e20);
-    transform: scale(1.05);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   }
 
   &:active {
     transform: scale(0.95);
   }
-`;
 
-const TypingIndicator = styled.div`
-  align-self: flex-start;
-  color: #555;
-  font-size: 0.9rem;
-  font-style: italic;
-  margin-top: -5px;
-  margin-bottom: 5px;
-  display: flex;
-  align-items: center;
-`;
-
-const TypingDots = styled.div`
-  display: inline-block;
-  margin-left: 5px;
-  
-  &::after {
-    content: '...';
-    animation: typing 1.5s infinite;
-    display: inline-block;
+  &:disabled {
+    background: #bdbdbd;
+    cursor: not-allowed;
+    transform: none;
   }
-  
-  @keyframes typing {
-    0% { content: '.'; }
-    33% { content: '..'; }
-    66% { content: '...'; }
-    100% { content: '.'; }
+`;
+
+const QuickActions = styled.div`
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+`;
+
+const QuickActionButton = styled.button`
+  background: rgba(67, 160, 71, 0.1);
+  color: #2e7d32;
+  border: 1px solid rgba(67, 160, 71, 0.3);
+  border-radius: 16px;
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: rgba(67, 160, 71, 0.2);
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: scale(0.98);
   }
 `;
 
@@ -240,19 +417,30 @@ function App() {
   const [newMessage, setNewMessage] = useState("");
   const [username] = useState("You");
   const [isFarmerTyping, setIsFarmerTyping] = useState(false);
-  const messagesEndRef = useRef(null);
   const [isOnline, setIsOnline] = useState(true);
+  const messagesEndRef = useRef(null);
 
   // Sample product data for the farmer's marketplace
   const productInfo = {
-    name: "Lime",
+    name: "Organic Red Rice",
     farmer: "Saman Perera",
     location: "Anuradhapura",
     price: "Rs. 180/kg",
     available: true,
     quantity: "500kg",
-    harvestDate: "March 28, 2025"
+    harvestDate: "March 28, 2025",
+    certification: "SLS Organic Certified",
+    delivery: "Available for bulk orders (100kg+)"
   };
+
+  // Quick action suggestions
+  const quickActions = [
+    "What's the price?",
+    "Is delivery available?",
+    "Do you offer discounts?",
+    "Tell me about quality",
+    "What's available now?"
+  ];
 
   // Auto-scroll to bottom of messages
   const scrollToBottom = () => {
@@ -267,7 +455,7 @@ function App() {
     // Initialize chat with a welcome message from the farmer
     if (messages.length === 0) {
       simulateFarmerReply({
-        text: `Ayubowan! Welcome to Sri Lanka Dedicated Economic Center. I'm from ${productInfo.farmer} in ${productInfo.location}. I have fresh ${productInfo.name} available. How can I help you today?`,
+        text: `Ayubowan! Welcome to Sri Lanka Dedicated Economic Center. I'm ${productInfo.farmer} from ${productInfo.location}. I specialize in traditional organic rice varieties. How can I assist you today?`,
         immediate: true
       });
       
@@ -281,7 +469,8 @@ function App() {
           available: productInfo.available,
           quantity: productInfo.quantity,
           harvestDate: productInfo.harvestDate,
-          timestamp: new Date().toLocaleTimeString()
+          certification: productInfo.certification,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         };
         setMessages(messages => [...messages, updateMessage]);
       }, 1000);
@@ -289,7 +478,7 @@ function App() {
 
     // Randomly toggle farmer online status
     const statusInterval = setInterval(() => {
-      setIsOnline(Math.random() > 0.2 ? true : false);
+      setIsOnline(Math.random() > 0.2);
     }, 60000); // Every minute
 
     return () => clearInterval(statusInterval);
@@ -302,8 +491,9 @@ function App() {
         id: Date.now(),
         text: newMessage,
         sender: username,
-        timestamp: new Date().toLocaleTimeString(),
-        isFarmer: false
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        isFarmer: false,
+        status: 'sent'
       };
       setMessages([...messages, message]);
       setNewMessage("");
@@ -311,6 +501,10 @@ function App() {
       // Simulate farmer typing and response
       handleFarmerResponse(newMessage);
     }
+  };
+
+  const handleQuickAction = (action) => {
+    setNewMessage(action);
   };
 
   const simulateFarmerReply = ({ text, immediate = false }) => {
@@ -327,7 +521,7 @@ function App() {
         id: Date.now(),
         text: text,
         sender: productInfo.farmer,
-        timestamp: new Date().toLocaleTimeString(),
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         isFarmer: true
       };
       setMessages(messages => [...messages, reply]);
@@ -340,9 +534,8 @@ function App() {
 
     // Set of predefined responses based on keywords
     if (lowerMsg.includes("price") || lowerMsg.includes("cost") || lowerMsg.includes("how much")) {
-      simulateFarmerReply({ text: `My ${productInfo.name} is currently priced at ${productInfo.price}. This is direct from my farm - no middleman price markup!` });
+      simulateFarmerReply({ text: `Our premium ${productInfo.name} is priced at ${productInfo.price}. This includes:\n\n• Direct from farm pricing\n• Traditional processing\n• Organic certification\n\nBulk discounts available for orders over 100kg.` });
       
-      // Add product update with price details
       setTimeout(() => {
         const updateMessage = {
           id: Date.now() + 100,
@@ -352,51 +545,62 @@ function App() {
           available: productInfo.available,
           quantity: productInfo.quantity,
           harvestDate: productInfo.harvestDate,
-          timestamp: new Date().toLocaleTimeString()
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          note: "Bulk discount: Rs. 165/kg for 200kg+"
         };
         setMessages(messages => [...messages, updateMessage]);
       }, 2000);
       
     } else if (lowerMsg.includes("delivery") || lowerMsg.includes("shipping") || lowerMsg.includes("transport")) {
-      simulateFarmerReply({ text: "We can arrange transport to Colombo for bulk orders (over 100kg). For smaller amounts, we have a pickup location at the Dedicated Economic Center. We can also connect you with local transport services." });
-    } else if (lowerMsg.includes("discount") || lowerMsg.includes("wholesale") || lowerMsg.includes("bulk")) {
-      simulateFarmerReply({ text: "Yes, we offer discounts for bulk purchases! For orders over 200kg, we can reduce the price to Rs. 165/kg." });
-    } else if (lowerMsg.includes("quality") || lowerMsg.includes("organic") || lowerMsg.includes("chemical")) {
-      simulateFarmerReply({ text: "Our rice is fully organic - no chemical fertilizers or pesticides. We use traditional farming methods and natural pest control. We have certification from the Sri Lanka Standards Institution." });
-    } else if (lowerMsg.includes("hello") || lowerMsg.includes("hi") || lowerMsg.includes("ayubowan")) {
-      simulateFarmerReply({ text: "Ayubowan! How can I help you today? Are you interested in purchasing our organic rice?" });
-    } else if (lowerMsg.includes("thank")) {
-      simulateFarmerReply({ text: "Istuti (Thank you)! Looking forward to doing business with you. Please let me know if you have any other questions." });
-    } else if (lowerMsg.includes("variety") || lowerMsg.includes("type") || lowerMsg.includes("kind")) {
-      simulateFarmerReply({ text: "We grow traditional Sri Lankan rice varieties - mainly Suwandel, Kalu Heenati, and Pachchaperumal. These heritage varieties have better taste and nutritional value than commercial types." });
-    } else if (lowerMsg.includes("harvest") || lowerMsg.includes("fresh") || lowerMsg.includes("new")) {
-      simulateFarmerReply({ text: `This batch was harvested on ${productInfo.harvestDate}. It's from our recent Maha season harvest and has been naturally dried and processed the traditional way.` });
+      simulateFarmerReply({ text: `🚚 Delivery Options:\n\n• Pickup at farm (Anuradhapura)\n• Economic Center collection point\n• Bulk delivery to Colombo (100kg+)\n\nWe work with trusted transport partners to ensure your rice arrives fresh.` });
       
-      // Update product details
+      setTimeout(() => {
+        const updateMessage = {
+          id: Date.now() + 101,
+          isUpdate: true,
+          product: productInfo.name,
+          delivery: productInfo.delivery,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          note: "Delivery charges apply based on quantity and location"
+        };
+        setMessages(messages => [...messages, updateMessage]);
+      }, 1500);
+      
+    } else if (lowerMsg.includes("discount") || lowerMsg.includes("wholesale") || lowerMsg.includes("bulk")) {
+      simulateFarmerReply({ text: "Yes! We offer special pricing for bulk purchases:\n\n• 100-199kg: Rs. 170/kg\n• 200-499kg: Rs. 165/kg\n• 500kg+: Rs. 160/kg\n\nThese prices include delivery to Colombo for orders over 100kg." });
+    } else if (lowerMsg.includes("quality") || lowerMsg.includes("organic") || lowerMsg.includes("chemical")) {
+      simulateFarmerReply({ text: `Our quality assurance:\n\n✅ ${productInfo.certification}\n✅ No chemical fertilizers/pesticides\n✅ Traditional sun-drying\n✅ Heritage seed varieties\n✅ Hand-processed\n\nWe maintain strict quality controls from seed to harvest.` });
+    } else if (lowerMsg.includes("hello") || lowerMsg.includes("hi") || lowerMsg.includes("ayubowan")) {
+      simulateFarmerReply({ text: "Ayubowan! Thank you for connecting through our Dedicated Economic Center. I'm happy to share information about our organic farming practices and products." });
+    } else if (lowerMsg.includes("thank")) {
+      simulateFarmerReply({ text: "Istuti (Thank you)! It's my pleasure to serve you. Please don't hesitate to ask if you need any more information about our products." });
+    } else if (lowerMsg.includes("variety") || lowerMsg.includes("type") || lowerMsg.includes("kind")) {
+      simulateFarmerReply({ text: "We grow these traditional Sri Lankan rice varieties:\n\n• Suwandel - Fragrant white rice\n• Kalu Heenati - High-nutrient red rice\n• Pachchaperumal - Drought-resistant\n\nEach has unique health benefits and flavors passed down for generations." });
+    } else if (lowerMsg.includes("harvest") || lowerMsg.includes("fresh") || lowerMsg.includes("new")) {
+      simulateFarmerReply({ text: `This batch was harvested on ${productInfo.harvestDate} during the Maha season. We follow these traditional practices:\n\n• Natural sun-drying\n• Traditional storage methods\n• Minimal processing\n\nThis preserves the natural nutrients and flavor.` });
+      
       setTimeout(() => {
         const updateMessage = {
           id: Date.now() + 200,
           isUpdate: true,
           product: productInfo.name,
-          price: productInfo.price,
-          available: productInfo.available,
-          quantity: "450kg", // Reduced quantity to show update
+          quantity: "450kg",
           harvestDate: productInfo.harvestDate,
-          timestamp: new Date().toLocaleTimeString(),
-          note: "Quantity updated: 50kg sold today"
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          note: "Recent sales: 50kg sold to Colombo buyer"
         };
         setMessages(messages => [...messages, updateMessage]);
       }, 2000);
       
     } else if (lowerMsg.includes("available") || lowerMsg.includes("stock") || lowerMsg.includes("quantity")) {
-      simulateFarmerReply({ text: `I currently have ${productInfo.quantity} available. I update my stock daily as sales happen. Would you like to reserve a specific amount?` });
+      simulateFarmerReply({ text: `Current availability:\n\n• ${productInfo.name}: ${productInfo.quantity}\n• New harvest expected in 3 weeks\n\nI can reserve stock for you if needed. Would you like to place a pre-order?` });
     } else {
       // Default responses for unrecognized queries
       const defaultResponses = [
-        `Thank you for your interest in our ${productInfo.name}. Would you like to know more about the quality or pricing?`,
-        "As a direct farmer-to-consumer service, we can provide fresher products at better prices. How can I help you today?",
-        "Our Economic Center helps connect local farmers directly with buyers. Is there something specific you're looking for?",
-        "I'm happy to answer any questions about our farming practices or products. We pride ourselves on sustainable agriculture."
+        `Thank you for your interest in our ${productInfo.name}. Would you like details about pricing or availability?`,
+        "As a direct farmer-to-buyer platform, we offer fresher products at fair prices. How may I assist you?",
+        "Our Economic Center connects farmers directly with buyers. What information would help you?",
+        "I'm happy to share more about our sustainable farming practices. What would you like to know?"
       ];
       
       const randomResponse = defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
@@ -405,36 +609,94 @@ function App() {
   };
 
   const goBack = () => {
-    window.history.back(); // Navigate to the previous page
+    window.history.back();
   };
 
   return (
     <AppContainer>
       <Header>
-        <BackButton onClick={goBack}>← Back</BackButton>
-        <HeaderInfo>
-          <FarmerName>{productInfo.farmer}</FarmerName>
-          <FarmerStatus>{isOnline ? "Online" : "In the field"}</FarmerStatus>
-        </HeaderInfo>
-        <div></div> {/* Empty div to balance flexbox alignment */}
+        <HeaderContent>
+          <BackButton onClick={goBack} aria-label="Go back">
+            <FiArrowLeft size={20} />
+          </BackButton>
+          
+          <FarmerInfo>
+            <FarmerName>{productInfo.farmer}</FarmerName>
+            <FarmerStatus>
+              <StatusIndicator online={isOnline} />
+              {isOnline ? "Online" : "Offline - Will reply later"}
+            </FarmerStatus>
+          </FarmerInfo>
+          
+          <FarmerAvatar>
+            {productInfo.farmer.charAt(0)}
+          </FarmerAvatar>
+        </HeaderContent>
       </Header>
 
       <MessagesContainer>
         {messages.length === 0 ? (
-          <EmptyMessage>Connecting with farmer...</EmptyMessage>
+          <EmptyMessage>
+            <div>Connecting you with {productInfo.farmer}...</div>
+          </EmptyMessage>
         ) : (
           <>
+            <WelcomeMessage>
+              <WelcomeHeader>
+                <FiInfo size={18} style={{ marginRight: '8px' }} />
+                About This Connection
+              </WelcomeHeader>
+              <div>You&apos;re chatting directly with {productInfo.farmer}, a certified organic farmer from {productInfo.location} through Sri Lanka&apos;s Dedicated Economic Center platform.</div>
+            </WelcomeMessage>
+            
             {messages.map((message) => (
               message.isUpdate ? (
                 <ProductUpdate key={message.id}>
-                  <strong>🌾 Product Update</strong><br />
-                  <span>{message.product}</span> <PriceTag>{message.price}</PriceTag>
-                  <StockInfo inStock={message.available}>
-                    {message.available ? "In Stock" : "Out of Stock"}
-                  </StockInfo><br />
-                  <span>Quantity: {message.quantity} • Harvested: {message.harvestDate}</span>
-                  {message.note && <div style={{ marginTop: '5px', fontStyle: 'italic' }}>{message.note}</div>}
-                  <div style={{ fontSize: '0.75rem', textAlign: 'right', marginTop: '5px', opacity: 0.7 }}>
+                  <ProductHeader>
+                    <BsFlower1 size={16} style={{ marginRight: '8px' }} />
+                    Product Update: {message.product}
+                  </ProductHeader>
+                  
+                  <ProductDetail>
+                    <DetailIcon>💰</DetailIcon>
+                    <span>Price: {message.price}</span>
+                    <StockInfo inStock={message.available}>
+                      {message.available ? "In Stock" : "Out of Stock"}
+                    </StockInfo>
+                  </ProductDetail>
+                  
+                  <ProductDetail>
+                    <DetailIcon>📦</DetailIcon>
+                    <span>Available Quantity: {message.quantity}</span>
+                  </ProductDetail>
+                  
+                  <ProductDetail>
+                    <DetailIcon>📅</DetailIcon>
+                    <span>Harvest Date: {message.harvestDate}</span>
+                  </ProductDetail>
+                  
+                  {message.certification && (
+                    <ProductDetail>
+                      <DetailIcon>✅</DetailIcon>
+                      <span>Certification: {message.certification}</span>
+                    </ProductDetail>
+                  )}
+                  
+                  {message.delivery && (
+                    <ProductDetail>
+                      <DetailIcon><BsTruck size={14} /></DetailIcon>
+                      <span>Delivery: {message.delivery}</span>
+                    </ProductDetail>
+                  )}
+                  
+                  {message.note && (
+                    <NoteBadge>
+                      <FiInfo size={14} style={{ marginRight: '4px' }} />
+                      {message.note}
+                    </NoteBadge>
+                  )}
+                  
+                  <div style={{ fontSize: '0.7rem', textAlign: 'right', marginTop: '8px', color: '#78909c' }}>
                     Updated at {message.timestamp}
                   </div>
                 </ProductUpdate>
@@ -446,31 +708,62 @@ function App() {
                 >
                   <MessageInfo sent={message.sender === username} isFarmer={message.isFarmer}>
                     <span>{message.sender}</span>
-                    <span>{message.timestamp}</span>
+                    <span>
+                      {message.timestamp}
+                      {message.sender === username && (
+                        <MessageStatus>
+                          {message.status === 'sent' ? <FiClock size={12} /> : <FiCheck size={12} />}
+                        </MessageStatus>
+                      )}
+                    </span>
                   </MessageInfo>
                   {message.text}
                 </Message>
               )
             ))}
+            
             {isFarmerTyping && (
               <TypingIndicator>
-                {productInfo.farmer} is typing<TypingDots />
+                {productInfo.farmer} is typing
+                <TypingDots>
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </TypingDots>
               </TypingIndicator>
             )}
+            
+            <div ref={messagesEndRef} />
           </>
         )}
-        <div ref={messagesEndRef} />
       </MessagesContainer>
 
       <MessageForm onSubmit={handleSendMessage}>
         <Input
           type="text"
-          placeholder="Type your message to farmer..."
+          placeholder={`Message ${productInfo.farmer}...`}
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
+          aria-label="Type your message"
         />
-        <Button type="submit">Send</Button>
+        <SendButton type="submit" disabled={!newMessage.trim()}>
+          <FiSend size={20} />
+        </SendButton>
       </MessageForm>
+      
+      {!newMessage && (
+        <QuickActions>
+          {quickActions.map((action, index) => (
+            <QuickActionButton 
+              key={index} 
+              onClick={() => handleQuickAction(action)}
+              type="button"
+            >
+              {action}
+            </QuickActionButton>
+          ))}
+        </QuickActions>
+      )}
     </AppContainer>
   );
 }
