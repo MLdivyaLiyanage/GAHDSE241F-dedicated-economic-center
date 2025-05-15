@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 void main() {
   runApp(const MyApp());
@@ -29,31 +30,47 @@ class MyApp extends StatelessWidget {
   }
 }
 
-// Data Models
 class Product {
+  final int id;
   final String name;
   final double price;
   final String imageUrl;
   final String description;
 
   Product({
+    required this.id,
     required this.name,
     required this.price,
     required this.imageUrl,
     required this.description,
   });
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'price': price,
+      };
 }
 
 class ShippingOption {
+  final int id;
   final String name;
   final double price;
   final String days;
 
   ShippingOption({
+    required this.id,
     required this.name,
     required this.price,
     required this.days,
   });
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'price': price,
+        'days': days,
+      };
 }
 
 class PaymentMethod {
@@ -61,11 +78,26 @@ class PaymentMethod {
   final IconData icon;
   final Color color;
 
-  PaymentMethod({
+  const PaymentMethod({
     required this.name,
     required this.icon,
     required this.color,
   });
+}
+
+class CartItem {
+  final Product product;
+  int quantity;
+
+  CartItem({
+    required this.product,
+    this.quantity = 1,
+  });
+
+  Map<String, dynamic> toJson() => {
+        'product': product.toJson(),
+        'quantity': quantity,
+      };
 }
 
 class PaymentPage extends StatefulWidget {
@@ -77,11 +109,10 @@ class PaymentPage extends StatefulWidget {
 
 class _PaymentPageState extends State<PaymentPage> {
   final _formKey = GlobalKey<FormState>();
-  int _selectedPaymentMethod = 0; // 0=Card, 1=Google Pay, 2=Cash on Delivery
-  int _selectedShippingMethod = 0; // 0=Standard, 1=Express, 2=Free
-  int quantity = 1;
+  int _selectedPaymentMethod = 0;
+  int _selectedShippingMethod = 0;
+  bool _isProcessing = false;
 
-  // Form controllers
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _addressController = TextEditingController();
@@ -91,43 +122,61 @@ class _PaymentPageState extends State<PaymentPage> {
   final TextEditingController _expiryController = TextEditingController();
   final TextEditingController _cvvController = TextEditingController();
 
-  // Cart items
   late List<CartItem> cartItems;
+  late List<ShippingOption> shippingOptions;
 
-  // Shipping options
-  final List<ShippingOption> shippingOptions = [
-    ShippingOption(name: 'Standard Delivery', price: 50.00, days: '3-5'),
-    ShippingOption(name: 'Express Delivery', price: 100.00, days: '1-2'),
-    ShippingOption(name: 'Free Delivery', price: 0.00, days: '5-7'),
+  final List<PaymentMethod> paymentMethods = const [
+    PaymentMethod(
+      name: 'Credit Card',
+      icon: Icons.credit_card,
+      color: Colors.blue,
+    ),
+    PaymentMethod(
+      name: 'Google Pay',
+      icon: Icons.account_balance_wallet,
+      color: Colors.green,
+    ),
+    PaymentMethod(
+      name: 'Cash on Delivery',
+      icon: Icons.money,
+      color: Colors.orange,
+    ),
   ];
-
-  // Payment methods
-  final List<PaymentMethod> paymentMethods = [
-    PaymentMethod(
-        name: 'Credit Card', icon: Icons.credit_card, color: Colors.blue),
-    PaymentMethod(
-        name: 'Google Pay',
-        icon: Icons.account_balance_wallet,
-        color: Colors.green),
-    PaymentMethod(
-        name: 'Cash on Delivery', icon: Icons.money, color: Colors.orange),
-  ];
-
-  bool _isProcessing = false;
 
   @override
   void initState() {
     super.initState();
-    // Initialize cart items
     cartItems = [
       CartItem(
         product: Product(
+          id: 1,
           name: 'Product Item',
           price: 280.00,
           imageUrl: 'https://example.com/product.jpg',
           description: 'Product description',
         ),
         quantity: 1,
+      ),
+    ];
+
+    shippingOptions = [
+      ShippingOption(
+        id: 1,
+        name: 'Standard Delivery',
+        price: 50.00,
+        days: '3-5',
+      ),
+      ShippingOption(
+        id: 2,
+        name: 'Express Delivery',
+        price: 100.00,
+        days: '1-2',
+      ),
+      ShippingOption(
+        id: 3,
+        name: 'Free Delivery',
+        price: 0.00,
+        days: '5-7',
       ),
     ];
   }
@@ -147,60 +196,160 @@ class _PaymentPageState extends State<PaymentPage> {
 
   double get subtotal {
     return cartItems.fold(
-        0, (sum, item) => sum + (item.product.price * item.quantity));
+      0,
+      (sum, item) => sum + (item.product.price * item.quantity),
+    );
   }
 
   double get shipping => shippingOptions[_selectedShippingMethod].price;
   double get tax => subtotal * 0.05;
   double get total => subtotal + shipping + tax;
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Checkout'),
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Shipping Information
-              _buildShippingInfoSection(),
+  Future<void> _processPayment() async {
+    if (!_formKey.currentState!.validate()) return;
 
-              const SizedBox(height: 24),
+    setState(() => _isProcessing = true);
 
-              // Shipping Method
-              _buildShippingMethodSection(),
+    try {
+      final paymentData = {
+        'customerInfo': {
+          'name': _nameController.text,
+          'email': _emailController.text,
+          'address': _addressController.text,
+          'city': _cityController.text,
+          'zipCode':
+              _zipCodeController.text.isNotEmpty ? _zipCodeController.text : '',
+        },
+        'shippingMethod': {
+          'id': _selectedShippingMethod + 1,
+          'name': shippingOptions[_selectedShippingMethod].name,
+          'price': shippingOptions[_selectedShippingMethod].price,
+        },
+        'paymentMethod': _selectedPaymentMethod == 0
+            ? 'credit_card'
+            : _selectedPaymentMethod == 1
+                ? 'google_pay'
+                : 'cash_on_delivery',
+        'cardDetails': _selectedPaymentMethod == 0
+            ? {
+                'cardNumber': _cardNumberController.text.replaceAll(' ', ''),
+                'expiry': _expiryController.text,
+                'cvv': _cvvController.text,
+              }
+            : null,
+        'cartItems': cartItems
+            .map((item) => {
+                  'product': {
+                    'id': item.product.id,
+                    'name': item.product.name,
+                    'price': item.product.price,
+                  },
+                  'quantity': item.quantity,
+                })
+            .toList(),
+        'subtotal': subtotal,
+        'shipping': shipping,
+        'tax': tax,
+        'total': total,
+      };
 
-              const SizedBox(height: 24),
+      final response = await http.post(
+        Uri.parse('http://10.0.2.2:5000/api/orders'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(paymentData),
+      );
 
-              // Payment Method
-              _buildPaymentMethodSection(),
+      final responseData = json.decode(response.body);
 
-              // Card Details (shown only for credit card)
-              if (_selectedPaymentMethod == 0) ...[
-                const SizedBox(height: 24),
-                _buildCardDetailsSection(),
-              ],
+      if (response.statusCode == 201 && responseData['success'] == true) {
+        _showPaymentSuccessDialog(responseData['order']['id'].toString());
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(responseData['error'] ?? 'Payment failed')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${e.toString()}')),
+      );
+    } finally {
+      setState(() => _isProcessing = false);
+    }
+  }
 
-              const SizedBox(height: 24),
-
-              // Order Summary
-              _buildOrderSummary(),
-
-              const SizedBox(height: 24),
-
-              // Terms and Conditions
-              _buildTermsAndConditions(),
-
-              const SizedBox(height: 24),
-
-              // Place Order Button
-              _buildPlaceOrderButton(),
-            ],
-          ),
+  void _showPaymentSuccessDialog(String orderId) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 16),
+            CircleAvatar(
+              radius: 36,
+              backgroundColor:
+                  _selectedPaymentMethod == 2 ? Colors.orange : Colors.green,
+              child: Icon(
+                _selectedPaymentMethod == 2
+                    ? Icons.delivery_dining
+                    : Icons.check,
+                size: 48,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              _selectedPaymentMethod == 2
+                  ? 'Order Placed Successfully!'
+                  : 'Payment Successful',
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              _selectedPaymentMethod == 2
+                  ? 'Your order has been placed. Please have Rs. ${total.toStringAsFixed(2)} ready for payment upon delivery.'
+                  : 'Thank you for your purchase!',
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Order #$orderId',
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: 200,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _selectedPaymentMethod == 2
+                      ? Colors.orange
+                      : Colors.green,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                onPressed: () => Navigator.pop(context),
+                child: const Text(
+                  'Done',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -239,12 +388,9 @@ class _PaymentPageState extends State<PaymentPage> {
                             border: OutlineInputBorder(),
                             prefixIcon: Icon(Icons.person),
                           ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter your name';
-                            }
-                            return null;
-                          },
+                          validator: (value) => value?.isEmpty ?? true
+                              ? 'Please enter your name'
+                              : null,
                         ),
                       ),
                       const SizedBox(width: 16),
@@ -258,10 +404,10 @@ class _PaymentPageState extends State<PaymentPage> {
                           ),
                           keyboardType: TextInputType.emailAddress,
                           validator: (value) {
-                            if (value == null || value.isEmpty) {
+                            if (value?.isEmpty ?? true) {
                               return 'Please enter your email';
                             }
-                            if (!value.contains('@')) {
+                            if (!value!.contains('@')) {
                               return 'Please enter a valid email';
                             }
                             return null;
@@ -278,12 +424,9 @@ class _PaymentPageState extends State<PaymentPage> {
                       border: OutlineInputBorder(),
                       prefixIcon: Icon(Icons.home),
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your address';
-                      }
-                      return null;
-                    },
+                    validator: (value) => value?.isEmpty ?? true
+                        ? 'Please enter your address'
+                        : null,
                   ),
                   const SizedBox(height: 16),
                   Row(
@@ -296,12 +439,9 @@ class _PaymentPageState extends State<PaymentPage> {
                             border: OutlineInputBorder(),
                             prefixIcon: Icon(Icons.location_city),
                           ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter your city';
-                            }
-                            return null;
-                          },
+                          validator: (value) => value?.isEmpty ?? true
+                              ? 'Please enter your city'
+                              : null,
                         ),
                       ),
                       const SizedBox(width: 16),
@@ -314,12 +454,9 @@ class _PaymentPageState extends State<PaymentPage> {
                             prefixIcon: Icon(Icons.pin),
                           ),
                           keyboardType: TextInputType.number,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter your zip code';
-                            }
-                            return null;
-                          },
+                          validator: (value) => value?.isEmpty ?? true
+                              ? 'Please enter your zip code'
+                              : null,
                         ),
                       ),
                     ],
@@ -360,11 +497,8 @@ class _PaymentPageState extends State<PaymentPage> {
                   subtitle: Text('Rs. ${option.price.toStringAsFixed(2)}'),
                   value: index,
                   groupValue: _selectedShippingMethod,
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedShippingMethod = value!;
-                    });
-                  },
+                  onChanged: (value) =>
+                      setState(() => _selectedShippingMethod = value!),
                   contentPadding: EdgeInsets.zero,
                   activeColor: Colors.green,
                 );
@@ -395,7 +529,6 @@ class _PaymentPageState extends State<PaymentPage> {
               ),
             ),
             const SizedBox(height: 16),
-            // Payment method buttons
             SizedBox(
               height: 100,
               child: ListView.builder(
@@ -404,11 +537,7 @@ class _PaymentPageState extends State<PaymentPage> {
                 itemBuilder: (context, index) {
                   final method = paymentMethods[index];
                   return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _selectedPaymentMethod = index;
-                      });
-                    },
+                    onTap: () => setState(() => _selectedPaymentMethod = index),
                     child: Container(
                       width: 120,
                       margin: const EdgeInsets.only(right: 10),
@@ -490,10 +619,8 @@ class _PaymentPageState extends State<PaymentPage> {
               ],
               validator: (value) {
                 if (_selectedPaymentMethod != 0) return null;
-                if (value == null || value.isEmpty) {
-                  return 'Please enter card number';
-                }
-                if (value.replaceAll(' ', '').length != 16) {
+                if (value?.isEmpty ?? true) return 'Please enter card number';
+                if (value!.replaceAll(' ', '').length != 16) {
                   return 'Enter a valid 16-digit card number';
                 }
                 return null;
@@ -519,10 +646,9 @@ class _PaymentPageState extends State<PaymentPage> {
                     ],
                     validator: (value) {
                       if (_selectedPaymentMethod != 0) return null;
-                      if (value == null || value.isEmpty) {
+                      if (value?.isEmpty ?? true)
                         return 'Please enter expiry date';
-                      }
-                      if (value.length != 5 || !value.contains('/')) {
+                      if (value!.length != 5 || !value.contains('/')) {
                         return 'Enter in MM/YY format';
                       }
                       return null;
@@ -547,10 +673,8 @@ class _PaymentPageState extends State<PaymentPage> {
                     ],
                     validator: (value) {
                       if (_selectedPaymentMethod != 0) return null;
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter CVV';
-                      }
-                      if (value.length < 3 || value.length > 4) {
+                      if (value?.isEmpty ?? true) return 'Please enter CVV';
+                      if (value!.length < 3 || value.length > 4) {
                         return 'Enter 3 or 4 digit CVV';
                       }
                       return null;
@@ -583,8 +707,6 @@ class _PaymentPageState extends State<PaymentPage> {
               ),
             ),
             const SizedBox(height: 16),
-
-            // Cart items
             ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -595,17 +717,11 @@ class _PaymentPageState extends State<PaymentPage> {
                 return _buildCartItemRow(item, index);
               },
             ),
-
             const Divider(height: 32),
-
-            // Price breakdown
             _buildPriceRow('Subtotal', subtotal),
             _buildPriceRow('Shipping', shipping),
             _buildPriceRow('Tax (5%)', tax),
-
             const Divider(height: 32),
-
-            // Total
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -682,9 +798,7 @@ class _PaymentPageState extends State<PaymentPage> {
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
                 onPressed: item.quantity > 1
-                    ? () => setState(() {
-                          cartItems[index].quantity--;
-                        })
+                    ? () => setState(() => cartItems[index].quantity--)
                     : null,
               ),
               Padding(
@@ -698,9 +812,7 @@ class _PaymentPageState extends State<PaymentPage> {
                 icon: const Icon(Icons.add, size: 18),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
-                onPressed: () => setState(() {
-                  cartItems[index].quantity++;
-                }),
+                onPressed: () => setState(() => cartItems[index].quantity++),
               ),
             ],
           ),
@@ -752,23 +864,7 @@ class _PaymentPageState extends State<PaymentPage> {
             borderRadius: BorderRadius.circular(8),
           ),
         ),
-        onPressed: _isProcessing
-            ? null
-            : () async {
-                if (_formKey.currentState!.validate()) {
-                  setState(() => _isProcessing = true);
-
-                  // Simulate payment processing (only for non-cash payments)
-                  if (_selectedPaymentMethod != 2) {
-                    await Future.delayed(const Duration(seconds: 2));
-                  }
-
-                  setState(() => _isProcessing = false);
-
-                  // Show success dialog
-                  _showPaymentSuccessDialog();
-                }
-              },
+        onPressed: _isProcessing ? null : _processPayment,
         child: _isProcessing
             ? const SizedBox(
                 width: 20,
@@ -792,102 +888,41 @@ class _PaymentPageState extends State<PaymentPage> {
     );
   }
 
-  void _showPaymentSuccessDialog() {
-    final orderNumber =
-        'OR${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}';
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 16),
-            CircleAvatar(
-              radius: 36,
-              backgroundColor:
-                  _selectedPaymentMethod == 2 ? Colors.orange : Colors.green,
-              child: Icon(
-                _selectedPaymentMethod == 2
-                    ? Icons.delivery_dining
-                    : Icons.check,
-                size: 48,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              _selectedPaymentMethod == 2
-                  ? 'Order Placed Successfully!'
-                  : 'Payment Successful',
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              _selectedPaymentMethod == 2
-                  ? 'Your order has been placed. Please have Rs. ${total.toStringAsFixed(2)} ready for payment upon delivery.'
-                  : 'Thank you for your purchase!',
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Order #$orderNumber',
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: 200,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _selectedPaymentMethod == 2
-                      ? Colors.orange
-                      : Colors.green,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                onPressed: () {
-                  Navigator.pop(context); // Close dialog
-                },
-                child: const Text(
-                  'Done',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-          ],
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Checkout'),
+      ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildShippingInfoSection(),
+              const SizedBox(height: 24),
+              _buildShippingMethodSection(),
+              const SizedBox(height: 24),
+              _buildPaymentMethodSection(),
+              if (_selectedPaymentMethod == 0) ...[
+                const SizedBox(height: 24),
+                _buildCardDetailsSection(),
+              ],
+              const SizedBox(height: 24),
+              _buildOrderSummary(),
+              const SizedBox(height: 24),
+              _buildTermsAndConditions(),
+              const SizedBox(height: 24),
+              _buildPlaceOrderButton(),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-// Cart item class
-class CartItem {
-  final Product product;
-  int quantity;
-
-  CartItem({
-    required this.product,
-    required this.quantity,
-  });
-}
-
-// Custom input formatters
 class CardNumberFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(
