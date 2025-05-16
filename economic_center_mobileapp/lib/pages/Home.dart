@@ -23,7 +23,7 @@ class MyApp extends StatelessWidget {
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       home: const HomePage(
-        userData: {},
+        userData: {'username': 'Guest'}, // Provide default user data
       ),
       debugShowCheckedModeBanner: false,
     );
@@ -31,7 +31,9 @@ class MyApp extends StatelessWidget {
 }
 
 class HomePage extends StatelessWidget {
-  const HomePage({super.key, required Map userData});
+  final Map<String, dynamic> userData;
+
+  const HomePage({super.key, required this.userData});
 
   @override
   Widget build(BuildContext context) {
@@ -75,7 +77,7 @@ class HomePage extends StatelessWidget {
                   ),
                 ),
               ),
-              title: const Text('Welcome'),
+              title: Text('Welcome ${userData['username'] ?? 'User'}'),
               actions: const [
                 Padding(
                   padding: EdgeInsets.only(right: 16.0),

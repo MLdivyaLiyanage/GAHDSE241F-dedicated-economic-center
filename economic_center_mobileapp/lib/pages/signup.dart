@@ -619,7 +619,12 @@ class _SignupPageState extends State<SignupPage> {
                       Center(
                         child: TextButton(
                           onPressed: () {
-                            Navigator.pop(context);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      const FarmerLoginScreen()),
+                            );
                           },
                           child: RichText(
                             text: TextSpan(
