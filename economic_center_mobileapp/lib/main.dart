@@ -1,967 +1,654 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:async';
+import 'dart:io';
+import 'package:economic_center_mobileapp/pages/signin.dart';
 
 void main() {
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'E-Commerce Payment',
       debugShowCheckedModeBanner: false,
+      title: 'SL Dedicated Economic Center',
       theme: ThemeData(
-        primarySwatch: Colors.green,
-        fontFamily: 'Poppins',
-        appBarTheme: const AppBarTheme(
-          elevation: 0,
-          centerTitle: true,
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black,
+        primaryColor: const Color(0xFF2E7D32),
+        scaffoldBackgroundColor: const Color(0xFFF8F9FA),
+        fontFamily: 'Roboto',
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF2E7D32),
+            foregroundColor: Colors.white,
+            elevation: 2,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            padding: const EdgeInsets.symmetric(vertical: 16),
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: Colors.white,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFFCCCCCC)),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFFCCCCCC)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFF2E7D32), width: 1.5),
+          ),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          labelStyle: const TextStyle(color: Color(0xFF4A4A4A)),
+          floatingLabelStyle: const TextStyle(color: Color(0xFF2E7D32)),
         ),
       ),
-      home: const PaymentPage(),
+      home: const SignupPage(),
     );
   }
 }
 
-class Product {
-  final int id;
-  final String name;
-  final double price;
-  final String imageUrl;
-  final String description;
-
-  Product({
-    required this.id,
-    required this.name,
-    required this.price,
-    required this.imageUrl,
-    required this.description,
-  });
-
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'price': price,
-      };
-}
-
-class ShippingOption {
-  final int id;
-  final String name;
-  final double price;
-  final String days;
-
-  ShippingOption({
-    required this.id,
-    required this.name,
-    required this.price,
-    required this.days,
-  });
-
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'price': price,
-        'days': days,
-      };
-}
-
-class PaymentMethod {
-  final String name;
-  final IconData icon;
-  final Color color;
-
-  const PaymentMethod({
-    required this.name,
-    required this.icon,
-    required this.color,
-  });
-}
-
-class CartItem {
-  final Product product;
-  int quantity;
-
-  CartItem({
-    required this.product,
-    this.quantity = 1,
-  });
-
-  Map<String, dynamic> toJson() => {
-        'product': product.toJson(),
-        'quantity': quantity,
-      };
-}
-
-class PaymentPage extends StatefulWidget {
-  const PaymentPage({super.key});
+class SignupPage extends StatefulWidget {
+  const SignupPage({Key? key}) : super(key: key);
 
   @override
-  State<PaymentPage> createState() => _PaymentPageState();
+  State<SignupPage> createState() => _SignupPageState();
 }
 
-class _PaymentPageState extends State<PaymentPage> {
+class _SignupPageState extends State<SignupPage> {
   final _formKey = GlobalKey<FormState>();
-  int _selectedPaymentMethod = 0;
-  int _selectedShippingMethod = 0;
-  bool _isProcessing = false;
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
+  bool _agreeToTerms = false;
+  bool _isLoading = false;
+
+  final List<String> _userRoles = ['Farmer', 'Customer'];
+  String? _selectedUserRole;
 
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _addressController = TextEditingController();
-  final TextEditingController _cityController = TextEditingController();
-  final TextEditingController _zipCodeController = TextEditingController();
-  final TextEditingController _cardNumberController = TextEditingController();
-  final TextEditingController _expiryController = TextEditingController();
-  final TextEditingController _cvvController = TextEditingController();
-
-  late List<CartItem> cartItems;
-  late List<ShippingOption> shippingOptions;
-
-  final List<PaymentMethod> paymentMethods = const [
-    PaymentMethod(
-      name: 'Credit Card',
-      icon: Icons.credit_card,
-      color: Colors.blue,
-    ),
-    PaymentMethod(
-      name: 'Google Pay',
-      icon: Icons.account_balance_wallet,
-      color: Colors.green,
-    ),
-    PaymentMethod(
-      name: 'Cash on Delivery',
-      icon: Icons.money,
-      color: Colors.orange,
-    ),
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    cartItems = [
-      CartItem(
-        product: Product(
-          id: 1,
-          name: 'Product Item',
-          price: 280.00,
-          imageUrl: 'https://example.com/product.jpg',
-          description: 'Product description',
-        ),
-        quantity: 1,
-      ),
-    ];
-
-    shippingOptions = [
-      ShippingOption(
-        id: 1,
-        name: 'Standard Delivery',
-        price: 50.00,
-        days: '3-5',
-      ),
-      ShippingOption(
-        id: 2,
-        name: 'Express Delivery',
-        price: 100.00,
-        days: '1-2',
-      ),
-      ShippingOption(
-        id: 3,
-        name: 'Free Delivery',
-        price: 0.00,
-        days: '5-7',
-      ),
-    ];
-  }
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
 
   @override
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
-    _addressController.dispose();
-    _cityController.dispose();
-    _zipCodeController.dispose();
-    _cardNumberController.dispose();
-    _expiryController.dispose();
-    _cvvController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
-  double get subtotal {
-    return cartItems.fold(
-      0,
-      (sum, item) => sum + (item.product.price * item.quantity),
-    );
-  }
+  Future<void> _submitForm() async {
+    final form = _formKey.currentState;
+    if (form == null) return;
 
-  double get shipping => shippingOptions[_selectedShippingMethod].price;
-  double get tax => subtotal * 0.05;
-  double get total => subtotal + shipping + tax;
+    if (form.validate() && _agreeToTerms) {
+      setState(() => _isLoading = true);
 
-  Future<void> _processPayment() async {
-    if (!_formKey.currentState!.validate()) return;
+      try {
+        final Map<String, dynamic> requestBody = {
+          'username': _nameController.text.trim(),
+          'email': _emailController.text.trim(),
+          'password': _passwordController.text,
+          'role': _selectedUserRole?.toLowerCase(),
+        };
 
-    setState(() => _isProcessing = true);
+        final response = await http
+            .post(
+              Uri.parse('http://10.0.2.2:3001/api/signup'),
+              headers: {'Content-Type': 'application/json'},
+              body: jsonEncode(requestBody),
+            )
+            .timeout(const Duration(seconds: 15));
 
-    try {
-      final paymentData = {
-        'customerInfo': {
-          'name': _nameController.text,
-          'email': _emailController.text,
-          'address': _addressController.text,
-          'city': _cityController.text,
-          'zipCode':
-              _zipCodeController.text.isNotEmpty ? _zipCodeController.text : '',
-        },
-        'shippingMethod': {
-          'id': _selectedShippingMethod + 1,
-          'name': shippingOptions[_selectedShippingMethod].name,
-          'price': shippingOptions[_selectedShippingMethod].price,
-        },
-        'paymentMethod': _selectedPaymentMethod == 0
-            ? 'credit_card'
-            : _selectedPaymentMethod == 1
-                ? 'google_pay'
-                : 'cash_on_delivery',
-        'cardDetails': _selectedPaymentMethod == 0
-            ? {
-                'cardNumber': _cardNumberController.text.replaceAll(' ', ''),
-                'expiry': _expiryController.text,
-                'cvv': _cvvController.text,
-              }
-            : null,
-        'cartItems': cartItems
-            .map((item) => {
-                  'product': {
-                    'id': item.product.id,
-                    'name': item.product.name,
-                    'price': item.product.price,
-                  },
-                  'quantity': item.quantity,
-                })
-            .toList(),
-        'subtotal': subtotal,
-        'shipping': shipping,
-        'tax': tax,
-        'total': total,
-      };
+        final responseData = jsonDecode(response.body);
 
-      final response = await http.post(
-        Uri.parse('http://10.0.2.2:5000/api/orders'),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode(paymentData),
-      );
+        if (response.statusCode == 201 && responseData['success'] == true) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                  '${_selectedUserRole ?? 'User'} Registration Successful!'),
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          );
 
-      final responseData = json.decode(response.body);
+          _nameController.clear();
+          _emailController.clear();
+          _passwordController.clear();
+          _confirmPasswordController.clear();
 
-      if (response.statusCode == 201 && responseData['success'] == true) {
-        _showPaymentSuccessDialog(responseData['order']['id'].toString());
-      } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const FarmerLoginScreen()),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(responseData['error'] ?? 'Registration failed'),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          );
+        }
+      } on SocketException catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(responseData['error'] ?? 'Payment failed')),
+          SnackBar(
+            content: Text('Network error: ${e.message}'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
         );
+      } on TimeoutException catch (_) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Request timed out. Please try again.'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        );
+      } finally {
+        setState(() => _isLoading = false);
       }
-    } catch (e) {
+    } else if (!_agreeToTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: ${e.toString()}')),
-      );
-    } finally {
-      setState(() => _isProcessing = false);
-    }
-  }
-
-  void _showPaymentSuccessDialog(String orderId) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 16),
-            CircleAvatar(
-              radius: 36,
-              backgroundColor:
-                  _selectedPaymentMethod == 2 ? Colors.orange : Colors.green,
-              child: Icon(
-                _selectedPaymentMethod == 2
-                    ? Icons.delivery_dining
-                    : Icons.check,
-                size: 48,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              _selectedPaymentMethod == 2
-                  ? 'Order Placed Successfully!'
-                  : 'Payment Successful',
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              _selectedPaymentMethod == 2
-                  ? 'Your order has been placed. Please have Rs. ${total.toStringAsFixed(2)} ready for payment upon delivery.'
-                  : 'Thank you for your purchase!',
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Order #$orderId',
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: 200,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _selectedPaymentMethod == 2
-                      ? Colors.orange
-                      : Colors.green,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                onPressed: () => Navigator.pop(context),
-                child: const Text(
-                  'Done',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildShippingInfoSection() {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Shipping Information',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Form(
-              key: _formKey,
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextFormField(
-                          controller: _nameController,
-                          decoration: const InputDecoration(
-                            labelText: 'Full Name',
-                            border: OutlineInputBorder(),
-                            prefixIcon: Icon(Icons.person),
-                          ),
-                          validator: (value) => value?.isEmpty ?? true
-                              ? 'Please enter your name'
-                              : null,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: TextFormField(
-                          controller: _emailController,
-                          decoration: const InputDecoration(
-                            labelText: 'Email',
-                            border: OutlineInputBorder(),
-                            prefixIcon: Icon(Icons.email),
-                          ),
-                          keyboardType: TextInputType.emailAddress,
-                          validator: (value) {
-                            if (value?.isEmpty ?? true) {
-                              return 'Please enter your email';
-                            }
-                            if (!value!.contains('@')) {
-                              return 'Please enter a valid email';
-                            }
-                            return null;
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _addressController,
-                    decoration: const InputDecoration(
-                      labelText: 'Address',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.home),
-                    ),
-                    validator: (value) => value?.isEmpty ?? true
-                        ? 'Please enter your address'
-                        : null,
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextFormField(
-                          controller: _cityController,
-                          decoration: const InputDecoration(
-                            labelText: 'City',
-                            border: OutlineInputBorder(),
-                            prefixIcon: Icon(Icons.location_city),
-                          ),
-                          validator: (value) => value?.isEmpty ?? true
-                              ? 'Please enter your city'
-                              : null,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: TextFormField(
-                          controller: _zipCodeController,
-                          decoration: const InputDecoration(
-                            labelText: 'Zip Code',
-                            border: OutlineInputBorder(),
-                            prefixIcon: Icon(Icons.pin),
-                          ),
-                          keyboardType: TextInputType.number,
-                          validator: (value) => value?.isEmpty ?? true
-                              ? 'Please enter your zip code'
-                              : null,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildShippingMethodSection() {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Shipping Method',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Column(
-              children: List.generate(shippingOptions.length, (index) {
-                final option = shippingOptions[index];
-                return RadioListTile<int>(
-                  title: Text('${option.name} (${option.days} days)'),
-                  subtitle: Text('Rs. ${option.price.toStringAsFixed(2)}'),
-                  value: index,
-                  groupValue: _selectedShippingMethod,
-                  onChanged: (value) =>
-                      setState(() => _selectedShippingMethod = value!),
-                  contentPadding: EdgeInsets.zero,
-                  activeColor: Colors.green,
-                );
-              }),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPaymentMethodSection() {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Payment Method',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              height: 100,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: paymentMethods.length,
-                itemBuilder: (context, index) {
-                  final method = paymentMethods[index];
-                  return GestureDetector(
-                    onTap: () => setState(() => _selectedPaymentMethod = index),
-                    child: Container(
-                      width: 120,
-                      margin: const EdgeInsets.only(right: 10),
-                      decoration: BoxDecoration(
-                        color: _selectedPaymentMethod == index
-                            ? method.color.withOpacity(0.2)
-                            : Colors.grey[100],
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: _selectedPaymentMethod == index
-                              ? method.color
-                              : Colors.grey[300]!,
-                          width: _selectedPaymentMethod == index ? 2 : 1,
-                        ),
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            method.icon,
-                            size: 30,
-                            color: method.color,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            method.name,
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: _selectedPaymentMethod == index
-                                  ? method.color
-                                  : Colors.black,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCardDetailsSection() {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Card Details',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _cardNumberController,
-              decoration: const InputDecoration(
-                labelText: 'Card Number',
-                hintText: '1234 5678 9012 3456',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.credit_card),
-              ),
-              keyboardType: TextInputType.number,
-              inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
-                LengthLimitingTextInputFormatter(16),
-                CardNumberFormatter(),
-              ],
-              validator: (value) {
-                if (_selectedPaymentMethod != 0) return null;
-                if (value?.isEmpty ?? true) return 'Please enter card number';
-                if (value!.replaceAll(' ', '').length != 16) {
-                  return 'Enter a valid 16-digit card number';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: _expiryController,
-                    decoration: const InputDecoration(
-                      labelText: 'Expiry Date',
-                      hintText: 'MM/YY',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.calendar_today),
-                    ),
-                    keyboardType: TextInputType.datetime,
-                    inputFormatters: [
-                      FilteringTextInputFormatter.digitsOnly,
-                      LengthLimitingTextInputFormatter(4),
-                      ExpiryDateFormatter(),
-                    ],
-                    validator: (value) {
-                      if (_selectedPaymentMethod != 0) return null;
-                      if (value?.isEmpty ?? true)
-                        return 'Please enter expiry date';
-                      if (value!.length != 5 || !value.contains('/')) {
-                        return 'Enter in MM/YY format';
-                      }
-                      return null;
-                    },
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: TextFormField(
-                    controller: _cvvController,
-                    decoration: const InputDecoration(
-                      labelText: 'CVV',
-                      hintText: '123',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.lock),
-                    ),
-                    keyboardType: TextInputType.number,
-                    obscureText: true,
-                    inputFormatters: [
-                      FilteringTextInputFormatter.digitsOnly,
-                      LengthLimitingTextInputFormatter(4),
-                    ],
-                    validator: (value) {
-                      if (_selectedPaymentMethod != 0) return null;
-                      if (value?.isEmpty ?? true) return 'Please enter CVV';
-                      if (value!.length < 3 || value.length > 4) {
-                        return 'Enter 3 or 4 digit CVV';
-                      }
-                      return null;
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildOrderSummary() {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            const Text(
-              'Order Summary',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16),
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: cartItems.length,
-              separatorBuilder: (context, index) => const Divider(height: 20),
-              itemBuilder: (context, index) {
-                final item = cartItems[index];
-                return _buildCartItemRow(item, index);
-              },
-            ),
-            const Divider(height: 32),
-            _buildPriceRow('Subtotal', subtotal),
-            _buildPriceRow('Shipping', shipping),
-            _buildPriceRow('Tax (5%)', tax),
-            const Divider(height: 32),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Total',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  'Rs. ${total.toStringAsFixed(2)}',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.green,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCartItemRow(CartItem item, int index) {
-    return Row(
-      children: [
-        Container(
-          width: 60,
-          height: 60,
-          decoration: BoxDecoration(
-            color: Colors.grey[200],
-            borderRadius: BorderRadius.circular(8),
-            image: const DecorationImage(
-              image: NetworkImage('https://via.placeholder.com/60'),
-              fit: BoxFit.cover,
-            ),
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                item.product.name,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Rs. ${item.product.price.toStringAsFixed(2)}',
-                style: const TextStyle(
-                  color: Colors.green,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(width: 16),
-        Container(
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey[300]!),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.remove, size: 18),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-                onPressed: item.quantity > 1
-                    ? () => setState(() => cartItems[index].quantity--)
-                    : null,
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                child: Text(
-                  item.quantity.toString(),
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.add, size: 18),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-                onPressed: () => setState(() => cartItems[index].quantity++),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPriceRow(String label, double value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label),
-          Text('Rs. ${value.toStringAsFixed(2)}'),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTermsAndConditions() {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Checkbox(
-          value: true,
-          onChanged: (value) {},
-          activeColor: Colors.green,
-        ),
-        const Expanded(
-          child: Text(
-            'I agree to the Terms and Conditions and Privacy Policy. I understand that my payment will be processed securely and my personal data will be handled in accordance with the Privacy Policy.',
-            style: TextStyle(fontSize: 12),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPlaceOrderButton() {
-    return SizedBox(
-      width: double.infinity,
-      height: 50,
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.green,
+        SnackBar(
+          content: const Text('Please agree to the Terms and Conditions'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
           ),
         ),
-        onPressed: _isProcessing ? null : _processPayment,
-        child: _isProcessing
-            ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  color: Colors.white,
-                  strokeWidth: 2,
-                ),
-              )
-            : Text(
-                _selectedPaymentMethod == 2
-                    ? 'Place Order (Pay on Delivery)'
-                    : 'Pay Rs. ${total.toStringAsFixed(2)}',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-      ),
-    );
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Checkout'),
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildShippingInfoSection(),
-              const SizedBox(height: 24),
-              _buildShippingMethodSection(),
-              const SizedBox(height: 24),
-              _buildPaymentMethodSection(),
-              if (_selectedPaymentMethod == 0) ...[
-                const SizedBox(height: 24),
-                _buildCardDetailsSection(),
-              ],
-              const SizedBox(height: 24),
-              _buildOrderSummary(),
-              const SizedBox(height: 24),
-              _buildTermsAndConditions(),
-              const SizedBox(height: 24),
-              _buildPlaceOrderButton(),
+              // Header with background image and overlay
+              Stack(
+                children: [
+                  Container(
+                    height: 220,
+                    width: double.infinity,
+                    decoration: const BoxDecoration(
+                      image: DecorationImage(
+                        image: NetworkImage(
+                            "https://img.freepik.com/premium-photo/farmers-working-lush-field-golden-hour-showcasing-dedication-teamwork-agricultural-practices_93675-347336.jpg?w=1380"),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    height: 220,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.black.withOpacity(0.1),
+                          Colors.black.withOpacity(0.7),
+                        ],
+                      ),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20.0, vertical: 20.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Welcome to',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          // FIXED: Made header text responsive
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Sri Lanka',
+                                style: TextStyle(
+                                  color: Colors.yellow[600],
+                                  fontSize: 24, // Reduced from 26
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              const Text(
+                                'Dedicated Economic Center',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 20, // Reduced from 26
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: const Text(
+                              'Registration Portal',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              // Registration Form
+              Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 20.0, vertical: 24.0), // Adjusted padding
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(30),
+                    topRight: Radius.circular(30),
+                  ),
+                ),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Personal Information Section
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.person_outline,
+                            color: Color(0xFF2E7D32),
+                            size: 24,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Personal Information',
+                            style: TextStyle(
+                              color: const Color(0xFF2E7D32),
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              shadows: [
+                                Shadow(
+                                  blurRadius: 1.0,
+                                  color: Colors.grey.shade300,
+                                  offset: const Offset(0.5, 0.5),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Container(
+                        height: 2,
+                        width: 50,
+                        color: const Color(0xFF2E7D32),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Full Name
+                      TextFormField(
+                        controller: _nameController,
+                        decoration: const InputDecoration(
+                          labelText: 'User Name',
+                          hintText: 'Enter your username',
+                          prefixIcon:
+                              Icon(Icons.person, color: Color(0xFF2E7D32)),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your username';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Email
+                      TextFormField(
+                        controller: _emailController,
+                        decoration: const InputDecoration(
+                          labelText: 'Email Address',
+                          hintText: 'Enter your email address',
+                          prefixIcon:
+                              Icon(Icons.email, color: Color(0xFF2E7D32)),
+                        ),
+                        keyboardType: TextInputType.emailAddress,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your email';
+                          } else if (!RegExp(
+                                  r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                              .hasMatch(value)) {
+                            return 'Please enter a valid email';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+
+                      // User Role Selection
+                      DropdownButtonFormField<String>(
+                        value: _selectedUserRole,
+                        isExpanded: true,
+                        decoration: const InputDecoration(
+                          labelText: 'User Role',
+                          hintText: 'Select your role',
+                          prefixIcon: Icon(Icons.work_outline,
+                              color: Color(0xFF2E7D32)),
+                        ),
+                        items: _userRoles.map((String role) {
+                          return DropdownMenuItem(
+                            value: role,
+                            child: Text(role),
+                          );
+                        }).toList(),
+                        onChanged: (String? newValue) {
+                          setState(() {
+                            _selectedUserRole = newValue;
+                          });
+                        },
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please select a user role';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 32),
+
+                      // Account Information Section
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.lock_outline,
+                            color: Color(0xFF2E7D32),
+                            size: 24,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Account Information',
+                            style: TextStyle(
+                              color: const Color(0xFF2E7D32),
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              shadows: [
+                                Shadow(
+                                  blurRadius: 1.0,
+                                  color: Colors.grey.shade300,
+                                  offset: const Offset(0.5, 0.5),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Container(
+                        height: 2,
+                        width: 50,
+                        color: const Color(0xFF2E7D32),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Password
+                      TextFormField(
+                        controller: _passwordController,
+                        obscureText: _obscurePassword,
+                        decoration: InputDecoration(
+                          labelText: 'Password',
+                          hintText: 'Create a password',
+                          prefixIcon:
+                              const Icon(Icons.lock, color: Color(0xFF2E7D32)),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
+                              color: Colors.grey,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _obscurePassword = !_obscurePassword;
+                              });
+                            },
+                          ),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter a password';
+                          } else if (value.length < 6) {
+                            return 'Password must be at least 6 characters';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Confirm Password
+                      TextFormField(
+                        controller: _confirmPasswordController,
+                        obscureText: _obscureConfirmPassword,
+                        decoration: InputDecoration(
+                          labelText: 'Confirm Password',
+                          hintText: 'Confirm your password',
+                          prefixIcon: const Icon(Icons.lock_outline,
+                              color: Color(0xFF2E7D32)),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscureConfirmPassword
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
+                              color: Colors.grey,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _obscureConfirmPassword =
+                                    !_obscureConfirmPassword;
+                              });
+                            },
+                          ),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please confirm your password';
+                          } else if (value != _passwordController.text) {
+                            return 'Passwords do not match';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Terms and Conditions Checkbox
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.grey.shade200),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 8, horizontal: 12),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Checkbox(
+                              value: _agreeToTerms,
+                              activeColor: const Color(0xFF2E7D32),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              onChanged: (bool? value) {
+                                setState(() {
+                                  _agreeToTerms = value ?? false;
+                                });
+                              },
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: RichText(
+                                text: TextSpan(
+                                  style: TextStyle(
+                                      color: Colors.grey.shade700,
+                                      fontSize: 14),
+                                  children: [
+                                    const TextSpan(text: 'I agree to the '),
+                                    TextSpan(
+                                      text: 'Terms and Conditions',
+                                      style: TextStyle(
+                                        color: Colors.yellow[800],
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const TextSpan(
+                                        text:
+                                            ' and acknowledge the Privacy Policy'),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+
+                      // Sign Up Button
+                      SizedBox(
+                        width: double.infinity,
+                        height: 54,
+                        child: ElevatedButton(
+                          onPressed: _isLoading ? null : _submitForm,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF2E7D32),
+                            foregroundColor: Colors.white,
+                            elevation: 3,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: _isLoading
+                              ? const SizedBox(
+                                  height: 24,
+                                  width: 24,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      'REGISTER',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: 1.2,
+                                      ),
+                                    ),
+                                    SizedBox(width: 10),
+                                    Icon(Icons.arrow_forward),
+                                  ],
+                                ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Already have an account link
+                      Center(
+                        child: TextButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          child: RichText(
+                            text: TextSpan(
+                              style: TextStyle(
+                                  color: Colors.grey.shade700, fontSize: 14),
+                              children: [
+                                const TextSpan(
+                                    text: 'Already have an account? '),
+                                TextSpan(
+                                  text: 'Login',
+                                  style: TextStyle(
+                                    color: Colors.yellow[800],
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
         ),
       ),
-    );
-  }
-}
-
-class CardNumberFormatter extends TextInputFormatter {
-  @override
-  TextEditingValue formatEditUpdate(
-    TextEditingValue oldValue,
-    TextEditingValue newValue,
-  ) {
-    final text = newValue.text.replaceAll(' ', '');
-    if (text.length > 16) return oldValue;
-
-    String formatted = '';
-    for (int i = 0; i < text.length; i++) {
-      if (i > 0 && i % 4 == 0) formatted += ' ';
-      formatted += text[i];
-    }
-
-    return newValue.copyWith(
-      text: formatted,
-      selection: TextSelection.collapsed(offset: formatted.length),
-    );
-  }
-}
-
-class ExpiryDateFormatter extends TextInputFormatter {
-  @override
-  TextEditingValue formatEditUpdate(
-    TextEditingValue oldValue,
-    TextEditingValue newValue,
-  ) {
-    final text = newValue.text.replaceAll('/', '');
-    if (text.length > 4) return oldValue;
-
-    String formatted = text;
-    if (text.length >= 2) {
-      formatted = '${text.substring(0, 2)}/${text.substring(2)}';
-    }
-
-    return newValue.copyWith(
-      text: formatted,
-      selection: TextSelection.collapsed(offset: formatted.length),
     );
   }
 }

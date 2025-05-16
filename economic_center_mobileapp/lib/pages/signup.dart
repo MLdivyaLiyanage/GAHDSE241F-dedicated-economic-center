@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'dart:async';
+import 'dart:io';
+import 'package:economic_center_mobileapp/pages/signin.dart';
 
 void main() {
   runApp(const MyApp());
@@ -13,8 +18,8 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'SL Dedicated Economic Center',
       theme: ThemeData(
-        primaryColor: const Color(0xFF2E7D32), // Dark Green
-        scaffoldBackgroundColor: const Color(0xFFF8F9FA), // Light background
+        primaryColor: const Color(0xFF2E7D32),
+        scaffoldBackgroundColor: const Color(0xFFF8F9FA),
         fontFamily: 'Roboto',
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
@@ -67,8 +72,7 @@ class _SignupPageState extends State<SignupPage> {
   bool _agreeToTerms = false;
   bool _isLoading = false;
 
-  // User role selection
-  final List<String> _userRoles = ['Farmer', 'Seller', 'Customer'];
+  final List<String> _userRoles = ['Farmer', 'Customer'];
   String? _selectedUserRole;
 
   final TextEditingController _nameController = TextEditingController();
@@ -86,28 +90,106 @@ class _SignupPageState extends State<SignupPage> {
     super.dispose();
   }
 
-  void _submitForm() {
-    if (_formKey.currentState!.validate() && _agreeToTerms) {
+  Future<void> _submitForm() async {
+    final form = _formKey.currentState;
+    if (form == null) return;
+
+    if (form.validate() && _agreeToTerms) {
       setState(() => _isLoading = true);
-      // Simulate registration process
-      Future.delayed(const Duration(seconds: 2), () {
-        setState(() => _isLoading = false);
+
+      try {
+        final Map<String, dynamic> requestBody = {
+          'username': _nameController.text.trim(),
+          'email': _emailController.text.trim(),
+          'password': _passwordController.text,
+          'role': _selectedUserRole?.toLowerCase(),
+        };
+
+        final response = await http
+            .post(
+              Uri.parse('http://10.0.2.2:3001/api/signup'),
+              headers: {'Content-Type': 'application/json'},
+              body: jsonEncode(requestBody),
+            )
+            .timeout(const Duration(seconds: 15));
+
+        final responseData = jsonDecode(response.body);
+
+        if (response.statusCode == 201 && responseData['success'] == true) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                  '${_selectedUserRole ?? 'User'} Registration Successful!'),
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          );
+
+          _nameController.clear();
+          _emailController.clear();
+          _passwordController.clear();
+          _confirmPasswordController.clear();
+
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const FarmerLoginScreen()),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(responseData['error'] ?? 'Registration failed'),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          );
+        }
+      } on SocketException catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('$_selectedUserRole Registration Successful!'),
-            backgroundColor: const Color(0xFF2E7D32),
+            content: Text('Network error: ${e.message}'),
+            backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
             ),
           ),
         );
-      });
+      } on TimeoutException catch (_) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Request timed out. Please try again.'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        );
+      } finally {
+        setState(() => _isLoading = false);
+      }
     } else if (!_agreeToTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Please agree to the Terms and Conditions'),
-          backgroundColor: Colors.redAccent,
+          backgroundColor: Colors.red,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
@@ -153,7 +235,8 @@ class _SignupPageState extends State<SignupPage> {
                       ),
                     ),
                     child: Padding(
-                      padding: const EdgeInsets.all(20.0),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20.0, vertical: 20.0),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.end,
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -167,22 +250,24 @@ class _SignupPageState extends State<SignupPage> {
                             ),
                           ),
                           const SizedBox(height: 8),
-                          Row(
+                          // FIXED: Made header text responsive
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
                                 'Sri Lanka',
                                 style: TextStyle(
                                   color: Colors.yellow[600],
-                                  fontSize: 26,
+                                  fontSize: 24, // Reduced from 26
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(height: 4),
                               const Text(
                                 'Dedicated Economic Center',
                                 style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: 26,
+                                  fontSize: 20, // Reduced from 26
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -214,7 +299,8 @@ class _SignupPageState extends State<SignupPage> {
 
               // Registration Form
               Container(
-                padding: const EdgeInsets.all(24.0),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 20.0, vertical: 24.0), // Adjusted padding
                 decoration: const BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.only(
