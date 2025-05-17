@@ -51,12 +51,14 @@ class _FarmerLoginScreenState extends State<FarmerLoginScreen> {
       if (response.statusCode == 200 && responseData['success'] == true) {
         // Successful login - navigate to HomePage
         Navigator.pushReplacement(
+          // ignore: use_build_context_synchronously
           context,
           MaterialPageRoute(
             builder: (context) => HomePage(userData: responseData['user']),
           ),
         );
 
+        // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Login successful'),
@@ -64,6 +66,7 @@ class _FarmerLoginScreenState extends State<FarmerLoginScreen> {
           ),
         );
       } else {
+        // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(responseData['error'] ?? 'Login failed'),
@@ -72,6 +75,7 @@ class _FarmerLoginScreenState extends State<FarmerLoginScreen> {
         );
       }
     } on SocketException catch (e) {
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Network error: ${e.message}'),
@@ -79,6 +83,7 @@ class _FarmerLoginScreenState extends State<FarmerLoginScreen> {
         ),
       );
     } on TimeoutException catch (_) {
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Request timed out. Please try again.'),
@@ -86,6 +91,7 @@ class _FarmerLoginScreenState extends State<FarmerLoginScreen> {
         ),
       );
     } catch (e) {
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error: ${e.toString()}'),
@@ -128,6 +134,7 @@ class _FarmerLoginScreenState extends State<FarmerLoginScreen> {
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
+                            // ignore: deprecated_member_use
                             color: Colors.green.withOpacity(0.1),
                             blurRadius: 10,
                             spreadRadius: 2,

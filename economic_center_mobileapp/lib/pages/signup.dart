@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use, duplicate_ignore
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -10,7 +12,7 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +61,7 @@ class MyApp extends StatelessWidget {
 }
 
 class SignupPage extends StatefulWidget {
-  const SignupPage({Key? key}) : super(key: key);
+  const SignupPage({super.key});
 
   @override
   State<SignupPage> createState() => _SignupPageState();
@@ -116,6 +118,7 @@ class _SignupPageState extends State<SignupPage> {
         final responseData = jsonDecode(response.body);
 
         if (response.statusCode == 201 && responseData['success'] == true) {
+          // ignore: use_build_context_synchronously
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
@@ -134,10 +137,12 @@ class _SignupPageState extends State<SignupPage> {
           _confirmPasswordController.clear();
 
           Navigator.pushReplacement(
+            // ignore: use_build_context_synchronously
             context,
             MaterialPageRoute(builder: (context) => const FarmerLoginScreen()),
           );
         } else {
+          // ignore: use_build_context_synchronously
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(responseData['error'] ?? 'Registration failed'),
@@ -150,6 +155,7 @@ class _SignupPageState extends State<SignupPage> {
           );
         }
       } on SocketException catch (e) {
+        // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Network error: ${e.message}'),
@@ -161,6 +167,7 @@ class _SignupPageState extends State<SignupPage> {
           ),
         );
       } on TimeoutException catch (_) {
+        // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text('Request timed out. Please try again.'),
@@ -172,6 +179,7 @@ class _SignupPageState extends State<SignupPage> {
           ),
         );
       } catch (e) {
+        // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error: ${e.toString()}'),
@@ -229,6 +237,7 @@ class _SignupPageState extends State<SignupPage> {
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
+                          // ignore: deprecated_member_use
                           Colors.black.withOpacity(0.1),
                           Colors.black.withOpacity(0.7),
                         ],

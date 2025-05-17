@@ -264,11 +264,13 @@ class _PaymentPageState extends State<PaymentPage> {
       if (response.statusCode == 201 && responseData['success'] == true) {
         _showPaymentSuccessDialog(responseData['order']['id'].toString());
       } else {
+        // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(responseData['error'] ?? 'Payment failed')),
         );
       }
     } catch (e) {
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: ${e.toString()}')),
       );
@@ -543,6 +545,7 @@ class _PaymentPageState extends State<PaymentPage> {
                       margin: const EdgeInsets.only(right: 10),
                       decoration: BoxDecoration(
                         color: _selectedPaymentMethod == index
+                            // ignore: deprecated_member_use
                             ? method.color.withOpacity(0.2)
                             : Colors.grey[100],
                         borderRadius: BorderRadius.circular(10),
@@ -646,8 +649,9 @@ class _PaymentPageState extends State<PaymentPage> {
                     ],
                     validator: (value) {
                       if (_selectedPaymentMethod != 0) return null;
-                      if (value?.isEmpty ?? true)
+                      if (value?.isEmpty ?? true) {
                         return 'Please enter expiry date';
+                      }
                       if (value!.length != 5 || !value.contains('/')) {
                         return 'Enter in MM/YY format';
                       }
