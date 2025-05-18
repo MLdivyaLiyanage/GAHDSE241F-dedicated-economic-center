@@ -6,6 +6,9 @@ import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:http_parser/http_parser.dart';
+import 'package:economic_center_mobileapp/pages/UserProfile.dart';
+import 'package:economic_center_mobileapp/pages/categary.dart';
+import 'package:economic_center_mobileapp/pages/message.dart';
 
 void main() {
   runApp(const MyApp());
@@ -78,13 +81,23 @@ class HomePage extends StatelessWidget {
                 ),
               ),
               title: Text('Welcome ${userData['username'] ?? 'User'}'),
-              actions: const [
-                Padding(
-                  padding: EdgeInsets.only(right: 16.0),
-                  child: CircleAvatar(
-                    backgroundImage: NetworkImage(
+              actions: [
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => UserProfileScreen(userData: userData),
+                      ),
+                    );
+                  },
+                  child: const Padding(
+                    padding: EdgeInsets.only(right: 16.0),
+                    child: CircleAvatar(
+                      backgroundImage: NetworkImage(
                         'https://randomuser.me/api/portraits/women/42.jpg'),
-                    radius: 18,
+                      radius: 18,
+                    ),
                   ),
                 ),
               ],
@@ -115,15 +128,15 @@ class HomePage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildOfferBanner(),
-                  _buildCategoriesSection(),
-                  _buildProductsSection(),
+                  _buildCategoriesSection(context),
+                  _buildProductsSection(context),
                 ],
               ),
             ),
           ],
         ),
       ),
-      bottomNavigationBar: _buildBottomNavigationBar(),
+      bottomNavigationBar: _buildBottomNavigationBar(context),
     );
   }
 
@@ -203,59 +216,64 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildCategoriesSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Categories',
+  Widget _buildCategoriesSection(BuildContext context) {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Categories',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context, // This context is now properly accessible
+                  MaterialPageRoute(builder: (context) => const CategoryScreen()),
+                );
+              },
+              child: Text(
+                'See All',
                 style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
+                  color: Colors.green.shade700,
                 ),
               ),
-              TextButton(
-                onPressed: () {},
-                child: Text(
-                  'See All',
-                  style: TextStyle(
-                    color: Colors.green.shade700,
-                  ),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
-        const SizedBox(height: 12),
-        SizedBox(
-          height: 120,
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            children: [
-              _buildCategoryItem('Vegetables',
-                  'https://img.freepik.com/free-photo/harvest-fresh-vegetable-baskets-presented-outdoor-market-sale_346278-729.jpg'),
-              _buildCategoryItem('Fruits',
-                  'https://img.freepik.com/free-photo/beautiful-street-market-sunset_23-2151530009.jpg'),
-              _buildCategoryItem('Nuts',
-                  'https://img.freepik.com/free-photo/set-pecan-pistachios-almond-peanut-cashew-pine-nuts-assorted-nuts-dried-fruits-mini-different-bowls-black-pan-top-view_176474-2049.jpg'),
-              _buildCategoryItem('Chilli',
-                  'https://img.freepik.com/premium-photo/vegetables-sale-market_1048944-22010058.jpg'),
-              _buildCategoryItem('Pepper',
-                  'https://img.freepik.com/free-photo/closeup-shot-colorful-asian-spices-market-with-blurry_181624-16223.jpg'),
-              _buildCategoryItem('Ginger',
-                  'https://img.freepik.com/free-photo/assortment-ginger-wooden-board_23-2148799547.jpg'),
-            ],
-          ),
+      ),
+      const SizedBox(height: 12),
+      SizedBox(
+        height: 120,
+        child: ListView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          children: [
+            _buildCategoryItem('Vegetables',
+                'https://img.freepik.com/free-photo/harvest-fresh-vegetable-baskets-presented-outdoor-market-sale_346278-729.jpg'),
+            _buildCategoryItem('Fruits',
+                'https://img.freepik.com/free-photo/beautiful-street-market-sunset_23-2151530009.jpg'),
+            _buildCategoryItem('Nuts',
+                'https://img.freepik.com/free-photo/set-pecan-pistachios-almond-peanut-cashew-pine-nuts-assorted-nuts-dried-fruits-mini-different-bowls-black-pan-top-view_176474-2049.jpg'),
+            _buildCategoryItem('Chilli',
+                'https://img.freepik.com/premium-photo/vegetables-sale-market_1048944-22010058.jpg'),
+            _buildCategoryItem('Pepper',
+                'https://img.freepik.com/free-photo/closeup-shot-colorful-asian-spices-market-with-blurry_181624-16223.jpg'),
+            _buildCategoryItem('Ginger',
+                'https://img.freepik.com/free-photo/assortment-ginger-wooden-board_23-2148799547.jpg'),
+          ],
         ),
-      ],
-    );
-  }
+      ),
+    ],
+  );
+}
 
   Widget _buildCategoryItem(String name, String imageUrl) {
     return Padding(
@@ -306,7 +324,7 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildProductsSection() {
+  Widget _buildProductsSection(BuildContext context){
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -323,7 +341,12 @@ class HomePage extends StatelessWidget {
                 ),
               ),
               TextButton(
-                onPressed: () {},
+                onPressed: () {
+                Navigator.push(
+                  context, // This context is now properly accessible
+                  MaterialPageRoute(builder: (context) => const CategoryScreen()),
+                );
+              },
                 child: Text(
                   'See All',
                   style: TextStyle(
@@ -477,7 +500,7 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildBottomNavigationBar() {
+  Widget _buildBottomNavigationBar(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -517,6 +540,15 @@ class HomePage extends StatelessWidget {
             label: 'More',
           ),
         ],
+        onTap: (index) {
+          if (index == 1) { // Message icon is at index 1
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const FarmerMessengerApp()),
+            );
+          }
+        // You can add other navigation cases for other icons here
+        },
       ),
     );
   }
