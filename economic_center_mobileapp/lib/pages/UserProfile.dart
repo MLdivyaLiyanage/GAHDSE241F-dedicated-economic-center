@@ -25,7 +25,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         useMaterial3: true,
       ),
-      home: const UserProfileScreen(),
+      home: const UserProfileScreen(userData: {},),
     );
   }
 }
@@ -89,7 +89,9 @@ class UserData {
 }
 
 class UserProfileScreen extends StatefulWidget {
-  const UserProfileScreen({super.key});
+  final Map<String, dynamic> userData;
+  
+  const UserProfileScreen({super.key, required this.userData});
 
   @override
   State<UserProfileScreen> createState() => _UserProfileScreenState();
