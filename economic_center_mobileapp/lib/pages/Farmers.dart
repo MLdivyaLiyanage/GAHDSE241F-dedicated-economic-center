@@ -23,7 +23,7 @@ class FarmerProfilesApp extends StatelessWidget {
           secondary: Colors.amber[700]!,
         ),
         fontFamily: 'Poppins',
-        cardTheme: CardTheme(
+        cardTheme: CardThemeData(
           elevation: 2,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
@@ -50,7 +50,8 @@ class _FarmerProfilesPageState extends State<FarmerProfilesPage> {
   String _searchQuery = '';
   String _selectedFilter = 'All';
   final TextEditingController _searchController = TextEditingController();
-  final String currentUserId = 'user123'; // Replace with actual user ID from auth
+  final String currentUserId =
+      'user123'; // Replace with actual user ID from auth
 
   String get baseUrl {
     if (Platform.isAndroid) {
@@ -79,23 +80,25 @@ class _FarmerProfilesPageState extends State<FarmerProfilesPage> {
       isLoading = true;
       errorMessage = '';
     });
-    
+
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/api/all-profiles'),
-        headers: {'Content-Type': 'application/json'},
-      ).timeout(const Duration(seconds: 10));
-      
+      final response = await http
+          .get(
+            Uri.parse('$baseUrl/api/all-profiles'),
+            headers: {'Content-Type': 'application/json'},
+          )
+          .timeout(const Duration(seconds: 10));
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['success'] == true) {
           final profiles = data['profiles'] as List;
-          
+
           setState(() {
             farmers = profiles.map((profile) {
               double avgRating = (profile['rating'] ?? 0).toDouble();
               int feedbackCount = (profile['feedback_count'] ?? 0).toInt();
-              
+
               return Farmer(
                 id: profile['id'].toString(),
                 username: profile['username'] ?? 'Unknown',
@@ -132,7 +135,8 @@ class _FarmerProfilesPageState extends State<FarmerProfilesPage> {
       }
     } catch (e) {
       setState(() {
-        errorMessage = 'Connection error: ${e.toString().replaceAll('Exception: ', '')}';
+        errorMessage =
+            'Connection error: ${e.toString().replaceAll('Exception: ', '')}';
         isLoading = false;
       });
     }
@@ -140,15 +144,23 @@ class _FarmerProfilesPageState extends State<FarmerProfilesPage> {
 
   List<Farmer> get filteredFarmers {
     return farmers.where((farmer) {
-      final matchesSearch = farmer.username.toLowerCase().contains(_searchQuery) ||
+      final matchesSearch =
+          farmer.username.toLowerCase().contains(_searchQuery) ||
           farmer.location.toLowerCase().contains(_searchQuery) ||
           farmer.workExperience.toLowerCase().contains(_searchQuery) ||
-          farmer.products.any((p) => p['name']?.toString().toLowerCase().contains(_searchQuery) ?? false);
+          farmer.products.any(
+            (p) =>
+                p['name']?.toString().toLowerCase().contains(_searchQuery) ??
+                false,
+          );
 
       if (_selectedFilter == 'All') {
         return matchesSearch;
       } else {
-        return matchesSearch && farmer.workExperience.toLowerCase().contains(_selectedFilter.toLowerCase());
+        return matchesSearch &&
+            farmer.workExperience.toLowerCase().contains(
+              _selectedFilter.toLowerCase(),
+            );
       }
     }).toList();
   }
@@ -187,9 +199,7 @@ class _FarmerProfilesPageState extends State<FarmerProfilesPage> {
             child: _buildSearchBar(),
           ),
           _buildFilterChips(),
-          Expanded(
-            child: _buildFarmerList(),
-          ),
+          Expanded(child: _buildFarmerList()),
         ],
       ),
     );
@@ -243,7 +253,9 @@ class _FarmerProfilesPageState extends State<FarmerProfilesPage> {
               },
               selectedColor: Theme.of(context).primaryColor,
               labelStyle: TextStyle(
-                color: _selectedFilter == filter ? Colors.white : Colors.grey[700],
+                color: _selectedFilter == filter
+                    ? Colors.white
+                    : Colors.grey[700],
               ),
             ),
           );
@@ -300,10 +312,7 @@ class _FarmerProfilesPageState extends State<FarmerProfilesPage> {
             const SizedBox(height: 16),
             Text(
               'No farmers found',
-              style: TextStyle(
-                fontSize: 18,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 18, color: Colors.grey[600]),
             ),
             if (_searchQuery.isNotEmpty || _selectedFilter != 'All')
               TextButton(
@@ -389,17 +398,18 @@ class _FarmerProfilesPageState extends State<FarmerProfilesPage> {
                 children: [
                   if (farmer.workExperience.isNotEmpty)
                     _buildFeatureChip(
-                      Icons.agriculture, 
-                      farmer.workExperience.length > 15 
-                          ? '${farmer.workExperience.substring(0, 15)}...' 
-                          : farmer.workExperience
+                      Icons.agriculture,
+                      farmer.workExperience.length > 15
+                          ? '${farmer.workExperience.substring(0, 15)}...'
+                          : farmer.workExperience,
                     ),
-                  if (farmer.phoneNumber.isNotEmpty && farmer.phoneNumber != 'No phone')
+                  if (farmer.phoneNumber.isNotEmpty &&
+                      farmer.phoneNumber != 'No phone')
                     _buildFeatureChip(Icons.phone, farmer.phoneNumber),
                   if (farmer.products.isNotEmpty)
                     _buildFeatureChip(
-                      Icons.shopping_basket, 
-                      '${farmer.products.length} product${farmer.products.length > 1 ? 's' : ''}'
+                      Icons.shopping_basket,
+                      '${farmer.products.length} product${farmer.products.length > 1 ? 's' : ''}',
                     ),
                 ],
               ),
@@ -420,7 +430,7 @@ class _FarmerProfilesPageState extends State<FarmerProfilesPage> {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
-        child: imageUrl.isNotEmpty 
+        child: imageUrl.isNotEmpty
             ? Image.network(
                 '$baseUrl$imageUrl',
                 fit: BoxFit.cover,
@@ -429,7 +439,8 @@ class _FarmerProfilesPageState extends State<FarmerProfilesPage> {
                   return Center(
                     child: CircularProgressIndicator(
                       value: loadingProgress.expectedTotalBytes != null
-                          ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                          ? loadingProgress.cumulativeBytesLoaded /
+                                loadingProgress.expectedTotalBytes!
                           : null,
                     ),
                   );
@@ -445,11 +456,7 @@ class _FarmerProfilesPageState extends State<FarmerProfilesPage> {
                 },
               )
             : Center(
-                child: Icon(
-                  Icons.person,
-                  size: 40,
-                  color: Colors.grey[500],
-                ),
+                child: Icon(Icons.person, size: 40, color: Colors.grey[500]),
               ),
       ),
     );
@@ -460,10 +467,8 @@ class _FarmerProfilesPageState extends State<FarmerProfilesPage> {
       children: [
         RatingBarIndicator(
           rating: rating,
-          itemBuilder: (context, index) => const Icon(
-            Icons.star,
-            color: Colors.amber,
-          ),
+          itemBuilder: (context, index) =>
+              const Icon(Icons.star, color: Colors.amber),
           itemCount: 5,
           itemSize: 16,
           unratedColor: Colors.amber.withAlpha(50),
@@ -471,9 +476,7 @@ class _FarmerProfilesPageState extends State<FarmerProfilesPage> {
         const SizedBox(width: 4),
         Text(
           rating.toStringAsFixed(1),
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
       ],
     );
@@ -484,9 +487,7 @@ class _FarmerProfilesPageState extends State<FarmerProfilesPage> {
       avatar: Icon(icon, size: 16, color: Theme.of(context).primaryColor),
       label: Text(text),
       backgroundColor: Colors.green[50],
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     );
   }
 
@@ -594,13 +595,17 @@ class _FarmerDetailsPageState extends State<FarmerDetailsPage> {
     setState(() {
       _isLoadingFeedback = true;
     });
-    
+
     try {
-      final response = await http.get(
-        Uri.parse('${widget.baseUrl}/api/farmer-feedback/${widget.farmer.id}'),
-        headers: {'Content-Type': 'application/json'},
-      ).timeout(const Duration(seconds: 10));
-      
+      final response = await http
+          .get(
+            Uri.parse(
+              '${widget.baseUrl}/api/farmer-feedback/${widget.farmer.id}',
+            ),
+            headers: {'Content-Type': 'application/json'},
+          )
+          .timeout(const Duration(seconds: 10));
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['success'] == true) {
@@ -631,17 +636,19 @@ class _FarmerDetailsPageState extends State<FarmerDetailsPage> {
     }
 
     try {
-      final response = await http.post(
-        Uri.parse('${widget.baseUrl}/api/submit-feedback'),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          'farmerId': widget.farmer.id,
-          'userId': widget.currentUserId,
-          'rating': _newRating,
-          'comment': _feedbackController.text,
-        }),
-      ).timeout(const Duration(seconds: 10));
-      
+      final response = await http
+          .post(
+            Uri.parse('${widget.baseUrl}/api/submit-feedback'),
+            headers: {'Content-Type': 'application/json'},
+            body: json.encode({
+              'farmerId': widget.farmer.id,
+              'userId': widget.currentUserId,
+              'rating': _newRating,
+              'comment': _feedbackController.text,
+            }),
+          )
+          .timeout(const Duration(seconds: 10));
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['success'] == true) {
@@ -652,10 +659,10 @@ class _FarmerDetailsPageState extends State<FarmerDetailsPage> {
               behavior: SnackBarBehavior.floating,
             ),
           );
-          
+
           await _loadFeedback();
           _feedbackController.clear();
-          
+
           if (mounted) {
             Navigator.pop(context, data['averageRating']);
           }
@@ -728,7 +735,8 @@ class _FarmerDetailsPageState extends State<FarmerDetailsPage> {
                       return Center(
                         child: CircularProgressIndicator(
                           value: loadingProgress.expectedTotalBytes != null
-                              ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                              ? loadingProgress.cumulativeBytesLoaded /
+                                    loadingProgress.expectedTotalBytes!
                               : null,
                         ),
                       );
@@ -767,20 +775,14 @@ class _FarmerDetailsPageState extends State<FarmerDetailsPage> {
               const SizedBox(height: 4),
               Text(
                 widget.farmer.location,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey[600],
-                ),
+                style: TextStyle(fontSize: 16, color: Colors.grey[600]),
               ),
               const SizedBox(height: 8),
               _buildRatingBar(),
               if (widget.farmer.email.isNotEmpty)
                 Text(
                   widget.farmer.email,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                  ),
+                  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                 ),
             ],
           ),
@@ -794,10 +796,8 @@ class _FarmerDetailsPageState extends State<FarmerDetailsPage> {
       children: [
         RatingBarIndicator(
           rating: widget.farmer.rating,
-          itemBuilder: (context, index) => const Icon(
-            Icons.star,
-            color: Colors.amber,
-          ),
+          itemBuilder: (context, index) =>
+              const Icon(Icons.star, color: Colors.amber),
           itemCount: 5,
           itemSize: 20,
           unratedColor: Colors.amber.withAlpha(50),
@@ -805,16 +805,12 @@ class _FarmerDetailsPageState extends State<FarmerDetailsPage> {
         const SizedBox(width: 8),
         Text(
           widget.farmer.rating.toStringAsFixed(1),
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         const SizedBox(width: 8),
         Text(
           '(${_farmerFeedback.length} reviews)',
-          style: TextStyle(
-            color: Colors.grey[600],
-          ),
+          style: TextStyle(color: Colors.grey[600]),
         ),
       ],
     );
@@ -826,22 +822,31 @@ class _FarmerDetailsPageState extends State<FarmerDetailsPage> {
       children: [
         const Text(
           'Farmer Details',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
         _buildDetailRow(Icons.person, 'About', widget.farmer.aboutMe),
-        _buildDetailRow(Icons.agriculture, 'Experience', widget.farmer.workExperience),
+        _buildDetailRow(
+          Icons.agriculture,
+          'Experience',
+          widget.farmer.workExperience,
+        ),
         _buildDetailRow(Icons.location_on, 'Address', widget.farmer.address),
         _buildDetailRow(Icons.phone, 'Contact', widget.farmer.phoneNumber),
         if (widget.farmer.age.isNotEmpty)
           _buildDetailRow(Icons.cake, 'Age', widget.farmer.age),
         if (widget.farmer.facebookLink.isNotEmpty)
-          _buildDetailRow(Icons.facebook, 'Facebook', widget.farmer.facebookLink),
+          _buildDetailRow(
+            Icons.facebook,
+            'Facebook',
+            widget.farmer.facebookLink,
+          ),
         if (widget.farmer.instagramLink.isNotEmpty)
-          _buildDetailRow(Icons.camera_alt, 'Instagram', widget.farmer.instagramLink),
+          _buildDetailRow(
+            Icons.camera_alt,
+            'Instagram',
+            widget.farmer.instagramLink,
+          ),
       ],
     );
   }
@@ -883,10 +888,7 @@ class _FarmerDetailsPageState extends State<FarmerDetailsPage> {
       children: [
         const Text(
           'Products',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
         if (widget.farmer.products.isEmpty)
@@ -923,10 +925,7 @@ class _FarmerDetailsPageState extends State<FarmerDetailsPage> {
           children: [
             Text(
               product['name'] ?? 'Unnamed Product',
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
             const SizedBox(height: 8),
             if (product['images'] != null && product['images'].isNotEmpty)
@@ -949,8 +948,10 @@ class _FarmerDetailsPageState extends State<FarmerDetailsPage> {
                             if (loadingProgress == null) return child;
                             return Center(
                               child: CircularProgressIndicator(
-                                value: loadingProgress.expectedTotalBytes != null
-                                    ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                                value:
+                                    loadingProgress.expectedTotalBytes != null
+                                    ? loadingProgress.cumulativeBytesLoaded /
+                                          loadingProgress.expectedTotalBytes!
                                     : null,
                               ),
                             );
@@ -977,10 +978,7 @@ class _FarmerDetailsPageState extends State<FarmerDetailsPage> {
             const SizedBox(height: 8),
             Text(
               'Price: \$${price.toStringAsFixed(2)}',
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
           ],
         ),
@@ -994,10 +992,7 @@ class _FarmerDetailsPageState extends State<FarmerDetailsPage> {
       children: [
         const Text(
           'Rate This Farmer',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
         RatingBar.builder(
@@ -1007,10 +1002,8 @@ class _FarmerDetailsPageState extends State<FarmerDetailsPage> {
           allowHalfRating: true,
           itemCount: 5,
           itemPadding: const EdgeInsets.symmetric(horizontal: 4.0),
-          itemBuilder: (context, _) => const Icon(
-            Icons.star,
-            color: Colors.amber,
-          ),
+          itemBuilder: (context, _) =>
+              const Icon(Icons.star, color: Colors.amber),
           onRatingUpdate: (rating) {
             setState(() {
               _newRating = rating;
@@ -1028,10 +1021,7 @@ class _FarmerDetailsPageState extends State<FarmerDetailsPage> {
 
     if (_farmerFeedback.isEmpty) {
       return const Center(
-        child: Text(
-          'No feedback yet',
-          style: TextStyle(color: Colors.grey),
-        ),
+        child: Text('No feedback yet', style: TextStyle(color: Colors.grey)),
       );
     }
 
@@ -1040,10 +1030,7 @@ class _FarmerDetailsPageState extends State<FarmerDetailsPage> {
       children: [
         const Text(
           'Customer Feedback',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
         ListView.builder(
@@ -1072,7 +1059,9 @@ class _FarmerDetailsPageState extends State<FarmerDetailsPage> {
                 CircleAvatar(
                   radius: 20,
                   backgroundImage: feedback['profile_image'] != null
-                      ? NetworkImage('${widget.baseUrl}${feedback['profile_image']}')
+                      ? NetworkImage(
+                          '${widget.baseUrl}${feedback['profile_image']}',
+                        )
                       : null,
                   child: feedback['profile_image'] == null
                       ? const Icon(Icons.person)
@@ -1086,8 +1075,9 @@ class _FarmerDetailsPageState extends State<FarmerDetailsPage> {
                 const Spacer(),
                 Text(
                   feedback['created_at'] != null
-                      ? DateFormat('MMM d, yyyy').format(
-                          DateTime.parse(feedback['created_at']))
+                      ? DateFormat(
+                          'MMM d, yyyy',
+                        ).format(DateTime.parse(feedback['created_at']))
                       : '',
                   style: TextStyle(color: Colors.grey[600], fontSize: 12),
                 ),
@@ -1098,10 +1088,8 @@ class _FarmerDetailsPageState extends State<FarmerDetailsPage> {
               children: [
                 RatingBarIndicator(
                   rating: feedback['rating']?.toDouble() ?? 0,
-                  itemBuilder: (context, index) => const Icon(
-                    Icons.star,
-                    color: Colors.amber,
-                  ),
+                  itemBuilder: (context, index) =>
+                      const Icon(Icons.star, color: Colors.amber),
                   itemCount: 5,
                   itemSize: 16,
                   unratedColor: Colors.amber.withAlpha(50),
@@ -1133,19 +1121,14 @@ class _FarmerDetailsPageState extends State<FarmerDetailsPage> {
       children: [
         const Text(
           'Add Your Feedback',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
         TextField(
           controller: _feedbackController,
           decoration: InputDecoration(
             hintText: 'Write your feedback...',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           ),
           maxLines: 3,
         ),

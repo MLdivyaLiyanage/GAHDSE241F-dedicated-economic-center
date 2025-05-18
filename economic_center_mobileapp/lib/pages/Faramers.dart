@@ -19,7 +19,7 @@ class FarmerProfilesApp extends StatelessWidget {
           secondary: Colors.amber[700]!,
         ),
         fontFamily: 'Poppins',
-        cardTheme: CardTheme(
+        cardTheme: CardThemeData(
           elevation: 2,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
@@ -121,7 +121,8 @@ class _FarmerProfilesPageState extends State<FarmerProfilesPage> {
 
   List<Farmer> get filteredFarmers {
     return farmers.where((farmer) {
-      final matchesSearch = farmer.name.toLowerCase().contains(_searchQuery) ||
+      final matchesSearch =
+          farmer.name.toLowerCase().contains(_searchQuery) ||
           farmer.location.toLowerCase().contains(_searchQuery) ||
           farmer.specialty.toLowerCase().contains(_searchQuery) ||
           farmer.products.toLowerCase().contains(_searchQuery);
@@ -157,9 +158,7 @@ class _FarmerProfilesPageState extends State<FarmerProfilesPage> {
             child: _buildSearchBar(),
           ),
           _buildFilterChips(),
-          Expanded(
-            child: _buildFarmerList(),
-          ),
+          Expanded(child: _buildFarmerList()),
         ],
       ),
     );
@@ -213,8 +212,9 @@ class _FarmerProfilesPageState extends State<FarmerProfilesPage> {
               },
               selectedColor: Theme.of(context).primaryColor,
               labelStyle: TextStyle(
-                color:
-                    _selectedFilter == filter ? Colors.white : Colors.grey[700],
+                color: _selectedFilter == filter
+                    ? Colors.white
+                    : Colors.grey[700],
               ),
             ),
           );
@@ -233,10 +233,7 @@ class _FarmerProfilesPageState extends State<FarmerProfilesPage> {
             const SizedBox(height: 16),
             Text(
               'No farmers found',
-              style: TextStyle(
-                fontSize: 18,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 18, color: Colors.grey[600]),
             ),
             if (_searchQuery.isNotEmpty || _selectedFilter != 'All')
               TextButton(
@@ -344,11 +341,7 @@ class _FarmerProfilesPageState extends State<FarmerProfilesPage> {
           fit: BoxFit.cover,
           errorBuilder: (context, error, stackTrace) {
             return Center(
-              child: Icon(
-                Icons.person,
-                size: 40,
-                color: Colors.grey[500],
-              ),
+              child: Icon(Icons.person, size: 40, color: Colors.grey[500]),
             );
           },
         ),
@@ -361,10 +354,8 @@ class _FarmerProfilesPageState extends State<FarmerProfilesPage> {
       children: [
         RatingBarIndicator(
           rating: rating,
-          itemBuilder: (context, index) => const Icon(
-            Icons.star,
-            color: Colors.amber,
-          ),
+          itemBuilder: (context, index) =>
+              const Icon(Icons.star, color: Colors.amber),
           itemCount: 5,
           itemSize: 16,
           unratedColor: Colors.amber.withAlpha(50),
@@ -372,9 +363,7 @@ class _FarmerProfilesPageState extends State<FarmerProfilesPage> {
         const SizedBox(width: 4),
         Text(
           rating.toStringAsFixed(1),
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
       ],
     );
@@ -385,9 +374,7 @@ class _FarmerProfilesPageState extends State<FarmerProfilesPage> {
       avatar: Icon(icon, size: 16, color: Theme.of(context).primaryColor),
       label: Text(text),
       backgroundColor: Colors.green[50],
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     );
   }
 
@@ -401,8 +388,10 @@ class _FarmerProfilesPageState extends State<FarmerProfilesPage> {
             setState(() {
               farmer.feedbacks.add(feedback);
               // Update average rating
-              final totalRating =
-                  farmer.feedbacks.fold(0.0, (sum, f) => sum + f.rating);
+              final totalRating = farmer.feedbacks.fold(
+                0.0,
+                (sum, f) => sum + f.rating,
+              );
               farmer.rating = totalRating / farmer.feedbacks.length;
             });
           },
@@ -542,11 +531,7 @@ class _FarmerDetailsPageState extends State<FarmerDetailsPage> {
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) {
                 return Center(
-                  child: Icon(
-                    Icons.person,
-                    size: 40,
-                    color: Colors.grey[500],
-                  ),
+                  child: Icon(Icons.person, size: 40, color: Colors.grey[500]),
                 );
               },
             ),
@@ -567,10 +552,7 @@ class _FarmerDetailsPageState extends State<FarmerDetailsPage> {
               const SizedBox(height: 4),
               Text(
                 widget.farmer.location,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey[600],
-                ),
+                style: TextStyle(fontSize: 16, color: Colors.grey[600]),
               ),
               const SizedBox(height: 8),
               _buildRatingBar(),
@@ -586,10 +568,8 @@ class _FarmerDetailsPageState extends State<FarmerDetailsPage> {
       children: [
         RatingBarIndicator(
           rating: widget.farmer.rating,
-          itemBuilder: (context, index) => const Icon(
-            Icons.star,
-            color: Colors.amber,
-          ),
+          itemBuilder: (context, index) =>
+              const Icon(Icons.star, color: Colors.amber),
           itemCount: 5,
           itemSize: 20,
           unratedColor: Colors.amber.withAlpha(50),
@@ -597,9 +577,7 @@ class _FarmerDetailsPageState extends State<FarmerDetailsPage> {
         const SizedBox(width: 8),
         Text(
           widget.farmer.rating.toStringAsFixed(1),
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
       ],
     );
@@ -611,16 +589,19 @@ class _FarmerDetailsPageState extends State<FarmerDetailsPage> {
       children: [
         const Text(
           'Farmer Details',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
         _buildDetailRow(
-            Icons.agriculture, 'Specialty', widget.farmer.specialty),
+          Icons.agriculture,
+          'Specialty',
+          widget.farmer.specialty,
+        ),
         _buildDetailRow(
-            Icons.calendar_today, 'Experience', widget.farmer.experience),
+          Icons.calendar_today,
+          'Experience',
+          widget.farmer.experience,
+        ),
         _buildDetailRow(Icons.landscape, 'Farm Size', widget.farmer.farmSize),
         _buildDetailRow(Icons.phone, 'Contact', widget.farmer.contact),
       ],
@@ -634,13 +615,8 @@ class _FarmerDetailsPageState extends State<FarmerDetailsPage> {
         children: [
           Icon(icon, size: 20, color: Colors.green[700]),
           const SizedBox(width: 8),
-          Text(
-            '$label: ',
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-          Expanded(
-            child: Text(value),
-          ),
+          Text('$label: ', style: const TextStyle(fontWeight: FontWeight.bold)),
+          Expanded(child: Text(value)),
         ],
       ),
     );
@@ -652,10 +628,7 @@ class _FarmerDetailsPageState extends State<FarmerDetailsPage> {
       children: [
         const Text(
           'Products',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
         Wrap(
@@ -684,25 +657,17 @@ class _FarmerDetailsPageState extends State<FarmerDetailsPage> {
           children: [
             const Text(
               'Feedback & Reviews',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             Text(
               '${widget.farmer.feedbacks.length} reviews',
-              style: TextStyle(
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(color: Colors.grey[600]),
             ),
           ],
         ),
         const SizedBox(height: 8),
         if (widget.farmer.feedbacks.isEmpty)
-          const Text(
-            'No reviews yet',
-            style: TextStyle(color: Colors.grey),
-          )
+          const Text('No reviews yet', style: TextStyle(color: Colors.grey))
         else
           Column(
             children: widget.farmer.feedbacks.map((feedback) {
@@ -724,37 +689,25 @@ class _FarmerDetailsPageState extends State<FarmerDetailsPage> {
             children: [
               Text(
                 feedback.userName,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                ),
+                style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               Text(
                 '${feedback.date.day}/${feedback.date.month}/${feedback.date.year}',
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 12,
-                ),
+                style: TextStyle(color: Colors.grey[600], fontSize: 12),
               ),
             ],
           ),
           const SizedBox(height: 4),
           RatingBarIndicator(
             rating: feedback.rating,
-            itemBuilder: (context, index) => const Icon(
-              Icons.star,
-              color: Colors.amber,
-            ),
+            itemBuilder: (context, index) =>
+                const Icon(Icons.star, color: Colors.amber),
             itemCount: 5,
             itemSize: 16,
             unratedColor: Colors.amber.withAlpha(50),
           ),
           const SizedBox(height: 4),
-          Text(
-            feedback.comment,
-            style: const TextStyle(
-              fontSize: 14,
-            ),
-          ),
+          Text(feedback.comment, style: const TextStyle(fontSize: 14)),
           const Divider(height: 24),
         ],
       ),
@@ -767,10 +720,7 @@ class _FarmerDetailsPageState extends State<FarmerDetailsPage> {
       children: [
         const Text(
           'Add Your Feedback',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
         RatingBar.builder(
@@ -780,10 +730,8 @@ class _FarmerDetailsPageState extends State<FarmerDetailsPage> {
           allowHalfRating: true,
           itemCount: 5,
           itemSize: 30,
-          itemBuilder: (context, _) => const Icon(
-            Icons.star,
-            color: Colors.amber,
-          ),
+          itemBuilder: (context, _) =>
+              const Icon(Icons.star, color: Colors.amber),
           onRatingUpdate: (rating) {
             setState(() {
               _newRating = rating;
@@ -795,9 +743,7 @@ class _FarmerDetailsPageState extends State<FarmerDetailsPage> {
           controller: _feedbackController,
           decoration: InputDecoration(
             hintText: 'Write your feedback...',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           ),
           maxLines: 3,
         ),

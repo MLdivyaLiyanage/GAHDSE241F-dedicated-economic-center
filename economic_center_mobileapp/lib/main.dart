@@ -24,10 +24,7 @@ class MyApp extends StatelessWidget {
         ),
         scaffoldBackgroundColor: const Color(0xFFF8FAFC),
         fontFamily: 'Poppins',
-        appBarTheme: const AppBarTheme(
-          elevation: 0,
-          centerTitle: true,
-        ),
+        appBarTheme: const AppBarTheme(elevation: 0, centerTitle: true),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
             elevation: 2,
@@ -37,7 +34,7 @@ class MyApp extends StatelessWidget {
             ),
           ),
         ),
-        cardTheme: CardTheme(
+        cardTheme: CardThemeData(
           elevation: 3,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
@@ -73,7 +70,7 @@ class MyApp extends StatelessWidget {
             ),
           ),
         ),
-        cardTheme: CardTheme(
+        cardTheme: CardThemeData(
           elevation: 3,
           color: const Color(0xFF1E293B),
           shape: RoundedRectangleBorder(
@@ -170,36 +167,41 @@ class _SriLankaExplorerState extends State<SriLankaExplorer>
     // Add some initial markers for key cities and Dedicated Economic Centers
     final List<LocationData> initialLocations = [
       LocationData(
-          id: 1,
-          name: 'Colombo',
-          position: const LatLng(6.9271, 79.8612),
-          type: 'City',
-          description: 'Commercial capital and largest city of Sri Lanka'),
+        id: 1,
+        name: 'Colombo',
+        position: const LatLng(6.9271, 79.8612),
+        type: 'City',
+        description: 'Commercial capital and largest city of Sri Lanka',
+      ),
       LocationData(
-          id: 2,
-          name: 'Kandy',
-          position: const LatLng(7.2906, 80.6337),
-          type: 'City',
-          description: 'Cultural capital famous for Temple of the Tooth Relic'),
+        id: 2,
+        name: 'Kandy',
+        position: const LatLng(7.2906, 80.6337),
+        type: 'City',
+        description: 'Cultural capital famous for Temple of the Tooth Relic',
+      ),
       LocationData(
-          id: 3,
-          name: 'Dambulla DEC',
-          position: const LatLng(7.8679, 80.6494),
-          type: 'Economic Center',
-          description:
-              'Major Dedicated Economic Centre for agricultural products'),
+        id: 3,
+        name: 'Dambulla DEC',
+        position: const LatLng(7.8679, 80.6494),
+        type: 'Economic Center',
+        description:
+            'Major Dedicated Economic Centre for agricultural products',
+      ),
       LocationData(
-          id: 4,
-          name: 'Narahenpita DEC',
-          position: const LatLng(6.9053, 79.8795),
-          type: 'Economic Center',
-          description: 'Economic hub in the Colombo district'),
+        id: 4,
+        name: 'Narahenpita DEC',
+        position: const LatLng(6.9053, 79.8795),
+        type: 'Economic Center',
+        description: 'Economic hub in the Colombo district',
+      ),
       LocationData(
-          id: 5,
-          name: 'Meegoda DEC',
-          position: const LatLng(6.8361, 80.0953),
-          type: 'Economic Center',
-          description: 'Important agricultural trading center near Colombo'),
+        id: 5,
+        name: 'Meegoda DEC',
+        position: const LatLng(6.8361, 80.0953),
+        type: 'Economic Center',
+        description: 'Important agricultural trading center near Colombo',
+      ),
     ];
 
     for (final location in initialLocations) {
@@ -217,10 +219,7 @@ class _SriLankaExplorerState extends State<SriLankaExplorer>
       Marker(
         markerId: MarkerId(location.id.toString()),
         position: location.position,
-        infoWindow: InfoWindow(
-          title: location.name,
-          snippet: location.type,
-        ),
+        infoWindow: InfoWindow(title: location.name, snippet: location.type),
         icon: markerIcon,
         onTap: () {
           setState(() {
@@ -269,10 +268,7 @@ class _SriLankaExplorerState extends State<SriLankaExplorer>
           // Animate to the location
           _mapController?.animateCamera(
             CameraUpdate.newCameraPosition(
-              CameraPosition(
-                target: newLocation.position,
-                zoom: 14,
-              ),
+              CameraPosition(target: newLocation.position, zoom: 14),
             ),
           );
         } else {
@@ -355,10 +351,7 @@ class _SriLankaExplorerState extends State<SriLankaExplorer>
                 children: [
                   const Text(
                     'DEDICATED ECONOMIC CENTRES',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   Text(
                     'Sri Lanka Explorer',
@@ -500,7 +493,8 @@ class _SriLankaExplorerState extends State<SriLankaExplorer>
                           onPressed: () {
                             _mapController?.animateCamera(
                               CameraUpdate.newCameraPosition(
-                                  _initialCameraPosition),
+                                _initialCameraPosition,
+                              ),
                             );
                           },
                           tooltip: 'Reset View',
@@ -519,9 +513,7 @@ class _SriLankaExplorerState extends State<SriLankaExplorer>
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          CircularProgressIndicator(
-                            color: Colors.white,
-                          ),
+                          CircularProgressIndicator(color: Colors.white),
                           SizedBox(height: 16),
                           Text(
                             'Loading map of Sri Lanka...',
@@ -602,7 +594,8 @@ class _SriLankaExplorerState extends State<SriLankaExplorer>
                                   _selectedLocation!.type == 'Economic Center'
                                       ? Icons.store_rounded
                                       : Icons.location_city_rounded,
-                                  color: _selectedLocation!.type ==
+                                  color:
+                                      _selectedLocation!.type ==
                                           'Economic Center'
                                       ? Theme.of(context).colorScheme.tertiary
                                       : Theme.of(context).colorScheme.secondary,
@@ -680,7 +673,8 @@ class _SriLankaExplorerState extends State<SriLankaExplorer>
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
                                         content: Text(
-                                            'Directions feature coming soon!'),
+                                          'Directions feature coming soon!',
+                                        ),
                                         behavior: SnackBarBehavior.floating,
                                       ),
                                     );
@@ -769,8 +763,10 @@ class _SriLankaExplorerState extends State<SriLankaExplorer>
                         )
                       : null,
                   border: InputBorder.none,
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
                 ),
                 onChanged: (value) {
                   setState(() {});
@@ -855,20 +851,22 @@ class _SriLankaExplorerState extends State<SriLankaExplorer>
 
                           return Card(
                             margin: const EdgeInsets.only(
-                                right: 12, top: 8, bottom: 8),
+                              right: 12,
+                              top: 8,
+                              bottom: 8,
+                            ),
                             color: isSelected
-                                ? Theme.of(context)
-                                    .colorScheme
-                                    .primary
-                                    // ignore: deprecated_member_use
-                                    .withOpacity(0.1)
+                                ? Theme.of(context).colorScheme.primary
+                                  // ignore: deprecated_member_use
+                                  .withOpacity(0.1)
                                 : null,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                               side: isSelected
                                   ? BorderSide(
-                                      color:
-                                          Theme.of(context).colorScheme.primary,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
                                       width: 2,
                                     )
                                   : BorderSide(
@@ -909,12 +907,12 @@ class _SriLankaExplorerState extends State<SriLankaExplorer>
                                           size: 16,
                                           color:
                                               location.type == 'Economic Center'
-                                                  ? Theme.of(context)
-                                                      .colorScheme
-                                                      .tertiary
-                                                  : Theme.of(context)
-                                                      .colorScheme
-                                                      .secondary,
+                                              ? Theme.of(
+                                                  context,
+                                                ).colorScheme.tertiary
+                                              : Theme.of(
+                                                  context,
+                                                ).colorScheme.secondary,
                                         ),
                                         const SizedBox(width: 4),
                                         Expanded(
@@ -991,9 +989,7 @@ class _SriLankaExplorerState extends State<SriLankaExplorer>
       margin: const EdgeInsets.only(right: 12, top: 8, bottom: 8),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: isDarkMode ? Colors.white12 : Colors.black12,
-        ),
+        side: BorderSide(color: isDarkMode ? Colors.white12 : Colors.black12),
       ),
       child: Container(
         width: 200,
