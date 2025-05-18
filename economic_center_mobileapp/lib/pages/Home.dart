@@ -8,6 +8,7 @@ import 'dart:convert';
 import 'package:http_parser/http_parser.dart';
 import 'package:economic_center_mobileapp/pages/UserProfile.dart';
 import 'package:economic_center_mobileapp/pages/categary.dart';
+import 'package:economic_center_mobileapp/pages/message.dart';
 
 void main() {
   runApp(const MyApp());
@@ -135,7 +136,7 @@ class HomePage extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar: _buildBottomNavigationBar(),
+      bottomNavigationBar: _buildBottomNavigationBar(context),
     );
   }
 
@@ -499,7 +500,7 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildBottomNavigationBar() {
+  Widget _buildBottomNavigationBar(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -539,6 +540,15 @@ class HomePage extends StatelessWidget {
             label: 'More',
           ),
         ],
+        onTap: (index) {
+          if (index == 1) { // Message icon is at index 1
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const FarmerMessengerApp()),
+            );
+          }
+        // You can add other navigation cases for other icons here
+        },
       ),
     );
   }
