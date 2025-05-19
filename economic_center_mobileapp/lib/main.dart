@@ -1259,4 +1259,23 @@ class LocationData {
     this.type = 'Custom',
     this.description = '',
   });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is LocationData &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          name == other.name &&
+          position == other.position &&
+          type == other.type &&
+          description == other.description;
+
+  @override
+  int get hashCode =>
+      id.hashCode ^
+      name.hashCode ^
+      position.hashCode ^
+      type.hashCode ^
+      description.hashCode;
 }
