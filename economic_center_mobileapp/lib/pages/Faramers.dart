@@ -32,6 +32,10 @@ class FarmerProfilesApp extends StatelessWidget {
   }
 }
 
+// ignore: non_constant_identifier_names
+CardThemeData({required int elevation, required RoundedRectangleBorder shape}) {
+}
+
 class FarmerProfilesPage extends StatefulWidget {
   const FarmerProfilesPage({super.key});
 
