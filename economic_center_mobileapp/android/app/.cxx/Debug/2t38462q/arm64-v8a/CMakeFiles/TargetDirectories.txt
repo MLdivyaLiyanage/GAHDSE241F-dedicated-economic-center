@@ -1,0 +1,2 @@
+C:/Final/GAHDSE241F-dedicated-economic-center/economic_center_mobileapp/android/app/.cxx/Debug/2t38462q/arm64-v8a/CMakeFiles/edit_cache.dir
+C:/Final/GAHDSE241F-dedicated-economic-center/economic_center_mobileapp/android/app/.cxx/Debug/2t38462q/arm64-v8a/CMakeFiles/rebuild_cache.dir
