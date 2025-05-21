@@ -1,5 +1,6 @@
 // ignore_for_file: depend_on_referenced_packages, sort_child_properties_last, deprecated_member_use, unnecessary_string_escapes
 
+import 'package:economic_center_mobileapp/pages/Location.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
@@ -9,6 +10,7 @@ import 'package:http_parser/http_parser.dart';
 import 'package:economic_center_mobileapp/pages/UserProfile.dart';
 import 'package:economic_center_mobileapp/pages/categary.dart';
 import 'package:economic_center_mobileapp/pages/message.dart';
+import 'package:economic_center_mobileapp/pages/Farmers.dart'; 
 
 void main() {
   runApp(const MyApp());
@@ -31,10 +33,10 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       routes: {
         '/message': (context) => const FarmerMessengerApp(),
-        '/farmers': (context) =>
-            const Placeholder(), // Add your farmers page widget
-        '/about': (context) =>
-            const Placeholder(), // Add your about us page widget
+        '/farmers': (context) => const FarmerProfilesPage(),
+        '/farmer-details': (context) => const FarmerProfilesApp(), // Add your farmers page widget
+        '/about': (context) => const Placeholder(), // Add your about us page widget
+        '/location': (context) => const SriLankaExplorer(),
       },
     );
   }
@@ -628,6 +630,8 @@ class HomePage extends StatelessWidget {
         onTap: (index) {
           if (index == 1) {
             Navigator.pushNamed(context, '/message');
+          } else if (index == 2) { // Add this condition for location
+            Navigator.pushNamed(context, '/location');
           } else if (index == 3) {
             _showMoreOptions(context);
           }

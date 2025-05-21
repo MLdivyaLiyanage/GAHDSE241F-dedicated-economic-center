@@ -1,5 +1,6 @@
 // ignore_for_file: depend_on_referenced_packages, sort_child_properties_last, deprecated_member_use, unnecessary_string_escapes
 
+import 'package:economic_center_mobileapp/pages/Location.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
@@ -9,13 +10,14 @@ import 'package:http_parser/http_parser.dart';
 import 'package:economic_center_mobileapp/pages/UserProfile.dart';
 import 'package:economic_center_mobileapp/pages/categary.dart';
 import 'package:economic_center_mobileapp/pages/message.dart';
+import 'package:economic_center_mobileapp/pages/Farmers.dart'; 
 
 void main() {
-  runApp(const FarmerProfilesApp());
+  runApp(const MyApp());
 }
 
-class FarmerProfilesApp extends StatelessWidget {
-  const FarmerProfilesApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -29,6 +31,13 @@ class FarmerProfilesApp extends StatelessWidget {
         userData: {'username': 'Guest'}, // Provide default user data
       ),
       debugShowCheckedModeBanner: false,
+      routes: {
+        '/message': (context) => const FarmerMessengerApp(),
+        '/farmers': (context) => const FarmerProfilesPage(),
+        '/farmer-details': (context) => const FarmerProfilesApp(), // Add your farmers page widget
+        '/about': (context) => const Placeholder(), // Add your about us page widget
+        '/location': (context) => const SriLankaExplorer(),
+      },
     );
   }
 }
@@ -49,7 +58,7 @@ class HomePage extends StatelessWidget {
           );
         },
         backgroundColor: Colors.green.shade600,
-        child: const Icon(Icons.add),
+        child: const Icon(Icons.add_circle_outline_rounded, size: 32),
         tooltip: 'Add Product',
       ),
       body: Container(
@@ -80,7 +89,37 @@ class HomePage extends StatelessWidget {
                   ),
                 ),
               ),
-              title: Text('Welcome ${userData['username'] ?? 'User'}'),
+              title: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'Sri Lanka Dedicated Economic Center',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      letterSpacing: 0.5,
+                      shadows: [
+                        Shadow(
+                          offset: Offset(1, 1),
+                          blurRadius: 3,
+                          color: Color.fromARGB(100, 0, 0, 0),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Text(
+                    'Welcome ${userData['username'] ?? 'User'}',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.normal,
+                      color: Colors.white70,
+                    ),
+                  ),
+                ],
+              ),
+              titleSpacing: 0,
               actions: [
                 GestureDetector(
                   onTap: () {
@@ -114,7 +153,10 @@ class HomePage extends StatelessWidget {
                     decoration: InputDecoration(
                       hintText: 'Search',
                       hintStyle: TextStyle(color: Colors.grey.shade400),
-                      prefixIcon: const Icon(Icons.search, color: Colors.green),
+                      prefixIcon: const Icon(
+                        Icons.search_rounded,
+                        color: Colors.green,
+                      ),
                       filled: true,
                       fillColor: Colors.white,
                       border: OutlineInputBorder(
@@ -231,7 +273,7 @@ class HomePage extends StatelessWidget {
               TextButton(
                 onPressed: () {
                   Navigator.push(
-                    context, // This context is now properly accessible
+                    context,
                     MaterialPageRoute(
                       builder: (context) => const CategoryScreen(),
                     ),
@@ -255,26 +297,32 @@ class HomePage extends StatelessWidget {
               _buildCategoryItem(
                 'Vegetables',
                 'https://img.freepik.com/free-photo/harvest-fresh-vegetable-baskets-presented-outdoor-market-sale_346278-729.jpg',
+                Icons.grass_rounded,
               ),
               _buildCategoryItem(
                 'Fruits',
                 'https://img.freepik.com/free-photo/beautiful-street-market-sunset_23-2151530009.jpg',
+                Icons.apple_rounded,
               ),
               _buildCategoryItem(
                 'Nuts',
                 'https://img.freepik.com/free-photo/set-pecan-pistachios-almond-peanut-cashew-pine-nuts-assorted-nuts-dried-fruits-mini-different-bowls-black-pan-top-view_176474-2049.jpg',
+                Icons.spa_rounded,
               ),
               _buildCategoryItem(
                 'Chilli',
                 'https://img.freepik.com/premium-photo/vegetables-sale-market_1048944-22010058.jpg',
+                Icons.local_fire_department_rounded,
               ),
               _buildCategoryItem(
                 'Pepper',
                 'https://img.freepik.com/free-photo/closeup-shot-colorful-asian-spices-market-with-blurry_181624-16223.jpg',
+                Icons.eco_rounded,
               ),
               _buildCategoryItem(
                 'Ginger',
                 'https://img.freepik.com/free-photo/assortment-ginger-wooden-board_23-2148799547.jpg',
+                Icons.energy_savings_leaf_rounded,
               ),
             ],
           ),
@@ -283,7 +331,7 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildCategoryItem(String name, String imageUrl) {
+  Widget _buildCategoryItem(String name, String imageUrl, IconData icon) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Column(
@@ -314,6 +362,13 @@ class HomePage extends StatelessWidget {
                 image: DecorationImage(
                   image: NetworkImage(imageUrl),
                   fit: BoxFit.cover,
+                ),
+              ),
+              child: Center(
+                child: Icon(
+                  icon,
+                  color: Colors.white.withOpacity(0.8),
+                  size: 36,
                 ),
               ),
             ),
@@ -348,7 +403,7 @@ class HomePage extends StatelessWidget {
               TextButton(
                 onPressed: () {
                   Navigator.push(
-                    context, // This context is now properly accessible
+                    context,
                     MaterialPageRoute(
                       builder: (context) => const CategoryScreen(),
                     ),
@@ -375,21 +430,25 @@ class HomePage extends StatelessWidget {
               'Tomato',
               '4.9 (27 Reviews)',
               'https://img.freepik.com/free-photo/fresh-tomato-vegetable-growth-healthy-eating-organic-food-generated-by-ai_188544-151682.jpg',
+              Icons.favorite_border_rounded,
             ),
             _buildProductCard(
               'Potato',
               '4.7 (15 Reviews)',
               'https://img.freepik.com/premium-photo/fresh-organic-potato-plant-field_86639-848.jpg',
+              Icons.favorite_border_rounded,
             ),
             _buildProductCard(
               'Apple',
               '4.8 (22 Reviews)',
               'https://img.freepik.com/free-photo/orchard-full-fruit-trees-agricultural-landscape_1268-30591.jpg',
+              Icons.favorite_border_rounded,
             ),
             _buildProductCard(
               'Banana',
               '4.5 (18 Reviews)',
               'https://img.freepik.com/premium-photo/two-bunches-bananas-growing-tree-plontage-island-mauritius_217593-9058.jpg',
+              Icons.favorite_border_rounded,
             ),
           ],
         ),
@@ -397,7 +456,12 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildProductCard(String name, String rating, String imageUrl) {
+  Widget _buildProductCard(
+    String name,
+    String rating,
+    String imageUrl,
+    IconData icon,
+  ) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -439,11 +503,7 @@ class HomePage extends StatelessWidget {
                   color: Colors.white.withOpacity(0.8),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
-                  Icons.favorite_border,
-                  color: Colors.red,
-                  size: 18,
-                ),
+                child: Icon(icon, color: Colors.red, size: 20),
               ),
             ),
           ),
@@ -462,7 +522,11 @@ class HomePage extends StatelessWidget {
                 const SizedBox(height: 6),
                 Row(
                   children: [
-                    const Icon(Icons.star, color: Colors.amber, size: 16),
+                    const Icon(
+                      Icons.star_rounded,
+                      color: Colors.amber,
+                      size: 16,
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       rating,
@@ -506,9 +570,9 @@ class HomePage extends StatelessWidget {
                         ],
                       ),
                       child: const Icon(
-                        Icons.add,
+                        Icons.add_rounded,
                         color: Colors.white,
-                        size: 18,
+                        size: 20,
                       ),
                     ),
                   ],
@@ -543,28 +607,73 @@ class HomePage extends StatelessWidget {
         elevation: 0,
         selectedItemColor: Colors.green.shade700,
         unselectedItemColor: Colors.grey.shade600,
+        selectedIconTheme: const IconThemeData(size: 28),
+        unselectedIconTheme: const IconThemeData(size: 26),
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.message), label: 'Message'),
           BottomNavigationBarItem(
-            icon: Icon(Icons.shopping_cart),
-            label: 'Cart',
+            icon: Icon(Icons.home_rounded),
+            label: 'Home',
           ),
-          BottomNavigationBarItem(icon: Icon(Icons.more_horiz), label: 'More'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.chat_bubble_outline_rounded),
+            label: 'Message',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.location_on_outlined),
+            label: 'Location',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.more_horiz_rounded),
+            label: 'More',
+          ),
         ],
         onTap: (index) {
           if (index == 1) {
-            // Message icon is at index 1
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const FarmerMessengerApp(),
-              ),
-            );
+            Navigator.pushNamed(context, '/message');
+          } else if (index == 2) { // Add this condition for location
+            Navigator.pushNamed(context, '/location');
+          } else if (index == 3) {
+            _showMoreOptions(context);
           }
-          // You can add other navigation cases for other icons here
         },
       ),
+    );
+  }
+
+  void _showMoreOptions(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(
+                  Icons.agriculture_rounded,
+                  color: Colors.green,
+                ),
+                title: const Text('Farmers Pages'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.pushNamed(context, '/farmers');
+                },
+              ),
+              ListTile(
+                leading: const Icon(
+                  Icons.info_outline_rounded,
+                  color: Colors.green,
+                ),
+                title: const Text('About Us'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.pushNamed(context, '/about');
+                },
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
@@ -713,6 +822,10 @@ class _UploadProductPageState extends State<UploadProductPage> {
         title: const Text('Upload Product'),
         backgroundColor: Colors.green.shade600,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -759,7 +872,7 @@ class _UploadProductPageState extends State<UploadProductPage> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Icon(
-                                  Icons.add_photo_alternate,
+                                  Icons.add_photo_alternate_rounded,
                                   size: 60,
                                   color: Colors.green.shade300,
                                 ),
@@ -781,7 +894,7 @@ class _UploadProductPageState extends State<UploadProductPage> {
                     decoration: InputDecoration(
                       labelText: 'Product Name',
                       prefixIcon: const Icon(
-                        Icons.shopping_bag,
+                        Icons.shopping_bag_outlined,
                         color: Colors.green,
                       ),
                       border: OutlineInputBorder(
@@ -806,7 +919,7 @@ class _UploadProductPageState extends State<UploadProductPage> {
                     decoration: InputDecoration(
                       labelText: 'Price (\Rs.)',
                       prefixIcon: const Icon(
-                        Icons.attach_money,
+                        Icons.currency_rupee_rounded,
                         color: Colors.green,
                       ),
                       border: OutlineInputBorder(
@@ -835,7 +948,7 @@ class _UploadProductPageState extends State<UploadProductPage> {
                     decoration: InputDecoration(
                       labelText: 'Stock Quantity(kg)',
                       prefixIcon: const Icon(
-                        Icons.inventory,
+                        Icons.inventory_2_outlined,
                         color: Colors.green,
                       ),
                       border: OutlineInputBorder(
@@ -864,7 +977,7 @@ class _UploadProductPageState extends State<UploadProductPage> {
                     decoration: InputDecoration(
                       labelText: 'Category',
                       prefixIcon: const Icon(
-                        Icons.category,
+                        Icons.category_outlined,
                         color: Colors.green,
                       ),
                       border: OutlineInputBorder(
@@ -891,7 +1004,7 @@ class _UploadProductPageState extends State<UploadProductPage> {
                     decoration: InputDecoration(
                       labelText: 'Description',
                       prefixIcon: const Icon(
-                        Icons.description,
+                        Icons.description_outlined,
                         color: Colors.green,
                       ),
                       border: OutlineInputBorder(
@@ -921,7 +1034,7 @@ class _UploadProductPageState extends State<UploadProductPage> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      elevation: 2,
+                      elevation: 3,
                     ),
                     child: _isUploading
                         ? const SizedBox(
@@ -932,14 +1045,22 @@ class _UploadProductPageState extends State<UploadProductPage> {
                               strokeWidth: 2,
                             ),
                           )
-                        : const Text(
-                            'UPLOAD PRODUCT',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
+                        : const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.cloud_upload_outlined, size: 24),
+                              SizedBox(width: 8),
+                              Text(
+                                'Upload Product',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
                           ),
                   ),
+                  const SizedBox(height: 40),
                 ],
               ),
             ),
@@ -948,236 +1069,4 @@ class _UploadProductPageState extends State<UploadProductPage> {
       ),
     );
   }
-
-  // Custom map style JSON
-  final String _mapStyle = '''
-[
-  {
-    "elementType": "geometry",
-    "stylers": [
-      {
-        "color": "#f5f5f5"
-      }
-    ]
-  },
-  {
-    "elementType": "labels.icon",
-    "stylers": [
-      {
-        "visibility": "off"
-      }
-    ]
-  },
-  {
-    "elementType": "labels.text.fill",
-    "stylers": [
-      {
-        "color": "#616161"
-      }
-    ]
-  },
-  {
-    "elementType": "labels.text.stroke",
-    "stylers": [
-      {
-        "color": "#f5f5f5"
-      }
-    ]
-  },
-  {
-    "featureType": "administrative",
-    "elementType": "geometry",
-    "stylers": [
-      {
-        "visibility": "on"
-      }
-    ]
-  },
-  {
-    "featureType": "administrative.country",
-    "elementType": "geometry.stroke",
-    "stylers": [
-      {
-        "color": "#3B82F6"
-      },
-      {
-        "weight": 2.5
-      }
-    ]
-  },
-  {
-    "featureType": "administrative.land_parcel",
-    "stylers": [
-      {
-        "visibility": "off"
-      }
-    ]
-  },
-  {
-    "featureType": "administrative.land_parcel",
-    "elementType": "labels.text.fill",
-    "stylers": [
-      {
-        "color": "#bdbdbd"
-      }
-    ]
-  },
-  {
-    "featureType": "administrative.province",
-    "elementType": "geometry.stroke",
-    "stylers": [
-      {
-        "color": "#8B4513"
-      },
-      {
-        "weight": 1
-      }
-    ]
-  },
-  {
-    "featureType": "poi",
-    "elementType": "geometry",
-    "stylers": [
-      {
-        "color": "#eeeeee"
-      }
-    ]
-  },
-  {
-    "featureType": "poi",
-    "elementType": "labels.text.fill",
-    "stylers": [
-      {
-        "color": "#757575"
-      }
-    ]
-  },
-  {
-    "featureType": "poi.park",
-    "elementType": "geometry",
-    "stylers": [
-      {
-        "color": "#e5f7df"
-      }
-    ]
-  },
-  {
-    "featureType": "poi.park",
-    "elementType": "labels.text.fill",
-    "stylers": [
-      {
-        "color": "#9e9e9e"
-      }
-    ]
-  },
-  {
-    "featureType": "road",
-    "elementType": "geometry",
-    "stylers": [
-      {
-        "color": "#ffffff"
-      }
-    ]
-  },
-  {
-    "featureType": "road.arterial",
-    "elementType": "labels.text.fill",
-    "stylers": [
-      {
-        "color": "#757575"
-      }
-    ]
-  },
-  {
-    "featureType": "road.highway",
-    "elementType": "geometry",
-    "stylers": [
-      {
-        "color": "#e8e8e8"
-      }
-    ]
-  },
-  {
-    "featureType": "road.highway",
-    "elementType": "labels.text.fill",
-    "stylers": [
-      {
-        "color": "#616161"
-      }
-    ]
-  },
-  {
-    "featureType": "road.local",
-    "elementType": "labels.text.fill",
-    "stylers": [
-      {
-        "color": "#9e9e9e"
-      }
-    ]
-  },
-  {
-    "featureType": "transit.line",
-    "elementType": "geometry",
-    "stylers": [
-      {
-        "color": "#e5e5e5"
-      }
-    ]
-  },
-  {
-    "featureType": "transit.station",
-    "elementType": "geometry",
-    "stylers": [
-      {
-        "color": "#eeeeee"
-      }
-    ]
-  },
-  {
-    "featureType": "water",
-    "elementType": "geometry",
-    "stylers": [
-      {
-        "color": "#b3e0ff"
-      }
-    ]
-  },
-  {
-    "featureType": "water",
-    "elementType": "labels.text.fill",
-    "stylers": [
-      {
-        "color": "#3d5a80"
-      }
-    ]
-  }
-]
-''';
-}
-
-class LocationData {
-  final int id;
-  final String name;
-  final LatLng position;
-  final String type;
-  final String description;
-
-  LocationData({
-    required this.id,
-    required this.username,
-    required this.email,
-    required this.age,
-    required this.aboutMe,
-    required this.address,
-    required this.idNumber,
-    required this.phoneNumber,
-    required this.location,
-    required this.workExperience,
-    required this.facebookLink,
-    required this.instagramLink,
-    required this.profileImage,
-    required this.rating,
-    required this.products,
-    required this.feedbackCount,
-  });
 }
