@@ -1,14 +1,8 @@
-// ignore_for_file: depend_on_referenced_packages, sort_child_properties_last, deprecated_member_use, unnecessary_string_escapes
+// ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
-import 'dart:io';
-import 'package:image_picker/image_picker.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'package:http_parser/http_parser.dart';
-import 'package:economic_center_mobileapp/pages/UserProfile.dart';
-import 'package:economic_center_mobileapp/pages/categary.dart';
-import 'package:economic_center_mobileapp/pages/message.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:geocoding/geocoding.dart';
 
 void main() {
   runApp(const MyApp());
@@ -20,1139 +14,901 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Fresh Grocery',
-      theme: ThemeData(
-        primarySwatch: Colors.green,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-      ),
-      home: const HomePage(
-        userData: {'username': 'Guest'}, // Provide default user data
-      ),
+      title: 'Sri Lanka Explorer',
       debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF3B82F6),
+          primary: const Color(0xFF3B82F6),
+          secondary: const Color(0xFFEF4444),
+          tertiary: const Color(0xFF10B981),
+        ),
+        scaffoldBackgroundColor: const Color(0xFFF8FAFC),
+        fontFamily: 'Poppins',
+        appBarTheme: const AppBarTheme(elevation: 0, centerTitle: true),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            elevation: 2,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ),
+        cardTheme: CardTheme(
+          elevation: 3,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+      ),
+      darkTheme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF3B82F6),
+          primary: const Color(0xFF3B82F6),
+          secondary: const Color(0xFFEF4444),
+          tertiary: const Color(0xFF10B981),
+          brightness: Brightness.dark,
+          // ignore: duplicate_ignore
+          // ignore: deprecated_member_use
+          background: const Color(0xFF0F172A),
+          surface: const Color(0xFF1E293B),
+          onSurface: Colors.white70,
+        ),
+        scaffoldBackgroundColor: const Color(0xFF0F172A),
+        fontFamily: 'Poppins',
+        appBarTheme: const AppBarTheme(
+          elevation: 0,
+          centerTitle: true,
+          backgroundColor: Color(0xFF1E293B),
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            elevation: 2,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ),
+        cardTheme: CardTheme(
+          elevation: 3,
+          color: const Color(0xFF1E293B),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+      ),
+      themeMode: ThemeMode.system,
+      home: const SriLankaExplorer(),
     );
   }
 }
 
-class HomePage extends StatelessWidget {
-  final Map<String, dynamic> userData;
+class SriLankaExplorer extends StatefulWidget {
+  const SriLankaExplorer({super.key});
 
-  const HomePage({super.key, required this.userData});
+  @override
+  State<SriLankaExplorer> createState() => _SriLankaExplorerState();
+}
+
+class _SriLankaExplorerState extends State<SriLankaExplorer>
+    with SingleTickerProviderStateMixin {
+  late GoogleMapController _mapController;
+  final TextEditingController _searchController = TextEditingController();
+  bool _isLoading = true;
+  String? _errorMsg;
+  MapType _currentMapType = MapType.normal;
+  bool _showSatelliteView = false;
+  bool _showFullScreenMap = false;
+  late TabController _tabController;
+
+  static const LatLng _sriLankaCoords = LatLng(7.8731, 80.7718);
+  final Set<Marker> _markers = {};
+  final List<LocationData> _locations = [];
+  LocationData? _selectedLocation;
+
+  static const CameraPosition _initialCameraPosition = CameraPosition(
+    target: _sriLankaCoords,
+    zoom: 8,
+  );
+
+  final Set<Polygon> _polygons = {};
+  bool _isSearching = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+    _setupInitialLocations();
+    _setupSriLankaBoundary();
+    _isLoading = false;
+  }
+
+  @override
+  void dispose() {
+    _mapController.dispose();
+    _searchController.dispose();
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  void _setupSriLankaBoundary() {
+    final List<LatLng> sriLankaBoundary = [
+      const LatLng(9.8358, 80.2041),
+      const LatLng(8.7925, 81.1787),
+      const LatLng(7.8731, 81.8593),
+      const LatLng(6.9271, 81.7917),
+      const LatLng(6.0350, 81.1159),
+      const LatLng(6.0542, 80.2504),
+      const LatLng(7.2374, 79.8708),
+      const LatLng(8.7261, 79.8989),
+      const LatLng(9.8358, 80.2041),
+    ];
+
+    _polygons.add(
+      Polygon(
+        polygonId: const PolygonId('srilanka_boundary'),
+        points: sriLankaBoundary,
+        strokeColor: const Color(0xFF3B82F6),
+        strokeWidth: 3,
+        // ignore: duplicate_ignore
+        // ignore: deprecated_member_use
+        fillColor: const Color(0xFF93C5FD).withOpacity(0.35),
+      ),
+    );
+  }
+
+  void _setupInitialLocations() {
+    final List<LocationData> initialLocations = [
+      LocationData(
+        id: 1,
+        name: 'Colombo',
+        position: const LatLng(6.9271, 79.8612),
+        type: 'City',
+        description: 'Commercial capital and largest city of Sri Lanka',
+      ),
+      LocationData(
+        id: 2,
+        name: 'Kandy',
+        position: const LatLng(7.2906, 80.6337),
+        type: 'City',
+        description: 'Cultural capital famous for Temple of the Tooth Relic',
+      ),
+      LocationData(
+        id: 3,
+        name: 'Dambulla DEC',
+        position: const LatLng(7.8679, 80.6494),
+        type: 'Economic Center',
+        description:
+            'Major Dedicated Economic Centre for agricultural products',
+      ),
+      LocationData(
+        id: 4,
+        name: 'Narahenpita DEC',
+        position: const LatLng(6.9053, 79.8795),
+        type: 'Economic Center',
+        description: 'Economic hub in the Colombo district',
+      ),
+      LocationData(
+        id: 5,
+        name: 'Meegoda DEC',
+        position: const LatLng(6.8361, 80.0953),
+        type: 'Economic Center',
+        description: 'Important agricultural trading center near Colombo',
+      ),
+    ];
+
+    for (final location in initialLocations) {
+      _addMarker(location);
+      _locations.add(location);
+    }
+  }
+
+  void _addMarker(LocationData location) {
+    final BitmapDescriptor markerIcon = location.type == 'Economic Center'
+        ? BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen)
+        : BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed);
+
+    _markers.add(
+      Marker(
+        markerId: MarkerId(location.id.toString()),
+        position: location.position,
+        infoWindow: InfoWindow(title: location.name, snippet: location.type),
+        icon: markerIcon,
+        onTap: () => setState(() => _selectedLocation = location),
+      ),
+    );
+  }
+
+  Future<void> _searchLocation() async {
+    final query = _searchController.text.trim();
+    if (query.isEmpty) return;
+
+    setState(() {
+      _isLoading = true;
+      _isSearching = true;
+      _errorMsg = null;
+    });
+
+    try {
+      final locations = await locationFromAddress('$query, Sri Lanka');
+
+      if (locations.isEmpty) {
+        throw Exception('Location not found');
+      }
+
+      final location = locations.first;
+      final newPosition = LatLng(location.latitude, location.longitude);
+
+      // Validate if within Sri Lanka bounds
+      if (location.latitude < 5.9 ||
+          location.latitude > 9.9 ||
+          location.longitude < 79.4 ||
+          location.longitude > 81.9) {
+        throw Exception('Location is outside Sri Lanka');
+      }
+
+      final newLocation = LocationData(
+        id: DateTime.now().millisecondsSinceEpoch,
+        name: query,
+        position: newPosition,
+        type: 'Custom',
+        description: 'Searched location: $query',
+      );
+
+      setState(() {
+        _addMarker(newLocation);
+        _locations.add(newLocation);
+        _selectedLocation = newLocation;
+        _searchController.clear();
+      });
+
+      await _mapController.animateCamera(
+        CameraUpdate.newCameraPosition(
+          CameraPosition(target: newPosition, zoom: 14),
+        ),
+      );
+    } catch (e) {
+      setState(() => _errorMsg = 'Error: ${e.toString()}');
+      // ignore: use_build_context_synchronously
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: ${e.toString()}'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+        _isSearching = false;
+      });
+    }
+  }
+
+  void _toggleMapType() {
+    setState(() {
+      _showSatelliteView = !_showSatelliteView;
+      _currentMapType = _showSatelliteView ? MapType.satellite : MapType.normal;
+      if (!_showSatelliteView) {
+        // ignore: duplicate_ignore
+        // ignore: deprecated_member_use
+        _mapController.setMapStyle(_mapStyle);
+      } else {
+        // ignore: duplicate_ignore
+        // ignore: deprecated_member_use
+        _mapController.setMapStyle(null);
+      }
+    });
+  }
+
+  void _toggleFullScreenMap() {
+    setState(() => _showFullScreenMap = !_showFullScreenMap);
+  }
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const UploadProductPage()),
-          );
-        },
-        backgroundColor: Colors.green.shade600,
-        child: const Icon(Icons.add),
-        tooltip: 'Add Product',
-      ),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Colors.white, Colors.white],
-          ),
-        ),
-        child: CustomScrollView(
-          slivers: [
-            SliverAppBar(
-              expandedHeight: 130,
-              pinned: true,
-              backgroundColor: Colors.green.shade600,
-              flexibleSpace: FlexibleSpaceBar(
-                background: Container(
+      appBar: _showFullScreenMap
+          ? null
+          : AppBar(
+              title: Column(
+                children: [
+                  const Text(
+                    'DEDICATED ECONOMIC CENTRES',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    'Sri Lanka Explorer',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: isDarkMode ? Colors.white70 : Colors.black54,
+                    ),
+                  ),
+                ],
+              ),
+              bottom: PreferredSize(
+                preferredSize: const Size.fromHeight(4),
+                child: Container(
+                  height: 4,
                   decoration: const BoxDecoration(
                     gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
                       colors: [
-                        Color.fromARGB(255, 81, 202, 209),
-                        Color.fromARGB(255, 121, 232, 52),
+                        Color(0xFF800000),
+                        Color(0xFFFF7722),
+                        Color(0xFFF9BC24),
+                        Color(0xFF018749),
                       ],
                     ),
                   ),
                 ),
               ),
-              title: Text('Welcome ${userData['username'] ?? 'User'}'),
-              actions: [
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            UserProfileScreen(userData: userData),
-                      ),
-                    );
+            ),
+      body: Column(
+        children: [
+          if (!_showFullScreenMap) _buildSearchBar(),
+          Expanded(
+            child: Stack(
+              children: [
+                GoogleMap(
+                  initialCameraPosition: _initialCameraPosition,
+                  markers: _markers,
+                  polygons: _polygons,
+                  mapType: _currentMapType,
+                  myLocationEnabled: true,
+                  myLocationButtonEnabled: false,
+                  zoomControlsEnabled: false,
+                  compassEnabled: true,
+                  onMapCreated: (controller) {
+                    _mapController = controller;
+                    // ignore: duplicate_ignore
+
+                    // ignore: deprecated_member_use
+                    controller.setMapStyle(_mapStyle);
+                    setState(() => _isLoading = false);
                   },
-                  child: const Padding(
-                    padding: EdgeInsets.only(right: 16.0),
-                    child: CircleAvatar(
-                      backgroundImage: NetworkImage(
-                        'https://randomuser.me/api/portraits/women/42.jpg',
-                      ),
-                      radius: 18,
+                ),
+                if (_isLoading)
+                  Container(
+                    color: Colors.black.withOpacity(0.5),
+                    child: const Center(
+                      child: CircularProgressIndicator(color: Colors.white),
                     ),
                   ),
-                ),
-              ],
-              bottom: PreferredSize(
-                preferredSize: const Size.fromHeight(60),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  child: TextField(
-                    decoration: InputDecoration(
-                      hintText: 'Search',
-                      hintStyle: TextStyle(color: Colors.grey.shade400),
-                      prefixIcon: const Icon(Icons.search, color: Colors.green),
-                      filled: true,
-                      fillColor: Colors.white,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(30),
-                        borderSide: BorderSide.none,
+                if (_errorMsg != null)
+                  Center(
+                    child: Card(
+                      margin: const EdgeInsets.all(16),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.error,
+                              color: Colors.red,
+                              size: 48,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              _errorMsg!,
+                              style: const TextStyle(color: Colors.red),
+                            ),
+                            const SizedBox(height: 16),
+                            ElevatedButton(
+                              onPressed: () => setState(() => _errorMsg = null),
+                              child: const Text('Try Again'),
+                            ),
+                          ],
+                        ),
                       ),
-                      contentPadding: const EdgeInsets.symmetric(vertical: 0),
                     ),
                   ),
-                ),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildOfferBanner(),
-                  _buildCategoriesSection(context),
-                  _buildProductsSection(context),
+                if (!_showFullScreenMap) ...[
+                  Positioned(
+                    top: 16,
+                    right: 16,
+                    child: Column(
+                      children: [
+                        _buildMapControlButton(
+                          icon: _showSatelliteView
+                              ? Icons.map_rounded
+                              : Icons.satellite_alt_rounded,
+                          tooltip: _showSatelliteView
+                              ? 'Map View'
+                              : 'Satellite View',
+                          onPressed: _toggleMapType,
+                          color: _showSatelliteView
+                              ? Theme.of(context).colorScheme.secondary
+                              : Theme.of(context).colorScheme.primary,
+                        ),
+                        const SizedBox(height: 8),
+                        _buildMapControlButton(
+                          icon: _showFullScreenMap
+                              ? Icons.fullscreen_exit_rounded
+                              : Icons.fullscreen_rounded,
+                          tooltip: _showFullScreenMap
+                              ? 'Exit Fullscreen'
+                              : 'Fullscreen',
+                          onPressed: _toggleFullScreenMap,
+                        ),
+                        const SizedBox(height: 8),
+                        _buildMapControlButton(
+                          icon: Icons.center_focus_strong_rounded,
+                          tooltip: 'Reset View',
+                          onPressed: () => _mapController.animateCamera(
+                            CameraUpdate.newCameraPosition(
+                              _initialCameraPosition,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (_selectedLocation != null)
+                    Positioned(
+                      left: 16,
+                      right: 16,
+                      bottom: 16,
+                      child: _buildLocationCard(),
+                    ),
                 ],
-              ),
+              ],
             ),
-          ],
-        ),
+          ),
+          if (!_showFullScreenMap) _buildInfoPanel(),
+        ],
       ),
-      bottomNavigationBar: _buildBottomNavigationBar(context),
     );
   }
 
-  Widget _buildOfferBanner() {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Container(
-        width: double.infinity,
+  Widget _buildMapControlButton({
+    required IconData icon,
+    required String tooltip,
+    required VoidCallback onPressed,
+    Color? color,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: const [
+          BoxShadow(color: Colors.black26, blurRadius: 6, offset: Offset(0, 2)),
+        ],
+      ),
+      child: IconButton(
+        icon: Icon(icon, color: color ?? Theme.of(context).colorScheme.primary),
+        onPressed: onPressed,
+        tooltip: tooltip,
+      ),
+    );
+  }
+
+  Widget _buildLocationCard() {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final location = _selectedLocation!;
+
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFFFFA726), Color(0xFFF57C00), Color(0xFFE65100)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.deepOrange.withOpacity(0.3),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              "Today's offer",
+            Row(
+              children: [
+                Icon(
+                  location.type == 'Economic Center'
+                      ? Icons.store_rounded
+                      : Icons.location_city_rounded,
+                  color: location.type == 'Economic Center'
+                      ? Theme.of(context).colorScheme.tertiary
+                      : Theme.of(context).colorScheme.secondary,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    location.name,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => setState(() => _selectedLocation = null),
+                ),
+              ],
+            ),
+            const Divider(),
+            Text(
+              'Type: ${location.type}',
               style: TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+                color: isDarkMode ? Colors.white70 : Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              location.description,
+              style: TextStyle(
+                color: isDarkMode ? Colors.white60 : Colors.black54,
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Get discount for every order\nonly valid for today',
-              style: TextStyle(color: Colors.white, fontSize: 14),
+            Row(
+              children: [
+                Icon(
+                  Icons.pin_drop,
+                  size: 16,
+                  color: isDarkMode ? Colors.white54 : Colors.black45,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  'Lat: ${location.position.latitude.toStringAsFixed(4)}, '
+                  'Lng: ${location.position.longitude.toStringAsFixed(4)}',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isDarkMode ? Colors.white54 : Colors.black45,
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 12),
-            Align(
-              alignment: Alignment.centerRight,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                OutlinedButton.icon(
+                  icon: const Icon(Icons.directions),
+                  label: const Text('Directions'),
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Directions feature coming soon!'),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  },
                 ),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: const Text(
-                  'Shop Now',
-                  style: TextStyle(
-                    color: Colors.deepOrange,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCategoriesSection(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Categories',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.push(
-                    context, // This context is now properly accessible
-                    MaterialPageRoute(
-                      builder: (context) => const CategoryScreen(),
-                    ),
-                  );
-                },
-                child: Text(
-                  'See All',
-                  style: TextStyle(color: Colors.green.shade700),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 12),
-        SizedBox(
-          height: 120,
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            children: [
-              _buildCategoryItem(
-                'Vegetables',
-                'https://img.freepik.com/free-photo/harvest-fresh-vegetable-baskets-presented-outdoor-market-sale_346278-729.jpg',
-              ),
-              _buildCategoryItem(
-                'Fruits',
-                'https://img.freepik.com/free-photo/beautiful-street-market-sunset_23-2151530009.jpg',
-              ),
-              _buildCategoryItem(
-                'Nuts',
-                'https://img.freepik.com/free-photo/set-pecan-pistachios-almond-peanut-cashew-pine-nuts-assorted-nuts-dried-fruits-mini-different-bowls-black-pan-top-view_176474-2049.jpg',
-              ),
-              _buildCategoryItem(
-                'Chilli',
-                'https://img.freepik.com/premium-photo/vegetables-sale-market_1048944-22010058.jpg',
-              ),
-              _buildCategoryItem(
-                'Pepper',
-                'https://img.freepik.com/free-photo/closeup-shot-colorful-asian-spices-market-with-blurry_181624-16223.jpg',
-              ),
-              _buildCategoryItem(
-                'Ginger',
-                'https://img.freepik.com/free-photo/assortment-ginger-wooden-board_23-2148799547.jpg',
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCategoryItem(String name, String imageUrl) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: Column(
-        children: [
-          Container(
-            width: 75,
-            height: 75,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(15),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 5,
-                  offset: const Offset(0, 3),
+                const SizedBox(width: 8),
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.explore),
+                  label: const Text('Explore'),
+                  onPressed: () {
+                    _mapController.animateCamera(
+                      CameraUpdate.newCameraPosition(
+                        CameraPosition(
+                          target: location.position,
+                          zoom: 16,
+                          tilt: 45,
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ],
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Colors.white, Colors.green.shade50],
-              ),
-              border: Border.all(color: Colors.white, width: 2),
             ),
-            child: Container(
-              margin: const EdgeInsets.all(5),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
-                image: DecorationImage(
-                  image: NetworkImage(imageUrl),
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            name,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: Colors.grey.shade800,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildProductsSection(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Popular Products',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.push(
-                    context, // This context is now properly accessible
-                    MaterialPageRoute(
-                      builder: (context) => const CategoryScreen(),
-                    ),
-                  );
-                },
-                child: Text(
-                  'See All',
-                  style: TextStyle(color: Colors.green.shade700),
-                ),
-              ),
-            ],
-          ),
-        ),
-        GridView.count(
-          padding: const EdgeInsets.all(16),
-          crossAxisCount: 2,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 16,
-          crossAxisSpacing: 16,
-          childAspectRatio: 0.7,
-          children: [
-            _buildProductCard(
-              'Tomato',
-              '4.9 (27 Reviews)',
-              'https://img.freepik.com/free-photo/fresh-tomato-vegetable-growth-healthy-eating-organic-food-generated-by-ai_188544-151682.jpg',
-            ),
-            _buildProductCard(
-              'Potato',
-              '4.7 (15 Reviews)',
-              'https://img.freepik.com/premium-photo/fresh-organic-potato-plant-field_86639-848.jpg',
-            ),
-            _buildProductCard(
-              'Apple',
-              '4.8 (22 Reviews)',
-              'https://img.freepik.com/free-photo/orchard-full-fruit-trees-agricultural-landscape_1268-30591.jpg',
-            ),
-            _buildProductCard(
-              'Banana',
-              '4.5 (18 Reviews)',
-              'https://img.freepik.com/premium-photo/two-bunches-bananas-growing-tree-plontage-island-mauritius_217593-9058.jpg',
-            ),
-          ],
-        ),
-      ],
-    );
-  }
+  Widget _buildSearchBar() {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
-  Widget _buildProductCard(String name, String rating, String imageUrl) {
     return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        color: Theme.of(context).scaffoldBackgroundColor,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            spreadRadius: 1,
-            blurRadius: 10,
-            offset: const Offset(0, 3),
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
           ),
         ],
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Colors.white, Colors.grey.shade50],
-        ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Container(
-            height: 125,
-            decoration: BoxDecoration(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(16),
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                color: isDarkMode ? const Color(0xFF1E293B) : Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
-              image: DecorationImage(
-                image: NetworkImage(imageUrl),
-                fit: BoxFit.cover,
-              ),
-            ),
-            child: Align(
-              alignment: Alignment.topRight,
-              child: Container(
-                margin: const EdgeInsets.all(8),
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.8),
-                  shape: BoxShape.circle,
+              child: TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  hintText: 'Search locations in Sri Lanka...',
+                  hintStyle: TextStyle(
+                    color: isDarkMode ? Colors.white60 : Colors.black45,
+                  ),
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon: _searchController.text.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: () {
+                            _searchController.clear();
+                            setState(() {});
+                          },
+                        )
+                      : null,
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
                 ),
-                child: const Icon(
-                  Icons.favorite_border,
-                  color: Colors.red,
-                  size: 18,
-                ),
+                onSubmitted: (_) => _searchLocation(),
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    const Icon(Icons.star, color: Colors.amber, size: 16),
-                    const SizedBox(width: 4),
-                    Text(
-                      rating,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade700,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      '\Rs.2.99',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: Colors.green,
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Colors.green.shade400,
-                            Colors.green.shade700,
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(8),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.green.withOpacity(0.3),
-                            blurRadius: 5,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.add,
-                        color: Colors.white,
-                        size: 18,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+          const SizedBox(width: 12),
+          ElevatedButton(
+            onPressed: _isSearching ? null : _searchLocation,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              minimumSize: const Size(48, 48),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
+            child: _isSearching
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  )
+                : const Icon(Icons.search),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildBottomNavigationBar(BuildContext context) {
+  Widget _buildInfoPanel() {
     return Container(
+      height: 140,
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Colors.white, Colors.green.shade50],
-        ),
+        color: Theme.of(context).scaffoldBackgroundColor,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
+            blurRadius: 8,
             offset: const Offset(0, -2),
           ),
         ],
       ),
-      child: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        selectedItemColor: Colors.green.shade700,
-        unselectedItemColor: Colors.grey.shade600,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.message), label: 'Message'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.shopping_cart),
-            label: 'Cart',
+      child: Column(
+        children: [
+          TabBar(
+            controller: _tabController,
+            tabs: const [
+              Tab(text: 'Locations'),
+              Tab(text: 'About'),
+            ],
+            indicatorColor: Theme.of(context).colorScheme.primary,
+            labelColor: Theme.of(context).colorScheme.primary,
+            unselectedLabelColor: Theme.of(context).textTheme.bodySmall?.color,
           ),
-          BottomNavigationBarItem(icon: Icon(Icons.more_horiz), label: 'More'),
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [_buildLocationsTab(), _buildAboutTab()],
+            ),
+          ),
         ],
-        onTap: (index) {
-          if (index == 1) {
-            // Message icon is at index 1
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const FarmerMessengerApp(),
-              ),
-            );
-          }
-          // You can add other navigation cases for other icons here
-        },
       ),
     );
   }
-}
 
-class UploadProductPage extends StatefulWidget {
-  const UploadProductPage({super.key});
+  Widget _buildLocationsTab() {
+    return ListView.builder(
+      scrollDirection: Axis.horizontal,
+      itemCount: _locations.length,
+      itemBuilder: (context, index) {
+        final location = _locations[index];
+        final isSelected = _selectedLocation?.id == location.id;
 
-  @override
-  State<UploadProductPage> createState() => _UploadProductPageState();
-}
-
-class _UploadProductPageState extends State<UploadProductPage> {
-  final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final _priceController = TextEditingController();
-  final _stockController = TextEditingController();
-  final _descriptionController = TextEditingController();
-  String _selectedCategory = 'Vegetables';
-  File? _imageFile;
-  final ImagePicker _picker = ImagePicker();
-  bool _isUploading = false;
-
-  // For Android emulator
-  static const String _baseUrl = 'http://10.0.2.2:5000';
-  // For iOS simulator or physical device, use your computer's local IP
-  // static const String _baseUrl = 'http://192.168.x.x:5000';
-
-  final List<String> _categories = [
-    'Vegetables',
-    'Fruits',
-    'Nuts',
-    'Chilli',
-    'Pepper',
-    'Ginger',
-    'Other',
-  ];
-
-  Future<void> _pickImage() async {
-    try {
-      final XFile? pickedFile = await _picker.pickImage(
-        source: ImageSource.gallery,
-        maxWidth: 800,
-        maxHeight: 800,
-        imageQuality: 85,
-      );
-
-      if (pickedFile != null) {
-        setState(() {
-          _imageFile = File(pickedFile.path);
-        });
-      }
-    } catch (e) {
-      _showErrorSnackbar('Failed to pick image: ${e.toString()}');
-    }
-  }
-
-  Future<void> _uploadProduct() async {
-    if (!_formKey.currentState!.validate()) return;
-    if (_imageFile == null) {
-      _showErrorSnackbar('Please select a product image');
-      return;
-    }
-
-    setState(() {
-      _isUploading = true;
-    });
-
-    try {
-      var request = http.MultipartRequest(
-        'POST',
-        Uri.parse('$_baseUrl/api/products'),
-      );
-
-      // Add text fields
-      request.fields['name'] = _nameController.text;
-      request.fields['price'] = _priceController.text;
-      request.fields['stock'] = _stockController.text;
-      request.fields['category'] = _selectedCategory;
-      request.fields['description'] = _descriptionController.text;
-
-      // Add image file
-      var imageFile = await http.MultipartFile.fromPath(
-        'image',
-        _imageFile!.path,
-        contentType: MediaType('image', 'jpeg'),
-      );
-      request.files.add(imageFile);
-
-      // Send the request
-      var response = await request.send();
-      final responseBody = await response.stream.bytesToString();
-      final jsonResponse = json.decode(responseBody);
-
-      if (response.statusCode == 201) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(jsonResponse['message']),
-            backgroundColor: Colors.green,
+        return Card(
+          margin: const EdgeInsets.only(right: 12, top: 8, bottom: 8),
+          color: isSelected
+              ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
+              : null,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(
+              color: isSelected
+                  ? Theme.of(context).colorScheme.primary
+                  : Theme.of(context).dividerColor,
+              width: isSelected ? 2 : 1,
+            ),
           ),
-        );
-        Navigator.pop(context);
-      } else {
-        _showErrorSnackbar(
-          'Failed to upload product: ${jsonResponse['error'] ?? 'Unknown error'}',
-        );
-      }
-    } on SocketException {
-      _showErrorSnackbar(
-        'Could not connect to the server. Please check your connection.',
-      );
-    } on HttpException {
-      _showErrorSnackbar('Could not reach the server. Please try again later.');
-    } on FormatException {
-      _showErrorSnackbar('Invalid server response. Please try again.');
-    } catch (e) {
-      _showErrorSnackbar('An unexpected error occurred: ${e.toString()}');
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isUploading = false;
-        });
-      }
-    }
-  }
-
-  void _showErrorSnackbar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.red),
-    );
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _priceController.dispose();
-    _stockController.dispose();
-    _descriptionController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Upload Product'),
-        backgroundColor: Colors.green.shade600,
-        elevation: 0,
-      ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Colors.green.shade50, Colors.white],
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Form(
-            key: _formKey,
-            child: SingleChildScrollView(
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: () {
+              setState(() => _selectedLocation = location);
+              _mapController.animateCamera(
+                CameraUpdate.newCameraPosition(
+                  CameraPosition(target: location.position, zoom: 14),
+                ),
+              );
+            },
+            child: Container(
+              width: 150,
+              padding: const EdgeInsets.all(12),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  GestureDetector(
-                    onTap: _pickImage,
-                    child: Container(
-                      height: 200,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.grey.shade300),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
+                  Row(
+                    children: [
+                      Icon(
+                        location.type == 'Economic Center'
+                            ? Icons.store_rounded
+                            : Icons.location_city_rounded,
+                        size: 16,
+                        color: location.type == 'Economic Center'
+                            ? Theme.of(context).colorScheme.tertiary
+                            : Theme.of(context).colorScheme.secondary,
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          location.type,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
                           ),
-                        ],
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                      child: _imageFile != null
-                          ? ClipRRect(
-                              borderRadius: BorderRadius.circular(16),
-                              child: Image.file(
-                                _imageFile!,
-                                fit: BoxFit.cover,
-                                width: double.infinity,
-                              ),
-                            )
-                          : Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.add_photo_alternate,
-                                  size: 60,
-                                  color: Colors.green.shade300,
-                                ),
-                                const SizedBox(height: 12),
-                                Text(
-                                  'Tap to select product image',
-                                  style: TextStyle(
-                                    color: Colors.grey.shade600,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                              ],
-                            ),
-                    ),
+                    ],
                   ),
-                  const SizedBox(height: 24),
-                  TextFormField(
-                    controller: _nameController,
-                    decoration: InputDecoration(
-                      labelText: 'Product Name',
-                      prefixIcon: const Icon(
-                        Icons.shopping_bag,
-                        color: Colors.green,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      filled: true,
-                      fillColor: Colors.white,
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter product name';
-                      }
-                      if (value.length < 3) {
-                        return 'Name must be at least 3 characters';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _priceController,
-                    decoration: InputDecoration(
-                      labelText: 'Price (\Rs.)',
-                      prefixIcon: const Icon(
-                        Icons.attach_money,
-                        color: Colors.green,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      filled: true,
-                      fillColor: Colors.white,
-                    ),
-                    keyboardType: TextInputType.number,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter product price';
-                      }
-                      if (double.tryParse(value) == null) {
-                        return 'Please enter a valid price';
-                      }
-                      if (double.parse(value) <= 0) {
-                        return 'Price must be greater than 0';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _stockController,
-                    decoration: InputDecoration(
-                      labelText: 'Stock Quantity(kg)',
-                      prefixIcon: const Icon(
-                        Icons.inventory,
-                        color: Colors.green,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      filled: true,
-                      fillColor: Colors.white,
-                    ),
-                    keyboardType: TextInputType.number,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter stock quantity';
-                      }
-                      if (int.tryParse(value) == null) {
-                        return 'Please enter a valid number';
-                      }
-                      if (int.parse(value) < 0) {
-                        return 'Stock cannot be negative';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  DropdownButtonFormField<String>(
-                    value: _selectedCategory,
-                    decoration: InputDecoration(
-                      labelText: 'Category',
-                      prefixIcon: const Icon(
-                        Icons.category,
-                        color: Colors.green,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      filled: true,
-                      fillColor: Colors.white,
-                    ),
-                    items: _categories.map((String category) {
-                      return DropdownMenuItem<String>(
-                        value: category,
-                        child: Text(category),
-                      );
-                    }).toList(),
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        _selectedCategory = newValue!;
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _descriptionController,
-                    decoration: InputDecoration(
-                      labelText: 'Description',
-                      prefixIcon: const Icon(
-                        Icons.description,
-                        color: Colors.green,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      filled: true,
-                      fillColor: Colors.white,
-                    ),
-                    maxLines: 4,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter product description';
-                      }
-                      if (value.length < 10) {
-                        return 'Description must be at least 10 characters';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 24),
-                  ElevatedButton(
-                    onPressed: _isUploading ? null : _uploadProduct,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 2,
-                    ),
-                    child: _isUploading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
-                          )
-                        : const Text(
-                            'UPLOAD PRODUCT',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                  const SizedBox(height: 4),
+                  Text(
+                    location.name,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
             ),
           ),
+        );
+      },
+    );
+  }
+
+  Widget _buildAboutTab() {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          _buildInfoCard(
+            icon: Icons.info_outline,
+            title: 'About Sri Lanka',
+            content:
+                'Island nation in South Asia known for its diverse landscapes and rich cultural heritage.',
+          ),
+          _buildInfoCard(
+            icon: Icons.store,
+            title: 'Dedicated Economic Centres',
+            content:
+                'Special markets for agricultural products connecting farmers directly with buyers.',
+          ),
+          _buildInfoCard(
+            icon: Icons.public,
+            title: 'Key Facts',
+            content:
+                'Capital: Colombo (Commercial) | Population: 22 million | Languages: Sinhala, Tamil, English',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoCard({
+    required IconData icon,
+    required String title,
+    required String content,
+  }) {
+    return Card(
+      margin: const EdgeInsets.only(right: 12, top: 8, bottom: 8),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Theme.of(context).dividerColor),
+      ),
+      child: Container(
+        width: 200,
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  icon,
+                  size: 16,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Expanded(
+              child: Text(
+                content,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Theme.of(context).textTheme.bodySmall?.color,
+                ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 3,
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  // Custom map style JSON
   final String _mapStyle = '''
-[
-  {
-    "elementType": "geometry",
-    "stylers": [
-      {
-        "color": "#f5f5f5"
-      }
-    ]
-  },
-  {
-    "elementType": "labels.icon",
-    "stylers": [
-      {
-        "visibility": "off"
-      }
-    ]
-  },
-  {
-    "elementType": "labels.text.fill",
-    "stylers": [
-      {
-        "color": "#616161"
-      }
-    ]
-  },
-  {
-    "elementType": "labels.text.stroke",
-    "stylers": [
-      {
-        "color": "#f5f5f5"
-      }
-    ]
-  },
-  {
-    "featureType": "administrative",
-    "elementType": "geometry",
-    "stylers": [
-      {
-        "visibility": "on"
-      }
-    ]
-  },
-  {
-    "featureType": "administrative.country",
-    "elementType": "geometry.stroke",
-    "stylers": [
-      {
-        "color": "#3B82F6"
-      },
-      {
-        "weight": 2.5
-      }
-    ]
-  },
-  {
-    "featureType": "administrative.land_parcel",
-    "stylers": [
-      {
-        "visibility": "off"
-      }
-    ]
-  },
-  {
-    "featureType": "administrative.land_parcel",
-    "elementType": "labels.text.fill",
-    "stylers": [
-      {
-        "color": "#bdbdbd"
-      }
-    ]
-  },
-  {
-    "featureType": "administrative.province",
-    "elementType": "geometry.stroke",
-    "stylers": [
-      {
-        "color": "#8B4513"
-      },
-      {
-        "weight": 1
-      }
-    ]
-  },
-  {
-    "featureType": "poi",
-    "elementType": "geometry",
-    "stylers": [
-      {
-        "color": "#eeeeee"
-      }
-    ]
-  },
-  {
-    "featureType": "poi",
-    "elementType": "labels.text.fill",
-    "stylers": [
-      {
-        "color": "#757575"
-      }
-    ]
-  },
-  {
-    "featureType": "poi.park",
-    "elementType": "geometry",
-    "stylers": [
-      {
-        "color": "#e5f7df"
-      }
-    ]
-  },
-  {
-    "featureType": "poi.park",
-    "elementType": "labels.text.fill",
-    "stylers": [
-      {
-        "color": "#9e9e9e"
-      }
-    ]
-  },
-  {
-    "featureType": "road",
-    "elementType": "geometry",
-    "stylers": [
-      {
-        "color": "#ffffff"
-      }
-    ]
-  },
-  {
-    "featureType": "road.arterial",
-    "elementType": "labels.text.fill",
-    "stylers": [
-      {
-        "color": "#757575"
-      }
-    ]
-  },
-  {
-    "featureType": "road.highway",
-    "elementType": "geometry",
-    "stylers": [
-      {
-        "color": "#e8e8e8"
-      }
-    ]
-  },
-  {
-    "featureType": "road.highway",
-    "elementType": "labels.text.fill",
-    "stylers": [
-      {
-        "color": "#616161"
-      }
-    ]
-  },
-  {
-    "featureType": "road.local",
-    "elementType": "labels.text.fill",
-    "stylers": [
-      {
-        "color": "#9e9e9e"
-      }
-    ]
-  },
-  {
-    "featureType": "transit.line",
-    "elementType": "geometry",
-    "stylers": [
-      {
-        "color": "#e5e5e5"
-      }
-    ]
-  },
-  {
-    "featureType": "transit.station",
-    "elementType": "geometry",
-    "stylers": [
-      {
-        "color": "#eeeeee"
-      }
-    ]
-  },
-  {
-    "featureType": "water",
-    "elementType": "geometry",
-    "stylers": [
-      {
-        "color": "#b3e0ff"
-      }
-    ]
-  },
-  {
-    "featureType": "water",
-    "elementType": "labels.text.fill",
-    "stylers": [
-      {
-        "color": "#3d5a80"
-      }
-    ]
-  }
-]
-''';
+  [
+    {"elementType": "geometry", "stylers": [{"color": "#f5f5f5"}]},
+    {"elementType": "labels.icon", "stylers": [{"visibility": "off"}]},
+    {"elementType": "labels.text.fill", "stylers": [{"color": "#616161"}]},
+    {"elementType": "labels.text.stroke", "stylers": [{"color": "#f5f5f5"}]},
+    {"featureType": "administrative", "elementType": "geometry", "stylers": [{"visibility": "on"}]},
+    {"featureType": "administrative.country", "elementType": "geometry.stroke", "stylers": [{"color": "#3B82F6"}, {"weight": 2.5}]},
+    {"featureType": "administrative.land_parcel", "stylers": [{"visibility": "off"}]},
+    {"featureType": "administrative.land_parcel", "elementType": "labels.text.fill", "stylers": [{"color": "#bdbdbd"}]},
+    {"featureType": "administrative.province", "elementType": "geometry.stroke", "stylers": [{"color": "#8B4513"}, {"weight": 1}]},
+    {"featureType": "poi", "elementType": "geometry", "stylers": [{"color": "#eeeeee"}]},
+    {"featureType": "poi", "elementType": "labels.text.fill", "stylers": [{"color": "#757575"}]},
+    {"featureType": "poi.park", "elementType": "geometry", "stylers": [{"color": "#e5f7df"}]},
+    {"featureType": "poi.park", "elementType": "labels.text.fill", "stylers": [{"color": "#9e9e9e"}]},
+    {"featureType": "road", "elementType": "geometry", "stylers": [{"color": "#ffffff"}]},
+    {"featureType": "road.arterial", "elementType": "labels.text.fill", "stylers": [{"color": "#757575"}]},
+    {"featureType": "road.highway", "elementType": "geometry", "stylers": [{"color": "#e8e8e8"}]},
+    {"featureType": "road.highway", "elementType": "labels.text.fill", "stylers": [{"color": "#616161"}]},
+    {"featureType": "road.local", "elementType": "labels.text.fill", "stylers": [{"color": "#9e9e9e"}]},
+    {"featureType": "transit.line", "elementType": "geometry", "stylers": [{"color": "#e5e5e5"}]},
+    {"featureType": "transit.station", "elementType": "geometry", "stylers": [{"color": "#eeeeee"}]},
+    {"featureType": "water", "elementType": "geometry", "stylers": [{"color": "#b3e0ff"}]},
+    {"featureType": "water", "elementType": "labels.text.fill", "stylers": [{"color": "#3d5a80"}]}
+  ]
+  ''';
 }
 
 class LocationData {

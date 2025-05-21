@@ -29,6 +29,13 @@ class MyApp extends StatelessWidget {
         userData: {'username': 'Guest'}, // Provide default user data
       ),
       debugShowCheckedModeBanner: false,
+      routes: {
+        '/message': (context) => const FarmerMessengerApp(),
+        '/farmers': (context) =>
+            const Placeholder(), // Add your farmers page widget
+        '/about': (context) =>
+            const Placeholder(), // Add your about us page widget
+      },
     );
   }
 }
@@ -49,7 +56,7 @@ class HomePage extends StatelessWidget {
           );
         },
         backgroundColor: Colors.green.shade600,
-        child: const Icon(Icons.add),
+        child: const Icon(Icons.add_circle_outline_rounded, size: 32),
         tooltip: 'Add Product',
       ),
       body: Container(
@@ -74,20 +81,51 @@ class HomePage extends StatelessWidget {
                       end: Alignment.bottomRight,
                       colors: [
                         Color.fromARGB(255, 81, 202, 209),
-                        Color.fromARGB(255, 121, 232, 52)
+                        Color.fromARGB(255, 121, 232, 52),
                       ],
                     ),
                   ),
                 ),
               ),
-              title: Text('Welcome ${userData['username'] ?? 'User'}'),
+              title: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'Sri Lanka Dedicated Economic Center',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      letterSpacing: 0.5,
+                      shadows: [
+                        Shadow(
+                          offset: Offset(1, 1),
+                          blurRadius: 3,
+                          color: Color.fromARGB(100, 0, 0, 0),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Text(
+                    'Welcome ${userData['username'] ?? 'User'}',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.normal,
+                      color: Colors.white70,
+                    ),
+                  ),
+                ],
+              ),
+              titleSpacing: 0,
               actions: [
                 GestureDetector(
                   onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => UserProfileScreen(userData: userData),
+                        builder: (context) =>
+                            UserProfileScreen(userData: userData),
                       ),
                     );
                   },
@@ -95,7 +133,8 @@ class HomePage extends StatelessWidget {
                     padding: EdgeInsets.only(right: 16.0),
                     child: CircleAvatar(
                       backgroundImage: NetworkImage(
-                        'https://randomuser.me/api/portraits/women/42.jpg'),
+                        'https://randomuser.me/api/portraits/women/42.jpg',
+                      ),
                       radius: 18,
                     ),
                   ),
@@ -104,13 +143,18 @@ class HomePage extends StatelessWidget {
               bottom: PreferredSize(
                 preferredSize: const Size.fromHeight(60),
                 child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   child: TextField(
                     decoration: InputDecoration(
                       hintText: 'Search',
                       hintStyle: TextStyle(color: Colors.grey.shade400),
-                      prefixIcon: const Icon(Icons.search, color: Colors.green),
+                      prefixIcon: const Icon(
+                        Icons.search_rounded,
+                        color: Colors.green,
+                      ),
                       filled: true,
                       fillColor: Colors.white,
                       border: OutlineInputBorder(
@@ -148,11 +192,7 @@ class HomePage extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [
-              Color(0xFFFFA726),
-              Color(0xFFF57C00),
-              Color(0xFFE65100),
-            ],
+            colors: [Color(0xFFFFA726), Color(0xFFF57C00), Color(0xFFE65100)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -179,17 +219,16 @@ class HomePage extends StatelessWidget {
             const SizedBox(height: 8),
             const Text(
               'Get discount for every order\nonly valid for today',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-              ),
+              style: TextStyle(color: Colors.white, fontSize: 14),
             ),
             const SizedBox(height: 12),
             Align(
               alignment: Alignment.centerRight,
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(20),
@@ -217,65 +256,80 @@ class HomePage extends StatelessWidget {
   }
 
   Widget _buildCategoriesSection(BuildContext context) {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(
-              'Categories',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Categories',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.push(
-                  context, // This context is now properly accessible
-                  MaterialPageRoute(builder: (context) => const CategoryScreen()),
-                );
-              },
-              child: Text(
-                'See All',
-                style: TextStyle(
-                  color: Colors.green.shade700,
+              TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const CategoryScreen(),
+                    ),
+                  );
+                },
+                child: Text(
+                  'See All',
+                  style: TextStyle(color: Colors.green.shade700),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
-      const SizedBox(height: 12),
-      SizedBox(
-        height: 120,
-        child: ListView(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          children: [
-            _buildCategoryItem('Vegetables',
-                'https://img.freepik.com/free-photo/harvest-fresh-vegetable-baskets-presented-outdoor-market-sale_346278-729.jpg'),
-            _buildCategoryItem('Fruits',
-                'https://img.freepik.com/free-photo/beautiful-street-market-sunset_23-2151530009.jpg'),
-            _buildCategoryItem('Nuts',
-                'https://img.freepik.com/free-photo/set-pecan-pistachios-almond-peanut-cashew-pine-nuts-assorted-nuts-dried-fruits-mini-different-bowls-black-pan-top-view_176474-2049.jpg'),
-            _buildCategoryItem('Chilli',
-                'https://img.freepik.com/premium-photo/vegetables-sale-market_1048944-22010058.jpg'),
-            _buildCategoryItem('Pepper',
-                'https://img.freepik.com/free-photo/closeup-shot-colorful-asian-spices-market-with-blurry_181624-16223.jpg'),
-            _buildCategoryItem('Ginger',
-                'https://img.freepik.com/free-photo/assortment-ginger-wooden-board_23-2148799547.jpg'),
-          ],
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 120,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            children: [
+              _buildCategoryItem(
+                'Vegetables',
+                'https://img.freepik.com/free-photo/harvest-fresh-vegetable-baskets-presented-outdoor-market-sale_346278-729.jpg',
+                Icons.grass_rounded,
+              ),
+              _buildCategoryItem(
+                'Fruits',
+                'https://img.freepik.com/free-photo/beautiful-street-market-sunset_23-2151530009.jpg',
+                Icons.apple_rounded,
+              ),
+              _buildCategoryItem(
+                'Nuts',
+                'https://img.freepik.com/free-photo/set-pecan-pistachios-almond-peanut-cashew-pine-nuts-assorted-nuts-dried-fruits-mini-different-bowls-black-pan-top-view_176474-2049.jpg',
+                Icons.spa_rounded,
+              ),
+              _buildCategoryItem(
+                'Chilli',
+                'https://img.freepik.com/premium-photo/vegetables-sale-market_1048944-22010058.jpg',
+                Icons.local_fire_department_rounded,
+              ),
+              _buildCategoryItem(
+                'Pepper',
+                'https://img.freepik.com/free-photo/closeup-shot-colorful-asian-spices-market-with-blurry_181624-16223.jpg',
+                Icons.eco_rounded,
+              ),
+              _buildCategoryItem(
+                'Ginger',
+                'https://img.freepik.com/free-photo/assortment-ginger-wooden-board_23-2148799547.jpg',
+                Icons.energy_savings_leaf_rounded,
+              ),
+            ],
+          ),
         ),
-      ),
-    ],
-  );
-}
+      ],
+    );
+  }
 
-  Widget _buildCategoryItem(String name, String imageUrl) {
+  Widget _buildCategoryItem(String name, String imageUrl, IconData icon) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Column(
@@ -308,6 +362,13 @@ class HomePage extends StatelessWidget {
                   fit: BoxFit.cover,
                 ),
               ),
+              child: Center(
+                child: Icon(
+                  icon,
+                  color: Colors.white.withOpacity(0.8),
+                  size: 36,
+                ),
+              ),
             ),
           ),
           const SizedBox(height: 8),
@@ -324,7 +385,7 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildProductsSection(BuildContext context){
+  Widget _buildProductsSection(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -335,23 +396,20 @@ class HomePage extends StatelessWidget {
             children: [
               const Text(
                 'Popular Products',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               TextButton(
                 onPressed: () {
-                Navigator.push(
-                  context, // This context is now properly accessible
-                  MaterialPageRoute(builder: (context) => const CategoryScreen()),
-                );
-              },
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const CategoryScreen(),
+                    ),
+                  );
+                },
                 child: Text(
                   'See All',
-                  style: TextStyle(
-                    color: Colors.green.shade700,
-                  ),
+                  style: TextStyle(color: Colors.green.shade700),
                 ),
               ),
             ],
@@ -366,21 +424,42 @@ class HomePage extends StatelessWidget {
           crossAxisSpacing: 16,
           childAspectRatio: 0.7,
           children: [
-            _buildProductCard('Tomato', '4.9 (27 Reviews)',
-                'https://img.freepik.com/free-photo/fresh-tomato-vegetable-growth-healthy-eating-organic-food-generated-by-ai_188544-151682.jpg'),
-            _buildProductCard('Potato', '4.7 (15 Reviews)',
-                'https://img.freepik.com/premium-photo/fresh-organic-potato-plant-field_86639-848.jpg'),
-            _buildProductCard('Apple', '4.8 (22 Reviews)',
-                'https://img.freepik.com/free-photo/orchard-full-fruit-trees-agricultural-landscape_1268-30591.jpg'),
-            _buildProductCard('Banana', '4.5 (18 Reviews)',
-                'https://img.freepik.com/premium-photo/two-bunches-bananas-growing-tree-plontage-island-mauritius_217593-9058.jpg'),
+            _buildProductCard(
+              'Tomato',
+              '4.9 (27 Reviews)',
+              'https://img.freepik.com/free-photo/fresh-tomato-vegetable-growth-healthy-eating-organic-food-generated-by-ai_188544-151682.jpg',
+              Icons.favorite_border_rounded,
+            ),
+            _buildProductCard(
+              'Potato',
+              '4.7 (15 Reviews)',
+              'https://img.freepik.com/premium-photo/fresh-organic-potato-plant-field_86639-848.jpg',
+              Icons.favorite_border_rounded,
+            ),
+            _buildProductCard(
+              'Apple',
+              '4.8 (22 Reviews)',
+              'https://img.freepik.com/free-photo/orchard-full-fruit-trees-agricultural-landscape_1268-30591.jpg',
+              Icons.favorite_border_rounded,
+            ),
+            _buildProductCard(
+              'Banana',
+              '4.5 (18 Reviews)',
+              'https://img.freepik.com/premium-photo/two-bunches-bananas-growing-tree-plontage-island-mauritius_217593-9058.jpg',
+              Icons.favorite_border_rounded,
+            ),
           ],
         ),
       ],
     );
   }
 
-  Widget _buildProductCard(String name, String rating, String imageUrl) {
+  Widget _buildProductCard(
+    String name,
+    String rating,
+    String imageUrl,
+    IconData icon,
+  ) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -405,8 +484,9 @@ class HomePage extends StatelessWidget {
           Container(
             height: 125,
             decoration: BoxDecoration(
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(16)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(16),
+              ),
               image: DecorationImage(
                 image: NetworkImage(imageUrl),
                 fit: BoxFit.cover,
@@ -421,11 +501,7 @@ class HomePage extends StatelessWidget {
                   color: Colors.white.withOpacity(0.8),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
-                  Icons.favorite_border,
-                  color: Colors.red,
-                  size: 18,
-                ),
+                child: Icon(icon, color: Colors.red, size: 20),
               ),
             ),
           ),
@@ -444,7 +520,11 @@ class HomePage extends StatelessWidget {
                 const SizedBox(height: 6),
                 Row(
                   children: [
-                    const Icon(Icons.star, color: Colors.amber, size: 16),
+                    const Icon(
+                      Icons.star_rounded,
+                      color: Colors.amber,
+                      size: 16,
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       rating,
@@ -473,7 +553,7 @@ class HomePage extends StatelessWidget {
                         gradient: LinearGradient(
                           colors: [
                             Colors.green.shade400,
-                            Colors.green.shade700
+                            Colors.green.shade700,
                           ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
@@ -487,8 +567,11 @@ class HomePage extends StatelessWidget {
                           ),
                         ],
                       ),
-                      child:
-                          const Icon(Icons.add, color: Colors.white, size: 18),
+                      child: const Icon(
+                        Icons.add_rounded,
+                        color: Colors.white,
+                        size: 20,
+                      ),
                     ),
                   ],
                 ),
@@ -522,34 +605,71 @@ class HomePage extends StatelessWidget {
         elevation: 0,
         selectedItemColor: Colors.green.shade700,
         unselectedItemColor: Colors.grey.shade600,
+        selectedIconTheme: const IconThemeData(size: 28),
+        unselectedIconTheme: const IconThemeData(size: 26),
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
+            icon: Icon(Icons.home_rounded),
             label: 'Home',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.message),
+            icon: Icon(Icons.chat_bubble_outline_rounded),
             label: 'Message',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.shopping_cart),
-            label: 'Cart',
+            icon: Icon(Icons.location_on_outlined),
+            label: 'Location',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.more_horiz),
+            icon: Icon(Icons.more_horiz_rounded),
             label: 'More',
           ),
         ],
         onTap: (index) {
-          if (index == 1) { // Message icon is at index 1
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const FarmerMessengerApp()),
-            );
+          if (index == 1) {
+            Navigator.pushNamed(context, '/message');
+          } else if (index == 3) {
+            _showMoreOptions(context);
           }
-        // You can add other navigation cases for other icons here
         },
       ),
+    );
+  }
+
+  void _showMoreOptions(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(
+                  Icons.agriculture_rounded,
+                  color: Colors.green,
+                ),
+                title: const Text('Farmers Pages'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.pushNamed(context, '/farmers');
+                },
+              ),
+              ListTile(
+                leading: const Icon(
+                  Icons.info_outline_rounded,
+                  color: Colors.green,
+                ),
+                title: const Text('About Us'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.pushNamed(context, '/about');
+                },
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
@@ -584,7 +704,7 @@ class _UploadProductPageState extends State<UploadProductPage> {
     'Chilli',
     'Pepper',
     'Ginger',
-    'Other'
+    'Other',
   ];
 
   Future<void> _pickImage() async {
@@ -654,11 +774,13 @@ class _UploadProductPageState extends State<UploadProductPage> {
         Navigator.pop(context);
       } else {
         _showErrorSnackbar(
-            'Failed to upload product: ${jsonResponse['error'] ?? 'Unknown error'}');
+          'Failed to upload product: ${jsonResponse['error'] ?? 'Unknown error'}',
+        );
       }
     } on SocketException {
       _showErrorSnackbar(
-          'Could not connect to the server. Please check your connection.');
+        'Could not connect to the server. Please check your connection.',
+      );
     } on HttpException {
       _showErrorSnackbar('Could not reach the server. Please try again later.');
     } on FormatException {
@@ -676,10 +798,7 @@ class _UploadProductPageState extends State<UploadProductPage> {
 
   void _showErrorSnackbar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-      ),
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
     );
   }
 
@@ -699,6 +818,10 @@ class _UploadProductPageState extends State<UploadProductPage> {
         title: const Text('Upload Product'),
         backgroundColor: Colors.green.shade600,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -745,7 +868,7 @@ class _UploadProductPageState extends State<UploadProductPage> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Icon(
-                                  Icons.add_photo_alternate,
+                                  Icons.add_photo_alternate_rounded,
                                   size: 60,
                                   color: Colors.green.shade300,
                                 ),
@@ -766,8 +889,10 @@ class _UploadProductPageState extends State<UploadProductPage> {
                     controller: _nameController,
                     decoration: InputDecoration(
                       labelText: 'Product Name',
-                      prefixIcon:
-                          const Icon(Icons.shopping_bag, color: Colors.green),
+                      prefixIcon: const Icon(
+                        Icons.shopping_bag_outlined,
+                        color: Colors.green,
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -789,8 +914,10 @@ class _UploadProductPageState extends State<UploadProductPage> {
                     controller: _priceController,
                     decoration: InputDecoration(
                       labelText: 'Price (\Rs.)',
-                      prefixIcon:
-                          const Icon(Icons.attach_money, color: Colors.green),
+                      prefixIcon: const Icon(
+                        Icons.currency_rupee_rounded,
+                        color: Colors.green,
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -816,8 +943,10 @@ class _UploadProductPageState extends State<UploadProductPage> {
                     controller: _stockController,
                     decoration: InputDecoration(
                       labelText: 'Stock Quantity(kg)',
-                      prefixIcon:
-                          const Icon(Icons.inventory, color: Colors.green),
+                      prefixIcon: const Icon(
+                        Icons.inventory_2_outlined,
+                        color: Colors.green,
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -843,8 +972,10 @@ class _UploadProductPageState extends State<UploadProductPage> {
                     value: _selectedCategory,
                     decoration: InputDecoration(
                       labelText: 'Category',
-                      prefixIcon:
-                          const Icon(Icons.category, color: Colors.green),
+                      prefixIcon: const Icon(
+                        Icons.category_outlined,
+                        color: Colors.green,
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -868,8 +999,10 @@ class _UploadProductPageState extends State<UploadProductPage> {
                     controller: _descriptionController,
                     decoration: InputDecoration(
                       labelText: 'Description',
-                      prefixIcon:
-                          const Icon(Icons.description, color: Colors.green),
+                      prefixIcon: const Icon(
+                        Icons.description_outlined,
+                        color: Colors.green,
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -897,7 +1030,7 @@ class _UploadProductPageState extends State<UploadProductPage> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      elevation: 2,
+                      elevation: 3,
                     ),
                     child: _isUploading
                         ? const SizedBox(
@@ -908,14 +1041,22 @@ class _UploadProductPageState extends State<UploadProductPage> {
                               strokeWidth: 2,
                             ),
                           )
-                        : const Text(
-                            'UPLOAD PRODUCT',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
+                        : const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.cloud_upload_outlined, size: 24),
+                              SizedBox(width: 8),
+                              Text(
+                                'Upload Product',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
                           ),
                   ),
+                  const SizedBox(height: 40),
                 ],
               ),
             ),
