@@ -1,7 +1,13 @@
+// ignore_for_file: prefer_const_literals_to_create_immutables, deprecated_member_use
+
+import 'package:economic_center_mobileapp/main.dart';
+import 'package:economic_center_mobileapp/pages/categary.dart' as categary;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:async';
+import 'models.dart';
 
 void main() {
   runApp(const MyApp());
@@ -25,83 +31,161 @@ class MyApp extends StatelessWidget {
           foregroundColor: Colors.black,
         ),
       ),
-      home: const PaymentPage(),
+      home: const PaymentPage(cartItems: [], totalAmount: 0.0),
     );
   }
 }
 
-class Product {
-  final int id;
-  final String name;
-  final double price;
-  final String imageUrl;
-  final String description;
+class PaymentService {
+  static const String _baseUrl = 'http://10.0.2.2:3000';
 
-  Product({
-    required this.id,
-    required this.name,
-    required this.price,
-    required this.imageUrl,
-    required this.description,
-  });
+  static Future<bool> testConnection() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$_baseUrl/api/health'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      ).timeout(const Duration(seconds: 10));
 
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'price': price,
+      print('Health check response: ${response.statusCode}');
+      print('Health check body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return data['status'] == 'OK';
+      }
+      return false;
+    } catch (e) {
+      print('Connection test failed: $e');
+      return false;
+    }
+  }
+
+  static Future<bool> processOrder({
+    required String name,
+    required String email,
+    required String address,
+    required String city,
+    required String zipCode,
+    required List<CartItem> cartItems,
+    required ShippingOption shippingMethod,
+    required String paymentMethod,
+    required double subtotal,
+    required double shipping,
+    required double tax,
+    required double total,
+    String? cardNumber,
+    String? expiryDate,
+    String? cvv,
+  }) async {
+    try {
+      // for (final item in cartItems) {
+      //   final success = await categary.ProductService.purchaseProduct(
+      //     item.product.id,
+      //     item.quantity,
+      //   );
+
+      //   if (!success) {
+      //     throw Exception('Failed to update stock for ${item.product.name}');
+      //   }
+      // }
+      // // Test connection first
+      print('Testing connection...');
+      final isConnected = await testConnection();
+      if (!isConnected) {
+        throw Exception(
+            'Cannot connect to server. Please check your connection and ensure the server is running.');
+      }
+
+      print('Sending order request...');
+      final requestBody = {
+        'customerInfo': {
+          'name': name,
+          'email': email,
+          'address': address,
+          'city': city,
+          'zipCode': zipCode,
+        },
+        'shippingMethod': shippingMethod.toJson(),
+        'paymentMethod': paymentMethod,
+        'cardDetails': paymentMethod == 'credit_card'
+            ? {
+                'number': cardNumber?.replaceAll(' ', ''),
+                'expiry': expiryDate,
+                'cvv': cvv,
+              }
+            : null,
+        'cartItems': cartItems.map((item) => item.toJson()).toList(),
+        'subtotal': subtotal,
+        'shipping': shipping,
+        'tax': tax,
+        'total': total,
       };
-}
 
-class ShippingOption {
-  final int id;
-  final String name;
-  final double price;
-  final String days;
+      print('Request body: ${json.encode(requestBody)}');
 
-  ShippingOption({
-    required this.id,
-    required this.name,
-    required this.price,
-    required this.days,
-  });
+      final response = await http
+          .post(
+            Uri.parse('$_baseUrl/api/orders'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: json.encode(requestBody),
+          )
+          .timeout(const Duration(seconds: 30));
 
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'price': price,
-        'days': days,
-      };
-}
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
 
-class PaymentMethod {
-  final String name;
-  final IconData icon;
-  final Color color;
-
-  const PaymentMethod({
-    required this.name,
-    required this.icon,
-    required this.color,
-  });
-}
-
-class CartItem {
-  final Product product;
-  int quantity;
-
-  CartItem({
-    required this.product,
-    this.quantity = 1,
-  });
-
-  Map<String, dynamic> toJson() => {
-        'product': product.toJson(),
-        'quantity': quantity,
-      };
+      if (response.statusCode == 201) {
+        final responseData = json.decode(response.body);
+        if (responseData['success'] == true) {
+          return true;
+        } else {
+          throw Exception(responseData['error'] ?? 'Unknown error occurred');
+        }
+      } else {
+        // Try to decode error response
+        try {
+          final errorData = json.decode(response.body);
+          throw Exception(errorData['error'] ??
+              errorData['message'] ??
+              'Failed to process order');
+        } catch (jsonError) {
+          // If response is not JSON (like HTML error page)
+          throw Exception(
+              'Server error: ${response.statusCode}. Please ensure the server is running and accessible.');
+        }
+      }
+    } on TimeoutException {
+      throw Exception(
+          'Request timeout. Please check your connection and try again.');
+    } on FormatException catch (e) {
+      throw Exception(
+          'Invalid response format. Server might be returning HTML instead of JSON. Error: ${e.message}');
+    } catch (e) {
+      print('Error in processOrder: $e');
+      if (e.toString().contains('Exception:')) {
+        rethrow;
+      } else {
+        throw Exception('Network error: ${e.toString()}');
+      }
+    }
+  }
 }
 
 class PaymentPage extends StatefulWidget {
-  const PaymentPage({super.key});
+  final List<CartItem> cartItems;
+  final double totalAmount;
+
+  const PaymentPage({
+    super.key,
+    required this.cartItems,
+    required this.totalAmount,
+  });
 
   @override
   State<PaymentPage> createState() => _PaymentPageState();
@@ -112,6 +196,10 @@ class _PaymentPageState extends State<PaymentPage> {
   int _selectedPaymentMethod = 0;
   int _selectedShippingMethod = 0;
   bool _isProcessing = false;
+  bool _paymentSuccess = false;
+  String _errorMessage = '';
+
+  // Removed duplicate build method to resolve the error.
 
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
@@ -128,16 +216,19 @@ class _PaymentPageState extends State<PaymentPage> {
   final List<PaymentMethod> paymentMethods = const [
     PaymentMethod(
       name: 'Credit Card',
+      apiValue: 'credit_card',
       icon: Icons.credit_card,
       color: Colors.blue,
     ),
     PaymentMethod(
       name: 'Google Pay',
+      apiValue: 'google_pay',
       icon: Icons.account_balance_wallet,
       color: Colors.green,
     ),
     PaymentMethod(
       name: 'Cash on Delivery',
+      apiValue: 'cash_on_delivery',
       icon: Icons.money,
       color: Colors.orange,
     ),
@@ -146,18 +237,42 @@ class _PaymentPageState extends State<PaymentPage> {
   @override
   void initState() {
     super.initState();
-    cartItems = [
-      CartItem(
-        product: Product(
-          id: 1,
-          name: 'Product Item',
-          price: 280.00,
-          imageUrl: 'https://example.com/product.jpg',
-          description: 'Product description',
+
+    cartItems = List.from(widget.cartItems);
+
+    // If no cart items provided, create sample data for testing
+    if (widget.cartItems.isEmpty) {
+      cartItems = [
+        CartItem(
+          cartId: 1,
+          product: Product(
+            id: 1,
+            name: 'Sample Product',
+            price: 299.99,
+            imageUrl: 'https://via.placeholder.com/150',
+            description: 'This is a sample product for testing',
+            category: '',
+            stockQuantity: 0,
+          ),
+          quantity: 2,
         ),
-        quantity: 1,
-      ),
-    ];
+        CartItem(
+          cartId: 2,
+          product: Product(
+            id: 2,
+            name: 'Another Product',
+            price: 199.99,
+            imageUrl: 'https://via.placeholder.com/150',
+            description: 'Another sample product',
+            category: '',
+            stockQuantity: 0,
+          ),
+          quantity: 1,
+        ),
+      ];
+    } else {
+      cartItems = List.from(widget.cartItems);
+    }
 
     shippingOptions = [
       ShippingOption(
@@ -181,6 +296,14 @@ class _PaymentPageState extends State<PaymentPage> {
     ];
   }
 
+  // double get subtotal => widget.totalAmount;
+  // Replace the existing subtotal getter with this:
+  double get subtotal {
+    if (cartItems.isEmpty) return widget.totalAmount;
+    return cartItems.fold(
+        0.0, (sum, item) => sum + (item.product.price * item.quantity));
+  }
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -194,13 +317,6 @@ class _PaymentPageState extends State<PaymentPage> {
     super.dispose();
   }
 
-  double get subtotal {
-    return cartItems.fold(
-      0,
-      (sum, item) => sum + (item.product.price * item.quantity),
-    );
-  }
-
   double get shipping => shippingOptions[_selectedShippingMethod].price;
   double get tax => subtotal * 0.05;
   double get total => subtotal + shipping + tax;
@@ -208,82 +324,64 @@ class _PaymentPageState extends State<PaymentPage> {
   Future<void> _processPayment() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _isProcessing = true);
+    setState(() {
+      _isProcessing = true;
+      _errorMessage = '';
+    });
 
     try {
-      final paymentData = {
-        'customerInfo': {
-          'name': _nameController.text,
-          'email': _emailController.text,
-          'address': _addressController.text,
-          'city': _cityController.text,
-          'zipCode':
-              _zipCodeController.text.isNotEmpty ? _zipCodeController.text : '',
-        },
-        'shippingMethod': {
-          'id': _selectedShippingMethod + 1,
-          'name': shippingOptions[_selectedShippingMethod].name,
-          'price': shippingOptions[_selectedShippingMethod].price,
-        },
-        'paymentMethod': _selectedPaymentMethod == 0
-            ? 'credit_card'
-            : _selectedPaymentMethod == 1
-                ? 'google_pay'
-                : 'cash_on_delivery',
-        'cardDetails': _selectedPaymentMethod == 0
-            ? {
-                'cardNumber': _cardNumberController.text.replaceAll(' ', ''),
-                'expiry': _expiryController.text,
-                'cvv': _cvvController.text,
-              }
-            : null,
-        'cartItems': cartItems
-            .map((item) => {
-                  'product': {
-                    'id': item.product.id,
-                    'name': item.product.name,
-                    'price': item.product.price,
-                  },
-                  'quantity': item.quantity,
-                })
-            .toList(),
-        'subtotal': subtotal,
-        'shipping': shipping,
-        'tax': tax,
-        'total': total,
-      };
-
-      final response = await http.post(
-        Uri.parse('http://10.0.2.2:5000/api/orders'),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode(paymentData),
+      // Then process the payment
+      final orderSuccess = await PaymentService.processOrder(
+        name: _nameController.text,
+        email: _emailController.text,
+        address: _addressController.text,
+        city: _cityController.text,
+        zipCode: _zipCodeController.text,
+        cartItems: cartItems,
+        shippingMethod: shippingOptions[_selectedShippingMethod],
+        paymentMethod: paymentMethods[_selectedPaymentMethod].apiValue,
+        subtotal: subtotal,
+        shipping: shipping,
+        tax: tax,
+        total: total,
+        cardNumber:
+            _selectedPaymentMethod == 0 ? _cardNumberController.text : null,
+        expiryDate: _selectedPaymentMethod == 0 ? _expiryController.text : null,
+        cvv: _selectedPaymentMethod == 0 ? _cvvController.text : null,
       );
 
-      final responseData = json.decode(response.body);
+      if (orderSuccess) {
+        setState(() {
+          _paymentSuccess = true;
+        });
+        // Await the dialog dismissal
+        await _showPaymentSuccessDialog(
+            'ORD-${DateTime.now().millisecondsSinceEpoch}');
 
-      if (response.statusCode == 201 && responseData['success'] == true) {
-        _showPaymentSuccessDialog(responseData['order']['id'].toString());
-      } else {
-        // ignore: use_build_context_synchronously
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(responseData['error'] ?? 'Payment failed')),
-        );
+        // If payment was successful and dialog is dismissed, pop PaymentPage with true
+        if (_paymentSuccess && mounted) {
+          Navigator.of(context).pop(true);
+        }
       }
     } catch (e) {
-      // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: ${e.toString()}')),
-      );
+      setState(() {
+        _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      });
     } finally {
       setState(() => _isProcessing = false);
     }
   }
 
-  void _showPaymentSuccessDialog(String orderId) {
-    showDialog(
+  // Make the dialog function async to be awaitable, though not strictly necessary
+  // if we handle the pop outside based on _paymentSuccess.
+  // The key change is in the onPressed of the "Done" button.
+  Future<void> _showPaymentSuccessDialog(String orderId) async {
+    return showDialog<void>(
+      // Return Future<void> and specify type for showDialog
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
+      builder: (BuildContext dialogContext) => AlertDialog(
+        // Use a different context name
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
@@ -341,7 +439,9 @@ class _PaymentPageState extends State<PaymentPage> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                onPressed: () => Navigator.pop(context),
+                onPressed: () {
+                  Navigator.of(dialogContext).pop(); // Pop only the dialog
+                },
                 child: const Text(
                   'Done',
                   style: TextStyle(
@@ -545,7 +645,6 @@ class _PaymentPageState extends State<PaymentPage> {
                       margin: const EdgeInsets.only(right: 10),
                       decoration: BoxDecoration(
                         color: _selectedPaymentMethod == index
-                            // ignore: deprecated_member_use
                             ? method.color.withOpacity(0.2)
                             : Colors.grey[100],
                         borderRadius: BorderRadius.circular(10),
@@ -588,6 +687,8 @@ class _PaymentPageState extends State<PaymentPage> {
   }
 
   Widget _buildCardDetailsSection() {
+    if (_selectedPaymentMethod != 0) return const SizedBox.shrink();
+
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(
@@ -621,7 +722,6 @@ class _PaymentPageState extends State<PaymentPage> {
                 CardNumberFormatter(),
               ],
               validator: (value) {
-                if (_selectedPaymentMethod != 0) return null;
                 if (value?.isEmpty ?? true) return 'Please enter card number';
                 if (value!.replaceAll(' ', '').length != 16) {
                   return 'Enter a valid 16-digit card number';
@@ -648,7 +748,6 @@ class _PaymentPageState extends State<PaymentPage> {
                       ExpiryDateFormatter(),
                     ],
                     validator: (value) {
-                      if (_selectedPaymentMethod != 0) return null;
                       if (value?.isEmpty ?? true) {
                         return 'Please enter expiry date';
                       }
@@ -676,7 +775,6 @@ class _PaymentPageState extends State<PaymentPage> {
                       LengthLimitingTextInputFormatter(4),
                     ],
                     validator: (value) {
-                      if (_selectedPaymentMethod != 0) return null;
                       if (value?.isEmpty ?? true) return 'Please enter CVV';
                       if (value!.length < 3 || value.length > 4) {
                         return 'Enter 3 or 4 digit CVV';
@@ -753,75 +851,110 @@ class _PaymentPageState extends State<PaymentPage> {
   }
 
   Widget _buildCartItemRow(CartItem item, int index) {
-    return Row(
-      children: [
-        Container(
-          width: 60,
-          height: 60,
-          decoration: BoxDecoration(
-            color: Colors.grey[200],
-            borderRadius: BorderRadius.circular(8),
-            image: const DecorationImage(
-              image: NetworkImage('https://via.placeholder.com/60'),
-              fit: BoxFit.cover,
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Product Image
+          Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              borderRadius: BorderRadius.circular(8),
+              image: item.product.imageUrl.isNotEmpty
+                  ? DecorationImage(
+                      image: NetworkImage(
+                        item.product.imageUrl.startsWith('http')
+                            ? item.product.imageUrl
+                            : 'http://10.0.2.2:5000/${item.product.imageUrl}',
+                      ),
+                      fit: BoxFit.cover,
+                    )
+                  : null,
+            ),
+            child: item.product.imageUrl.isEmpty
+                ? const Icon(Icons.image, size: 30, color: Colors.grey)
+                : null,
+          ),
+          const SizedBox(width: 16),
+
+          // Product Details
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item.product.name,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Rs. ${item.product.price.toStringAsFixed(2)}',
+                  style: const TextStyle(
+                    color: Colors.green,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+
+                // Quantity Controls
+                Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.remove, size: 18),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      onPressed: () {
+                        setState(() {
+                          if (item.quantity > 1) {
+                            cartItems[index].quantity--;
+                          } else {
+                            cartItems.removeAt(index);
+                          }
+                        });
+                      },
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 4),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey[300]!),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        item.quantity.toString(),
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.add, size: 18),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      onPressed: () {
+                        setState(() {
+                          cartItems[index].quantity++;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                item.product.name,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Rs. ${item.product.price.toStringAsFixed(2)}',
-                style: const TextStyle(
-                  color: Colors.green,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
+
+          // Total Price
+          Text(
+            'Rs. ${(item.product.price * item.quantity).toStringAsFixed(2)}',
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+            ),
           ),
-        ),
-        const SizedBox(width: 16),
-        Container(
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey[300]!),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.remove, size: 18),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-                onPressed: item.quantity > 1
-                    ? () => setState(() => cartItems[index].quantity--)
-                    : null,
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                child: Text(
-                  item.quantity.toString(),
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.add, size: 18),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-                onPressed: () => setState(() => cartItems[index].quantity++),
-              ),
-            ],
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -858,6 +991,8 @@ class _PaymentPageState extends State<PaymentPage> {
   }
 
   Widget _buildPlaceOrderButton() {
+    if (_paymentSuccess) return const SizedBox.shrink();
+
     return SizedBox(
       width: double.infinity,
       height: 50,
@@ -892,6 +1027,54 @@ class _PaymentPageState extends State<PaymentPage> {
     );
   }
 
+  Widget _buildErrorMessage() {
+    if (_errorMessage.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Text(
+        _errorMessage,
+        style: const TextStyle(
+          color: Colors.red,
+          fontWeight: FontWeight.bold,
+        ),
+        textAlign: TextAlign.center,
+      ),
+    );
+  }
+
+  Widget _buildSuccessMessage() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.check_circle, size: 80, color: Colors.green),
+          const SizedBox(height: 20),
+          const Text(
+            'Payment Successful!',
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Thank you for your purchase of Rs. ${total.toStringAsFixed(2)}',
+            style: const TextStyle(fontSize: 16),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 32),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).popUntil((route) => route.isFirst);
+              },
+              child: const Text('Back to Home'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -904,21 +1087,26 @@ class _PaymentPageState extends State<PaymentPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildShippingInfoSection(),
-              const SizedBox(height: 24),
-              _buildShippingMethodSection(),
-              const SizedBox(height: 24),
-              _buildPaymentMethodSection(),
-              if (_selectedPaymentMethod == 0) ...[
+              if (_paymentSuccess)
+                _buildSuccessMessage()
+              else ...[
+                _buildShippingInfoSection(),
                 const SizedBox(height: 24),
-                _buildCardDetailsSection(),
+                _buildShippingMethodSection(),
+                const SizedBox(height: 24),
+                _buildPaymentMethodSection(),
+                if (_selectedPaymentMethod == 0) ...[
+                  const SizedBox(height: 24),
+                  _buildCardDetailsSection(),
+                ],
+                const SizedBox(height: 24),
+                _buildOrderSummary(),
+                const SizedBox(height: 24),
+                _buildTermsAndConditions(),
+                _buildErrorMessage(),
+                const SizedBox(height: 24),
+                _buildPlaceOrderButton(),
               ],
-              const SizedBox(height: 24),
-              _buildOrderSummary(),
-              const SizedBox(height: 24),
-              _buildTermsAndConditions(),
-              const SizedBox(height: 24),
-              _buildPlaceOrderButton(),
             ],
           ),
         ),
