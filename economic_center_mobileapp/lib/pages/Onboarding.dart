@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import 'package:economic_center_mobileapp/pages/signup.dart';
+import 'package:economic_center_mobileapp/pages/signin.dart';
 
 void main() {
   runApp(const MyApp());
@@ -364,7 +366,7 @@ class _WalkthroughScreenState extends State<WalkthroughScreen>
         // Sign Up Button
         ModernButton(
           onTap: () => Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const SignUpScreen()),
+            MaterialPageRoute(builder: (context) => const SignupPage()),
           ),
           label: 'Create Account',
           isPrimary: true,
@@ -377,7 +379,7 @@ class _WalkthroughScreenState extends State<WalkthroughScreen>
         // Sign In Button
         ModernButton(
           onTap: () => Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const SignInScreen()),
+            MaterialPageRoute(builder: (context) => const FarmerLoginScreen()),
           ),
           label: 'Sign In',
           isPrimary: false,
@@ -390,7 +392,7 @@ class _WalkthroughScreenState extends State<WalkthroughScreen>
         // Continue as Guest
         GestureDetector(
           onTap: () => Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const HomeScreen()),
+            MaterialPageRoute(builder: (context) => const SignupPage()),
           ),
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
