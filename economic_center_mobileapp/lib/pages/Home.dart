@@ -11,6 +11,7 @@ import 'package:economic_center_mobileapp/pages/UserProfile.dart';
 import 'package:economic_center_mobileapp/pages/categary.dart';
 import 'package:economic_center_mobileapp/pages/message.dart';
 import 'package:economic_center_mobileapp/pages/Farmers.dart'; 
+import 'package:economic_center_mobileapp/pages/Aboutus.dart'; 
 
 void main() {
   runApp(const MyApp());
@@ -35,7 +36,7 @@ class MyApp extends StatelessWidget {
         '/message': (context) => const FarmerMessengerApp(),
         '/farmers': (context) => const FarmerProfilesPage(),
         '/farmer-details': (context) => const FarmerProfilesApp(), // Add your farmers page widget
-        '/about': (context) => const Placeholder(), // Add your about us page widget
+        '/about': (context) => const AboutUsPage(), // Add your about us page widget
         '/location': (context) => const SriLankaExplorer(),
       },
     );
