@@ -1,9 +1,11 @@
-// ignore_for_file: deprecated_member_use, duplicate_ignore, use_build_context_synchronously, sort_child_properties_last, unused_field, prefer_final_fields, unused_element, unnecessary_to_list_in_spreads, unnecessary_to_list_in_spreads, prefer_const_constructors
+// ignore_for_file: deprecated_member_use, duplicate_ignore, use_build_context_synchronously, sort_child_properties_last, unused_field, prefer_final_fields, unused_element, unnecessary_to_list_in_spreads, unnecessary_to_list_in_spreads, prefer_const_constructors, prefer_const_literals_to_create_immutables
 
+import 'package:economic_center_mobileapp/pages/Payment.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:async';
+import 'package:economic_center_mobileapp/pages/models.dart';
 
 void main() {
   runApp(const MyApp());
@@ -27,125 +29,6 @@ class MyApp extends StatelessWidget {
       ),
       home: const CategoryScreen(),
     );
-  }
-}
-
-// Add this at the top of your file with other model classes
-class CartItem {
-  final Product product;
-  int quantity;
-
-  CartItem({required this.product, this.quantity = 1});
-}
-
-class Product {
-  final int id;
-  final String name;
-  final String description;
-  final double price;
-  final String imageUrl;
-  final String category;
-  final bool isLocal;
-  final double rating;
-  final String seller;
-  final int reviewCount;
-  final int stockQuantity;
-  final List<Review>? reviews;
-
-  Product({
-    required this.id,
-    required this.name,
-    required this.description,
-    required this.price,
-    required this.imageUrl,
-    required this.category,
-    required this.stockQuantity,
-    this.isLocal = true,
-    this.rating = 4.0,
-    this.seller = 'Local Seller',
-    this.reviewCount = 0,
-    this.reviews,
-  });
-
-  factory Product.fromJson(Map<String, dynamic> json) {
-    return Product(
-      id: json['id'] ?? 0,
-      name: json['name'] ?? 'No Name',
-      description: json['description'] ?? 'No description available',
-      price: json['price'] is String
-          ? double.tryParse(json['price']) ?? 0.0
-          : (json['price']?.toDouble() ?? 0.0),
-      imageUrl: json['image_url'] ?? '',
-      category: json['category'] ?? 'Uncategorized',
-      stockQuantity:
-          json['stock'] != null // Changed from stock_quantity to stock
-              ? int.tryParse(json['stock'].toString()) ?? 0
-              : 0,
-      isLocal: json['is_local'] ?? true,
-      rating: (json['rating'] is String
-          ? double.tryParse(json['rating']) ?? 4.0
-          : (json['rating']?.toDouble() ?? 4.0)),
-      seller: json['seller'] ?? 'Local Seller',
-      reviewCount: json['review_count'] ?? 0,
-      reviews: json['reviews'] != null
-          ? (json['reviews'] as List).map((i) => Review.fromJson(i)).toList()
-          : null,
-    );
-  }
-}
-
-class Review {
-  final int id;
-  final String username;
-  final int rating;
-  final String comment;
-  final String date;
-
-  Review({
-    required this.id,
-    required this.username,
-    required this.rating,
-    required this.comment,
-    required this.date,
-  });
-
-  factory Review.fromJson(Map<String, dynamic> json) {
-    return Review(
-      id: json['id'] ?? 0,
-      username: json['username'] ?? 'Anonymous',
-      rating: json['rating'] ?? 5,
-      comment: json['comment'] ?? '',
-      date: json['created_at'] != null
-          ? _formatDate(json['created_at'])
-          : 'Unknown date',
-    );
-  }
-
-  static String _formatDate(String dateString) {
-    try {
-      final date = DateTime.parse(dateString);
-      return '${date.day} ${_getMonthName(date.month)} ${date.year}';
-    } catch (e) {
-      return dateString;
-    }
-  }
-
-  static String _getMonthName(int month) {
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec'
-    ];
-    return months[month - 1];
   }
 }
 
@@ -173,6 +56,35 @@ class ProductService {
     }
   }
 
+  static Future<bool> purchaseMultipleProducts(List<CartItem> cartItems) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/api/products/batch-purchase'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: json.encode({
+          'items': cartItems
+              .map((item) => {
+                    'productId': item.product.id,
+                    'quantity': item.quantity,
+                  })
+              .toList(),
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        final errorData = json.decode(response.body);
+        throw Exception(errorData['error'] ?? 'Failed to process purchase');
+      }
+    } catch (e) {
+      throw Exception('Network error: ${e.toString()}');
+    }
+  }
+
   // In your ProductService class, add this method:
   static Future<bool> purchaseProduct(int productId, int quantity) async {
     try {
@@ -190,6 +102,155 @@ class ProductService {
       } else {
         final errorData = json.decode(response.body);
         throw Exception(errorData['error'] ?? 'Failed to purchase product');
+      }
+    } catch (e) {
+      throw Exception('Network error: ${e.toString()}');
+    }
+  }
+
+  static Future<List<CartItem>> getCartItems() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$_baseUrl/api/cart'),
+        headers: {'Accept': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> jsonResponse = json.decode(response.body);
+        return jsonResponse
+            .map((item) => CartItem(
+                  product: Product.fromJson(item),
+                  quantity: item['quantity'],
+                  cartId: item['cart_id'],
+                ))
+            .toList();
+      } else {
+        throw Exception('Failed to load cart items: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Network error: ${e.toString()}');
+    }
+  }
+
+  static Future<CartItem?> addToCart(int productId, int quantity) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/api/cart'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: json.encode({
+          'productId': productId,
+          'quantity': quantity,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = json.decode(response.body);
+        if (responseData['success'] == true &&
+            responseData['cartItem'] != null) {
+          // Ensure the product data within cartItem is correctly parsed
+          Map<String, dynamic> cartItemJson = responseData['cartItem'];
+          // The backend sends product details flat inside the cartItem,
+          // but CartItem.fromJson expects a nested 'product' object.
+          // We need to reconstruct it if it's not already nested.
+          // Based on your backend, p.* is selected, so product fields are at the top level of cartItem.
+          // Product.fromJson needs these fields.
+          // Manually construct Product from the flat cartItemJson, then create CartItem
+          Product product = Product.fromJson(
+              cartItemJson); // Product.fromJson can handle the flat structure
+          return CartItem(
+              product: product,
+              quantity: cartItemJson['quantity'] ??
+                  1, // Get quantity directly from cartItemJson
+              cartId: cartItemJson[
+                  'cart_id'] // Get cart_id directly from cartItemJson
+              );
+        } else {
+          throw Exception(responseData['error'] ??
+              'Failed to add to cart: Invalid response format');
+        }
+      } else {
+        final errorData = json.decode(response.body);
+        throw Exception(errorData['error'] ?? 'Failed to add to cart');
+      }
+    } catch (e) {
+      // Consider logging the error or handling it more gracefully
+      print('Error in ProductService.addToCart: $e');
+      throw Exception('Network error or parsing issue: ${e.toString()}');
+    }
+  }
+
+  static Future<bool> updateCartItem(int cartItemId, int quantity) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$_baseUrl/api/cart/$cartItemId'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: json.encode({'quantity': quantity}),
+      );
+
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        final errorData = json.decode(response.body);
+        throw Exception(errorData['error'] ?? 'Failed to update cart');
+      }
+    } catch (e) {
+      throw Exception('Network error: ${e.toString()}');
+    }
+  }
+
+  static Future<bool> removeFromCart(int cartItemId) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$_baseUrl/api/cart/$cartItemId'),
+        headers: {'Accept': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        final errorData = json.decode(response.body);
+        throw Exception(errorData['error'] ?? 'Failed to remove from cart');
+      }
+    } catch (e) {
+      throw Exception('Network error: ${e.toString()}');
+    }
+  }
+
+  static Future<bool> clearCartBackend() async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$_baseUrl/api/cart/clear'),
+        headers: {'Accept': 'application/json'},
+      );
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        final errorData = json.decode(response.body);
+        throw Exception(errorData['error'] ?? 'Failed to clear cart');
+      }
+    } catch (e) {
+      throw Exception('Network error: ${e.toString()}');
+    }
+  }
+
+  static Future<bool> checkout() async {
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/api/cart/checkout'),
+        headers: {'Accept': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        final errorData = json.decode(response.body);
+        throw Exception(errorData['error'] ?? 'Checkout failed');
       }
     } catch (e) {
       throw Exception('Network error: ${e.toString()}');
@@ -292,6 +353,7 @@ class _ProductScreenState extends State<ProductScreen> {
   void initState() {
     super.initState();
     _fetchProducts();
+    _fetchCartItems(); // Fetch cart items on init
   }
 
   Future<void> _fetchProducts() async {
@@ -302,16 +364,18 @@ class _ProductScreenState extends State<ProductScreen> {
 
     try {
       final fetchedProducts = await ProductService.fetchProducts();
-      setState(() {
-        products = fetchedProducts;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _errorMessage = e.toString().replaceAll('Exception: ', '');
-        _isLoading = false;
-      });
       if (mounted) {
+        setState(() {
+          products = fetchedProducts;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.toString().replaceAll('Exception: ', '');
+          _isLoading = false;
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: $_errorMessage')),
         );
@@ -325,69 +389,165 @@ class _ProductScreenState extends State<ProductScreen> {
         0, (total, item) => total + (item.product.price * item.quantity));
   }
 
-  // Add these cart methods
-  void addToCart(Product product) {
-    setState(() {
-      final existingItemIndex =
-          cartItems.indexWhere((item) => item.product.id == product.id);
-      if (existingItemIndex >= 0) {
-        cartItems[existingItemIndex].quantity++;
-      } else {
-        cartItems.add(CartItem(product: product));
+  // Method to fetch cart items and update state
+  Future<void> _fetchCartItems() async {
+    try {
+      final fetchedCartItems = await ProductService.getCartItems();
+      if (mounted) {
+        setState(() {
+          cartItems = fetchedCartItems;
+        });
       }
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.check_circle, color: Colors.white),
-            const SizedBox(width: 8),
-            Text('${product.name} added to cart'),
-          ],
-        ),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        duration: const Duration(seconds: 1),
-      ),
-    );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(
+                  'Error fetching cart: ${e.toString().replaceAll('Exception: ', '')}')),
+        );
+      }
+    }
   }
 
-  void removeFromCart(int productId) {
-    setState(() {
-      final existingItemIndex =
-          cartItems.indexWhere((item) => item.product.id == productId);
-      if (existingItemIndex >= 0) {
-        if (cartItems[existingItemIndex].quantity > 1) {
-          cartItems[existingItemIndex].quantity--;
-        } else {
-          cartItems.removeAt(existingItemIndex);
+// Duplicate _showCartDialog removed to resolve method conflict.
+
+  // Modified addToCart method
+  void addToCart(Product product, {int quantityToAdd = 1}) async {
+    try {
+      // ProductService.addToCart now returns CartItem?
+      CartItem? addedItem =
+          await ProductService.addToCart(product.id, quantityToAdd);
+
+      if (addedItem != null) {
+        // Successfully added/updated, backend returned the item.
+        // Refresh the whole cart for simplicity.
+        await _fetchCartItems();
+        await _fetchProducts(); // <-- Add this line to refresh product list and update stock on cards
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.check_circle, color: Colors.white),
+                  const SizedBox(width: 8),
+                  Text('${product.name} (x$quantityToAdd) added to cart'),
+                ],
+              ),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              duration: const Duration(seconds: 1),
+            ),
+          );
+        }
+      } else {
+        // If addedItem is null, it implies a failure.
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to add ${product.name} to cart.')),
+          );
         }
       }
-    });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(
+                  'Error adding to cart: ${e.toString().replaceAll('Exception: ', '')}')),
+        );
+      }
+    }
   }
 
-  void clearCart() {
-    setState(() {
-      cartItems.clear();
-    });
+  // Modified removeFromCart method to interact with the backend
+  void removeFromCart(CartItem item) async {
+    try {
+      bool success;
+      String message;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Row(
-          children: [
-            Icon(Icons.delete_forever, color: Colors.white),
-            SizedBox(width: 8),
-            Text('Cart cleared'),
-          ],
-        ),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        backgroundColor: Colors.red.shade700,
-        duration: const Duration(seconds: 1),
-      ),
-    );
+      if (item.quantity > 1) {
+        success =
+            await ProductService.updateCartItem(item.cartId, item.quantity - 1);
+        message = '${item.product.name} quantity updated';
+      } else {
+        success = await ProductService.removeFromCart(item.cartId);
+        message = '${item.product.name} removed from cart';
+      }
+
+      if (success) {
+        await _fetchCartItems(); // Refresh cart from server
+        await _fetchProducts(); // <-- Add this line to refresh product list and update stock on cards
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(message),
+              backgroundColor:
+                  item.quantity > 1 ? Colors.blueGrey : Colors.orange,
+              duration: const Duration(seconds: 1),
+            ),
+          );
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content:
+                    Text('Failed to update cart for ${item.product.name}')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content:
+                  Text('Error: ${e.toString().replaceAll('Exception: ', '')}')),
+        );
+      }
+    }
+  }
+
+  void clearCart() async {
+    try {
+      bool success = await ProductService.clearCartBackend();
+      if (success) {
+        await _fetchCartItems(); // Refresh local cart
+        await _fetchProducts(); // <-- Add this line to refresh product list and update stock on cards
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Row(
+                children: [
+                  Icon(Icons.delete_forever, color: Colors.white),
+                  SizedBox(width: 8),
+                  Text('Cart cleared successfully'),
+                ],
+              ),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+              backgroundColor: Colors.red.shade700,
+              duration: const Duration(seconds: 1),
+            ),
+          );
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Failed to clear cart on server')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(
+                  'Error clearing cart: ${e.toString().replaceAll('Exception: ', '')}')),
+        );
+      }
+    }
   }
 
   void _showCartDialog(BuildContext context) {
@@ -523,7 +683,7 @@ class _ProductScreenState extends State<ProductScreen> {
                                 IconButton(
                                   icon: const Icon(Icons.remove_circle_outline),
                                   onPressed: () =>
-                                      removeFromCart(item.product.id),
+                                      removeFromCart(item), // Pass CartItem
                                   color: Colors.red,
                                   iconSize: 20,
                                 ),
@@ -538,7 +698,8 @@ class _ProductScreenState extends State<ProductScreen> {
                                 ),
                                 IconButton(
                                   icon: const Icon(Icons.add_circle_outline),
-                                  onPressed: () => addToCart(item.product),
+                                  onPressed: () =>
+                                      addToCart(item.product), // Pass Product
                                   color: Theme.of(context).colorScheme.primary,
                                   iconSize: 20,
                                 ),
@@ -626,10 +787,10 @@ class _ProductScreenState extends State<ProductScreen> {
           ),
           TextButton(
             onPressed: () {
-              clearCart();
               Navigator.pop(context);
+              clearCart(); // Actually clear the cart when confirmed
             },
-            child: const Text('Clear', style: TextStyle(color: Colors.red)),
+            child: const Text('Clear'),
           ),
         ],
       ),
@@ -643,26 +804,45 @@ class _ProductScreenState extends State<ProductScreen> {
         title: const Text('Checkout'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Your order has been placed successfully!'),
+            const Text('Proceed to payment?'),
             const SizedBox(height: 16),
             Text(
               'Total: Rs. ${totalCartValue.toStringAsFixed(2)}',
               style: const TextStyle(
+                fontSize: 18,
                 fontWeight: FontWeight.bold,
-                fontSize: 16,
               ),
             ),
           ],
         ),
         actions: [
           TextButton(
-            onPressed: () {
-              clearCart();
-              Navigator.pop(context);
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              // Make this async
+              Navigator.pop(context); // Close the dialog first
+              final paymentSuccess = await Navigator.push<bool>(
+                // Await and expect a bool
+                context,
+                MaterialPageRoute(
+                  builder: (context) => PaymentPage(
+                    cartItems:
+                        List.from(cartItems), // Pass the current cart items
+                    totalAmount: totalCartValue,
+                  ),
+                ),
+              );
+
+              if (paymentSuccess == true && mounted) {
+                _fetchProducts(); // Refresh products to show updated stock
+                _fetchCartItems(); // Refresh cart (likely empty after checkout)
+              }
             },
-            child: const Text('OK'),
+            child: const Text('Proceed'),
           ),
         ],
       ),
@@ -991,7 +1171,18 @@ class ProductCard extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => ProductDetailPage(productId: product.id),
+            builder: (context) => ProductDetailPage(
+              productId: product.id,
+              onAddToCart: (p) {
+                if (onAddToCart != null) {
+                  onAddToCart!();
+                } else {
+                  final state =
+                      context.findAncestorStateOfType<_ProductScreenState>();
+                  state?.addToCart(product);
+                }
+              },
+            ),
           ),
         );
       },
@@ -1166,8 +1357,13 @@ class ProductCard extends StatelessWidget {
 
 class ProductDetailPage extends StatefulWidget {
   final int productId;
+  final Function(Product)? onAddToCart;
 
-  const ProductDetailPage({super.key, required this.productId});
+  const ProductDetailPage({
+    super.key,
+    required this.productId,
+    this.onAddToCart,
+  });
 
   @override
   State<ProductDetailPage> createState() => _ProductDetailPageState();
@@ -1824,11 +2020,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 color: Colors.white,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.grey.withOpacity(0.2),
-                    spreadRadius: 1,
-                    blurRadius: 5,
-                    offset: const Offset(0, -2),
-                  ),
+                      color: Colors.grey.withOpacity(0.2),
+                      spreadRadius: 1,
+                      blurRadius: 5,
+                      offset: const Offset(0, -2)),
                 ],
               ),
               child: FutureBuilder<Product>(
@@ -1840,10 +2035,11 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                   return Row(
                     children: [
                       Expanded(
-                        child: ElevatedButton(
+                        child: // In the buy now button section of ProductDetailPage
+                            ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: product.stockQuantity > 0
-                                ? Colors.orange
+                                ? Theme.of(context).colorScheme.primary
                                 : Colors.grey,
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
@@ -1851,7 +2047,40 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                             ),
                           ),
                           onPressed: product.stockQuantity > 0
-                              ? _purchaseProduct
+                              ? () async {
+                                  try {
+                                    // Create a cart item with the selected quantity
+                                    final cartItem = CartItem(
+                                      product: product,
+                                      quantity: _quantity,
+                                      cartId:
+                                          0, // Provide a default or appropriate cartId
+                                    );
+                                    // Make the navigation async and await result
+                                    final paymentSuccess =
+                                        await Navigator.push<bool>(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => PaymentPage(
+                                          cartItems: [
+                                            cartItem
+                                          ], // Pass as a list with one item
+                                          totalAmount:
+                                              product.price * _quantity,
+                                        ),
+                                      ),
+                                    );
+
+                                    // If payment was successful, refresh product details
+                                    if (paymentSuccess == true && mounted) {
+                                      _refreshProduct();
+                                    }
+                                  } catch (e) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text(e.toString())),
+                                    );
+                                  }
+                                }
                               : null,
                           child: const Text(
                             'Buy Now',
@@ -1864,7 +2093,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       ),
                       const SizedBox(width: 16),
                       Expanded(
-                        child: OutlinedButton(
+                        child: // In the bottom buttons section, replace the current OutlinedButton with:
+                            OutlinedButton(
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
@@ -1872,30 +2102,48 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                             ),
                             side: BorderSide(
                               color: product.stockQuantity > 0
-                                  ? Colors.orange
+                                  ? Theme.of(context).colorScheme.primary
                                   : Colors.grey,
                             ),
                           ),
                           onPressed: product.stockQuantity > 0
                               ? () {
-                                  final state =
-                                      context.findRootAncestorStateOfType<
-                                          _ProductScreenState>();
-                                  state?.addToCart(product);
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content:
-                                          Text('${product.name} added to cart'),
-                                      duration: const Duration(seconds: 1),
-                                    ),
-                                  );
+                                  if (widget.onAddToCart != null) {
+                                    for (int i = 0; i < _quantity; i++) {
+                                      widget.onAddToCart!(product);
+                                    }
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                            '${product.name} (x$_quantity) added to cart'),
+                                        duration: const Duration(seconds: 1),
+                                      ),
+                                    );
+                                  } else {
+                                    final state =
+                                        context.findAncestorStateOfType<
+                                            _ProductScreenState>();
+                                    if (state != null) {
+                                      for (int i = 0; i < _quantity; i++) {
+                                        state.addToCart(product);
+                                      }
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                              '${product.name} (x$_quantity) added to cart'),
+                                          duration: const Duration(seconds: 1),
+                                        ),
+                                      );
+                                    }
+                                  }
                                 }
                               : null,
                           child: Text(
                             'Add to Cart',
                             style: TextStyle(
                               color: product.stockQuantity > 0
-                                  ? Colors.orange
+                                  ? Theme.of(context).colorScheme.primary
                                   : Colors.grey,
                               fontWeight: FontWeight.bold,
                             ),
