@@ -39,7 +39,7 @@ class MyApp extends StatelessWidget {
             ),
           ),
         ),
-        cardTheme: CardTheme(
+        cardTheme: CardThemeData(
           elevation: 3,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
@@ -54,8 +54,7 @@ class MyApp extends StatelessWidget {
           secondary: const Color(0xFFEF4444),
           tertiary: const Color(0xFF10B981),
           brightness: Brightness.dark,
-          // ignore: duplicate_ignore
-          // ignore: deprecated_member_use
+        ).copyWith(
           background: const Color(0xFF0F172A),
           surface: const Color(0xFF1E293B),
           onSurface: Colors.white70,
@@ -76,7 +75,7 @@ class MyApp extends StatelessWidget {
             ),
           ),
         ),
-        cardTheme: CardTheme(
+        cardTheme: CardThemeData(
           elevation: 3,
           color: const Color(0xFF1E293B),
           shape: RoundedRectangleBorder(

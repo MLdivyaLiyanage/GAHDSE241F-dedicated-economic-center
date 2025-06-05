@@ -10,8 +10,8 @@ import 'package:http_parser/http_parser.dart';
 import 'package:economic_center_mobileapp/pages/UserProfile.dart';
 import 'package:economic_center_mobileapp/pages/categary.dart';
 import 'package:economic_center_mobileapp/pages/message.dart';
-import 'package:economic_center_mobileapp/pages/Farmers.dart'; 
-import 'package:economic_center_mobileapp/pages/Aboutus.dart'; 
+import 'package:economic_center_mobileapp/pages/Farmers.dart';
+import 'package:economic_center_mobileapp/pages/Aboutus.dart';
 
 void main() {
   runApp(const MyApp());
@@ -33,10 +33,13 @@ class MyApp extends StatelessWidget {
       ),
       debugShowCheckedModeBanner: false,
       routes: {
-        '/message': (context) => const FarmerMessengerApp(),
+        '/message': (context) =>
+            const FarmerCommunicationApp(isDarkMode: false),
         '/farmers': (context) => const FarmerProfilesPage(),
-        '/farmer-details': (context) => const FarmerProfilesApp(), // Add your farmers page widget
-        '/about': (context) => const AboutUsPage(), // Add your about us page widget
+        '/farmer-details': (context) =>
+            const FarmerProfilesApp(), // Add your farmers page widget
+        '/about': (context) =>
+            const AboutUsPage(), // Add your about us page widget
         '/location': (context) => const SriLankaExplorer(),
       },
     );
@@ -631,7 +634,8 @@ class HomePage extends StatelessWidget {
         onTap: (index) {
           if (index == 1) {
             Navigator.pushNamed(context, '/message');
-          } else if (index == 2) { // Add this condition for location
+          } else if (index == 2) {
+            // Add this condition for location
             Navigator.pushNamed(context, '/location');
           } else if (index == 3) {
             _showMoreOptions(context);

@@ -37,15 +37,15 @@ async function initializeDatabase() {
     const connection = await pool.getConnection();
     
     // Drop tables if they exist (for development only - remove in production)
-    await connection.query('DROP TABLE IF EXISTS order_items');
-    await connection.query('DROP TABLE IF EXISTS orders');
-    await connection.query('DROP TABLE IF EXISTS customer_addresses');
-    await connection.query('DROP TABLE IF EXISTS products');
-    await connection.query('DROP TABLE IF EXISTS customers');
+    // await connection.query('DROP TABLE IF EXISTS order_item');
+    // await connection.query('DROP TABLE IF EXISTS `order`');
+    // await connection.query('DROP TABLE IF EXISTS customer_address');
+    // await connection.query('DROP TABLE IF EXISTS product');
+    // await connection.query('DROP TABLE IF EXISTS customer');
     
-    // Create customers table with shorter email length
+    // Create customer table with shorter email length
     await connection.query(`
-      CREATE TABLE IF NOT EXISTS customers (
+      CREATE TABLE IF NOT EXISTS customer (
         id INT AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(100) NOT NULL,
         email VARCHAR(100) NOT NULL UNIQUE,
@@ -53,34 +53,34 @@ async function initializeDatabase() {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
     
-    // Create customer_addresses table
+    // Create customer_address table
     await connection.query(`
-      CREATE TABLE IF NOT EXISTS customer_addresses (
+      CREATE TABLE IF NOT EXISTS customer_address (
         id INT AUTO_INCREMENT PRIMARY KEY,
         customer_id INT NOT NULL,
         address VARCHAR(255) NOT NULL,
         city VARCHAR(50) NOT NULL,
         zip_code VARCHAR(20) NOT NULL,
         is_default BOOLEAN DEFAULT false,
-        FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE
+        FOREIGN KEY (customer_id) REFERENCES customer(id) ON DELETE CASCADE
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
     
-    // Create products table
+    // Create product table (uncommented and fixed)
     await connection.query(`
-      CREATE TABLE IF NOT EXISTS products (
+      CREATE TABLE IF NOT EXISTS prod (
         id INT AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(100) NOT NULL,
         price DECIMAL(10,2) NOT NULL,
         description TEXT,
         image_url VARCHAR(255),
-        stock_quantity INT DEFAULT 0
+        stock INT DEFAULT 0
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
     
-    // Create orders table with correct column names
+    // Create order table with backticks around 'order' (reserved keyword)
     await connection.query(`
-      CREATE TABLE IF NOT EXISTS orders (
+      CREATE TABLE IF NOT EXISTS \`order\` (
         id INT AUTO_INCREMENT PRIMARY KEY,
         customer_id INT NOT NULL,
         address_id INT NOT NULL,
@@ -92,27 +92,27 @@ async function initializeDatabase() {
         tax DECIMAL(10,2) NOT NULL,
         total DECIMAL(10,2) NOT NULL,
         status VARCHAR(20) DEFAULT 'pending',
-        FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE,
-        FOREIGN KEY (address_id) REFERENCES customer_addresses(id) ON DELETE CASCADE
+        FOREIGN KEY (customer_id) REFERENCES customer(id) ON DELETE CASCADE,
+        FOREIGN KEY (address_id) REFERENCES customer_address(id) ON DELETE CASCADE
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
     
-    // Create order_items table
+    // Create order_item table
     await connection.query(`
-      CREATE TABLE IF NOT EXISTS order_items (
+      CREATE TABLE IF NOT EXISTS order_item (
         id INT AUTO_INCREMENT PRIMARY KEY,
         order_id INT NOT NULL,
         product_id INT NOT NULL,
         quantity INT NOT NULL,
         price DECIMAL(10,2) NOT NULL,
-        FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
-        FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+        FOREIGN KEY (order_id) REFERENCES \`order\`(id) ON DELETE CASCADE,
+        FOREIGN KEY (product_id) REFERENCES product(id) ON DELETE CASCADE
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
     
     // Insert some sample products if they don't exist
     await connection.query(`
-      INSERT IGNORE INTO products (id, name, price, description, image_url, stock_quantity)
+      INSERT IGNORE INTO prod (id, name, price, description, image_url, stock)
       VALUES
         (1, 'Sample Product', 299.99, 'This is a sample product', 'https://via.placeholder.com/150', 100),
         (2, 'Another Product', 199.99, 'Another sample product', 'https://via.placeholder.com/150', 50)
@@ -182,7 +182,7 @@ app.post('/api/orders', async (req, res) => {
 
     // Check if customer exists or create new one
     let [customer] = await connection.query(
-      'SELECT id FROM customers WHERE email = ?',
+      'SELECT id FROM customer WHERE email = ?',
       [customerInfo.email]
     );
 
@@ -190,7 +190,7 @@ app.post('/api/orders', async (req, res) => {
     if (customer.length === 0) {
       // Create new customer
       [customer] = await connection.query(
-        'INSERT INTO customers (name, email) VALUES (?, ?)',
+        'INSERT INTO customer (name, email) VALUES (?, ?)',
         [customerInfo.name, customerInfo.email]
       );
       customerId = customer.insertId;
@@ -200,7 +200,7 @@ app.post('/api/orders', async (req, res) => {
 
     // Create shipping address
     const [address] = await connection.query(
-      'INSERT INTO customer_addresses (customer_id, address, city, zip_code) VALUES (?, ?, ?, ?)',
+      'INSERT INTO customer_address (customer_id, address, city, zip_code) VALUES (?, ?, ?, ?)',
       [customerId, customerInfo.address, customerInfo.city, customerInfo.zipCode]
     );
     const addressId = address.insertId;
@@ -218,9 +218,9 @@ app.post('/api/orders', async (req, res) => {
       });
     }
 
-    // Create the order
+    // Create the order (using backticks around 'order')
     const [order] = await connection.query(
-      `INSERT INTO orders (
+      `INSERT INTO \`order\` (
         customer_id, 
         address_id, 
         payment_method, 
@@ -246,7 +246,7 @@ app.post('/api/orders', async (req, res) => {
     // Insert order items
     for (const item of cartItems) {
       await connection.query(
-        `INSERT INTO order_items (
+        `INSERT INTO order_item (
           order_id, 
           product_id, 
           quantity, 
@@ -321,52 +321,3 @@ app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
   console.log(`Health check endpoint: http://localhost:${PORT}/api/health`);
 });
-
-// CREATE TABLE orders (
-//   id INT AUTO_INCREMENT PRIMARY KEY,
-//   customer_id INT NOT NULL,
-//   shipping_address_id INT NOT NULL,
-//   payment_method ENUM('credit_card', 'google_pay', 'cash_on_delivery') NOT NULL,
-//   shipping_method INT NOT NULL,
-//   subtotal DECIMAL(10,2) NOT NULL,
-//   shipping_cost DECIMAL(10,2) NOT NULL,
-//   tax DECIMAL(10,2) NOT NULL,
-//   total DECIMAL(10,2) NOT NULL,
-//   status ENUM('pending', 'processing', 'shipped', 'delivered', 'cancelled') DEFAULT 'pending',
-//   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-//   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-//   FOREIGN KEY (customer_id) REFERENCES customers(id),
-//   FOREIGN KEY (shipping_address_id) REFERENCES customer_addresses(id),
-//   FOREIGN KEY (shipping_method) REFERENCES shipping_methods(id)
-// );
-
-// CREATE TABLE order_items (
-//   id INT AUTO_INCREMENT PRIMARY KEY,
-//   order_id INT NOT NULL,
-//   product_id INT NOT NULL,
-//   quantity INT NOT NULL,
-//   price DECIMAL(10,2) NOT NULL,
-//   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-//   FOREIGN KEY (order_id) REFERENCES orders(id),
-//   FOREIGN KEY (product_id) REFERENCES product(id)
-// );
-
-// CREATE TABLE customer_addresses (
-//   id INT AUTO_INCREMENT PRIMARY KEY,
-//   customer_id INT NOT NULL,
-//   address TEXT NOT NULL,
-//   city VARCHAR(100) NOT NULL,
-//   zip_code VARCHAR(20) NOT NULL,
-//   is_default TINYINT(1) DEFAULT 0,
-//   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-//   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-//   FOREIGN KEY (customer_id) REFERENCES customers(id)
-// );
-
-// CREATE TABLE customers (
-//   id INT AUTO_INCREMENT PRIMARY KEY,
-//   name VARCHAR(100) NOT NULL,
-//   email VARCHAR(100) NOT NULL UNIQUE,
-//   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-//   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-// );

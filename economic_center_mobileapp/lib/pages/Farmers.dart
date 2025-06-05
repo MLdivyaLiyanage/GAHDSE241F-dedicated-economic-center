@@ -23,7 +23,7 @@ class FarmerProfilesApp extends StatelessWidget {
           secondary: Colors.amber[700]!,
         ),
         fontFamily: 'Poppins',
-        cardTheme: CardTheme(
+        cardTheme: CardThemeData(
           elevation: 2,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
@@ -50,7 +50,8 @@ class _FarmerProfilesPageState extends State<FarmerProfilesPage> {
   String _searchQuery = '';
   String _selectedFilter = 'All';
   final TextEditingController _searchController = TextEditingController();
-  final String currentUserId = 'user123'; // Replace with actual user ID from auth
+  final String currentUserId =
+      'user123'; // Replace with actual user ID from auth
 
   String get baseUrl {
     if (Platform.isAndroid) {
@@ -79,23 +80,23 @@ class _FarmerProfilesPageState extends State<FarmerProfilesPage> {
       isLoading = true;
       errorMessage = '';
     });
-    
+
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/api/all-profiles'),
         headers: {'Content-Type': 'application/json'},
       ).timeout(const Duration(seconds: 10));
-      
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['success'] == true) {
           final profiles = data['profiles'] as List;
-          
+
           setState(() {
             farmers = profiles.map((profile) {
               double avgRating = (profile['rating'] ?? 0).toDouble();
               int feedbackCount = (profile['feedback_count'] ?? 0).toInt();
-              
+
               return Farmer(
                 id: profile['id'].toString(),
                 username: profile['username'] ?? 'Unknown',
@@ -132,7 +133,8 @@ class _FarmerProfilesPageState extends State<FarmerProfilesPage> {
       }
     } catch (e) {
       setState(() {
-        errorMessage = 'Connection error: ${e.toString().replaceAll('Exception: ', '')}';
+        errorMessage =
+            'Connection error: ${e.toString().replaceAll('Exception: ', '')}';
         isLoading = false;
       });
     }
@@ -140,15 +142,21 @@ class _FarmerProfilesPageState extends State<FarmerProfilesPage> {
 
   List<Farmer> get filteredFarmers {
     return farmers.where((farmer) {
-      final matchesSearch = farmer.username.toLowerCase().contains(_searchQuery) ||
-          farmer.location.toLowerCase().contains(_searchQuery) ||
-          farmer.workExperience.toLowerCase().contains(_searchQuery) ||
-          farmer.products.any((p) => p['name']?.toString().toLowerCase().contains(_searchQuery) ?? false);
+      final matchesSearch =
+          farmer.username.toLowerCase().contains(_searchQuery) ||
+              farmer.location.toLowerCase().contains(_searchQuery) ||
+              farmer.workExperience.toLowerCase().contains(_searchQuery) ||
+              farmer.products.any((p) =>
+                  p['name']?.toString().toLowerCase().contains(_searchQuery) ??
+                  false);
 
       if (_selectedFilter == 'All') {
         return matchesSearch;
       } else {
-        return matchesSearch && farmer.workExperience.toLowerCase().contains(_selectedFilter.toLowerCase());
+        return matchesSearch &&
+            farmer.workExperience
+                .toLowerCase()
+                .contains(_selectedFilter.toLowerCase());
       }
     }).toList();
   }
@@ -243,7 +251,8 @@ class _FarmerProfilesPageState extends State<FarmerProfilesPage> {
               },
               selectedColor: Theme.of(context).primaryColor,
               labelStyle: TextStyle(
-                color: _selectedFilter == filter ? Colors.white : Colors.grey[700],
+                color:
+                    _selectedFilter == filter ? Colors.white : Colors.grey[700],
               ),
             ),
           );
@@ -389,18 +398,16 @@ class _FarmerProfilesPageState extends State<FarmerProfilesPage> {
                 children: [
                   if (farmer.workExperience.isNotEmpty)
                     _buildFeatureChip(
-                      Icons.agriculture, 
-                      farmer.workExperience.length > 15 
-                          ? '${farmer.workExperience.substring(0, 15)}...' 
-                          : farmer.workExperience
-                    ),
-                  if (farmer.phoneNumber.isNotEmpty && farmer.phoneNumber != 'No phone')
+                        Icons.agriculture,
+                        farmer.workExperience.length > 15
+                            ? '${farmer.workExperience.substring(0, 15)}...'
+                            : farmer.workExperience),
+                  if (farmer.phoneNumber.isNotEmpty &&
+                      farmer.phoneNumber != 'No phone')
                     _buildFeatureChip(Icons.phone, farmer.phoneNumber),
                   if (farmer.products.isNotEmpty)
-                    _buildFeatureChip(
-                      Icons.shopping_basket, 
-                      '${farmer.products.length} product${farmer.products.length > 1 ? 's' : ''}'
-                    ),
+                    _buildFeatureChip(Icons.shopping_basket,
+                        '${farmer.products.length} product${farmer.products.length > 1 ? 's' : ''}'),
                 ],
               ),
             ],
@@ -420,7 +427,7 @@ class _FarmerProfilesPageState extends State<FarmerProfilesPage> {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
-        child: imageUrl.isNotEmpty 
+        child: imageUrl.isNotEmpty
             ? Image.network(
                 '$baseUrl$imageUrl',
                 fit: BoxFit.cover,
@@ -429,7 +436,8 @@ class _FarmerProfilesPageState extends State<FarmerProfilesPage> {
                   return Center(
                     child: CircularProgressIndicator(
                       value: loadingProgress.expectedTotalBytes != null
-                          ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                          ? loadingProgress.cumulativeBytesLoaded /
+                              loadingProgress.expectedTotalBytes!
                           : null,
                     ),
                   );
@@ -594,13 +602,13 @@ class _FarmerDetailsPageState extends State<FarmerDetailsPage> {
     setState(() {
       _isLoadingFeedback = true;
     });
-    
+
     try {
       final response = await http.get(
         Uri.parse('${widget.baseUrl}/api/farmer-feedback/${widget.farmer.id}'),
         headers: {'Content-Type': 'application/json'},
       ).timeout(const Duration(seconds: 10));
-      
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['success'] == true) {
@@ -631,17 +639,19 @@ class _FarmerDetailsPageState extends State<FarmerDetailsPage> {
     }
 
     try {
-      final response = await http.post(
-        Uri.parse('${widget.baseUrl}/api/submit-feedback'),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          'farmerId': widget.farmer.id,
-          'userId': widget.currentUserId,
-          'rating': _newRating,
-          'comment': _feedbackController.text,
-        }),
-      ).timeout(const Duration(seconds: 10));
-      
+      final response = await http
+          .post(
+            Uri.parse('${widget.baseUrl}/api/submit-feedback'),
+            headers: {'Content-Type': 'application/json'},
+            body: json.encode({
+              'farmerId': widget.farmer.id,
+              'userId': widget.currentUserId,
+              'rating': _newRating,
+              'comment': _feedbackController.text,
+            }),
+          )
+          .timeout(const Duration(seconds: 10));
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['success'] == true) {
@@ -652,10 +662,10 @@ class _FarmerDetailsPageState extends State<FarmerDetailsPage> {
               behavior: SnackBarBehavior.floating,
             ),
           );
-          
+
           await _loadFeedback();
           _feedbackController.clear();
-          
+
           if (mounted) {
             Navigator.pop(context, data['averageRating']);
           }
@@ -728,7 +738,8 @@ class _FarmerDetailsPageState extends State<FarmerDetailsPage> {
                       return Center(
                         child: CircularProgressIndicator(
                           value: loadingProgress.expectedTotalBytes != null
-                              ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                              ? loadingProgress.cumulativeBytesLoaded /
+                                  loadingProgress.expectedTotalBytes!
                               : null,
                         ),
                       );
@@ -833,15 +844,18 @@ class _FarmerDetailsPageState extends State<FarmerDetailsPage> {
         ),
         const SizedBox(height: 8),
         _buildDetailRow(Icons.person, 'About', widget.farmer.aboutMe),
-        _buildDetailRow(Icons.agriculture, 'Experience', widget.farmer.workExperience),
+        _buildDetailRow(
+            Icons.agriculture, 'Experience', widget.farmer.workExperience),
         _buildDetailRow(Icons.location_on, 'Address', widget.farmer.address),
         _buildDetailRow(Icons.phone, 'Contact', widget.farmer.phoneNumber),
         if (widget.farmer.age.isNotEmpty)
           _buildDetailRow(Icons.cake, 'Age', widget.farmer.age),
         if (widget.farmer.facebookLink.isNotEmpty)
-          _buildDetailRow(Icons.facebook, 'Facebook', widget.farmer.facebookLink),
+          _buildDetailRow(
+              Icons.facebook, 'Facebook', widget.farmer.facebookLink),
         if (widget.farmer.instagramLink.isNotEmpty)
-          _buildDetailRow(Icons.camera_alt, 'Instagram', widget.farmer.instagramLink),
+          _buildDetailRow(
+              Icons.camera_alt, 'Instagram', widget.farmer.instagramLink),
       ],
     );
   }
@@ -949,8 +963,10 @@ class _FarmerDetailsPageState extends State<FarmerDetailsPage> {
                             if (loadingProgress == null) return child;
                             return Center(
                               child: CircularProgressIndicator(
-                                value: loadingProgress.expectedTotalBytes != null
-                                    ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                                value: loadingProgress.expectedTotalBytes !=
+                                        null
+                                    ? loadingProgress.cumulativeBytesLoaded /
+                                        loadingProgress.expectedTotalBytes!
                                     : null,
                               ),
                             );
@@ -1072,7 +1088,8 @@ class _FarmerDetailsPageState extends State<FarmerDetailsPage> {
                 CircleAvatar(
                   radius: 20,
                   backgroundImage: feedback['profile_image'] != null
-                      ? NetworkImage('${widget.baseUrl}${feedback['profile_image']}')
+                      ? NetworkImage(
+                          '${widget.baseUrl}${feedback['profile_image']}')
                       : null,
                   child: feedback['profile_image'] == null
                       ? const Icon(Icons.person)
@@ -1086,8 +1103,8 @@ class _FarmerDetailsPageState extends State<FarmerDetailsPage> {
                 const Spacer(),
                 Text(
                   feedback['created_at'] != null
-                      ? DateFormat('MMM d, yyyy').format(
-                          DateTime.parse(feedback['created_at']))
+                      ? DateFormat('MMM d, yyyy')
+                          .format(DateTime.parse(feedback['created_at']))
                       : '',
                   style: TextStyle(color: Colors.grey[600], fontSize: 12),
                 ),

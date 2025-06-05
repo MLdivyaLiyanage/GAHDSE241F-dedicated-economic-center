@@ -392,7 +392,7 @@ class _WalkthroughScreenState extends State<WalkthroughScreen>
         // Continue as Guest
         GestureDetector(
           onTap: () => Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const HomeScreen()),
+            MaterialPageRoute(builder: (context) => const SignupPage()),
           ),
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
