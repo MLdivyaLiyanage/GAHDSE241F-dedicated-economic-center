@@ -753,11 +753,14 @@ app.listen(PORT, () => {
 
 // Cart endpoints
 
-// GET all cart items with product details
+// GET all cart items with product details - Updated to handle user_id
 app.get('/api/cart', (req, res) => {
-  const sql = `
+  const user_id = req.query.user_id || null; // Optional user_id parameter
+  
+  let sql = `
     SELECT 
       c.id as cart_id, 
+      c.user_id,
       c.quantity, 
       c.created_at as cart_created_at,
       p.id, 
@@ -772,22 +775,33 @@ app.get('/api/cart', (req, res) => {
     FROM cart_items c
     LEFT JOIN products p ON c.product_id = p.id
     LEFT JOIN users u ON p.farmer_id = u.id
-    ORDER BY c.created_at DESC
   `;
   
-  db.query(sql, (err, results) => {
+  let params = [];
+  
+  if (user_id) {
+    sql += ' WHERE c.user_id = ?';
+    params.push(parseInt(user_id));
+  } else {
+    // For mobile app without user authentication, get items with null user_id
+    sql += ' WHERE c.user_id IS NULL';
+  }
+  
+  sql += ' ORDER BY c.created_at DESC';
+  
+  db.query(sql, params, (err, results) => {
     if (err) {
       console.error('Fetch cart error:', err);
-      return res.status(500).json({ error: 'Database error' });
+      return res.status(500).json({ error: 'Database error: ' + err.message });
     }
     
     res.json(results);
   });
 });
 
-// POST add item to cart
+// POST add item to cart - Updated to handle user_id
 app.post('/api/cart', (req, res) => {
-  const { productId, quantity } = req.body;
+  const { productId, quantity, user_id = null } = req.body;
   
   if (!productId || !quantity || quantity <= 0) {
     return res.status(400).json({ error: 'Product ID and valid quantity are required' });
@@ -799,7 +813,7 @@ app.post('/api/cart', (req, res) => {
   db.query(checkProductSql, [parseInt(productId)], (err, productResults) => {
     if (err) {
       console.error('Check product error:', err);
-      return res.status(500).json({ error: 'Database error' });
+      return res.status(500).json({ error: 'Database error: ' + err.message });
     }
     
     if (productResults.length === 0) {
@@ -812,13 +826,20 @@ app.post('/api/cart', (req, res) => {
       return res.status(400).json({ error: `Only ${product.stock_quantity} items available in stock` });
     }
     
-    // Check if item already exists in cart
-    const checkCartSql = 'SELECT id, quantity FROM cart_items WHERE product_id = ?';
+    // Check if item already exists in cart for this user (or null user)
+    let checkCartSql, checkParams;
+    if (user_id) {
+      checkCartSql = 'SELECT id, quantity FROM cart_items WHERE product_id = ? AND user_id = ?';
+      checkParams = [parseInt(productId), parseInt(user_id)];
+    } else {
+      checkCartSql = 'SELECT id, quantity FROM cart_items WHERE product_id = ? AND user_id IS NULL';
+      checkParams = [parseInt(productId)];
+    }
     
-    db.query(checkCartSql, [parseInt(productId)], (err, cartResults) => {
+    db.query(checkCartSql, checkParams, (err, cartResults) => {
       if (err) {
         console.error('Check cart error:', err);
-        return res.status(500).json({ error: 'Database error' });
+        return res.status(500).json({ error: 'Database error: ' + err.message });
       }
       
       if (cartResults.length > 0) {
@@ -837,13 +858,14 @@ app.post('/api/cart', (req, res) => {
         db.query(updateSql, [newQuantity, existingItem.id], (err, result) => {
           if (err) {
             console.error('Update cart error:', err);
-            return res.status(500).json({ error: 'Database error' });
+            return res.status(500).json({ error: 'Database error: ' + err.message });
           }
           
           // Return the updated cart item with product details
           const getUpdatedItemSql = `
             SELECT 
               c.id as cart_id, 
+              c.user_id,
               c.quantity, 
               c.created_at as cart_created_at,
               p.id, 
@@ -864,7 +886,7 @@ app.post('/api/cart', (req, res) => {
           db.query(getUpdatedItemSql, [existingItem.id], (err, itemResults) => {
             if (err) {
               console.error('Get updated item error:', err);
-              return res.status(500).json({ error: 'Database error' });
+              return res.status(500).json({ error: 'Database error: ' + err.message });
             }
             
             res.json({
@@ -876,18 +898,19 @@ app.post('/api/cart', (req, res) => {
         });
       } else {
         // Item doesn't exist, insert new
-        const insertSql = 'INSERT INTO cart_items (product_id, quantity) VALUES (?, ?)';
+        const insertSql = 'INSERT INTO cart_items (product_id, quantity, user_id) VALUES (?, ?, ?)';
         
-        db.query(insertSql, [parseInt(productId), parseInt(quantity)], (err, result) => {
+        db.query(insertSql, [parseInt(productId), parseInt(quantity), user_id], (err, result) => {
           if (err) {
             console.error('Insert cart error:', err);
-            return res.status(500).json({ error: 'Database error' });
+            return res.status(500).json({ error: 'Database error: ' + err.message });
           }
           
           // Return the new cart item with product details
           const getNewItemSql = `
             SELECT 
               c.id as cart_id, 
+              c.user_id,
               c.quantity, 
               c.created_at as cart_created_at,
               p.id, 
@@ -908,7 +931,7 @@ app.post('/api/cart', (req, res) => {
           db.query(getNewItemSql, [result.insertId], (err, itemResults) => {
             if (err) {
               console.error('Get new item error:', err);
-              return res.status(500).json({ error: 'Database error' });
+              return res.status(500).json({ error: 'Database error: ' + err.message });
             }
             
             res.json({
@@ -923,107 +946,46 @@ app.post('/api/cart', (req, res) => {
   });
 });
 
-// PUT update cart item quantity
-app.put('/api/cart/:id', (req, res) => {
-  const cartItemId = req.params.id;
-  const { quantity } = req.body;
+// DELETE clear all cart items - Enhanced with user handling (MOVED BEFORE :id route)
+app.delete('/api/cart/clear', (req, res) => {
+  const { user_id = null } = req.query; // Get user_id from query params
   
-  if (!quantity || quantity <= 0) {
-    return res.status(400).json({ error: 'Valid quantity is required' });
+  console.log(`Attempting to clear cart for user ${user_id || 'null'}`);
+  
+  let clearSql = 'DELETE FROM cart_items';
+  let params = [];
+  
+  if (user_id) {
+    clearSql += ' WHERE user_id = ?';
+    params.push(parseInt(user_id));
+  } else {
+    clearSql += ' WHERE user_id IS NULL';
   }
   
-  // First check if cart item exists and get product info
-  const checkSql = `
-    SELECT c.id, c.product_id, p.quantity as stock_quantity 
-    FROM cart_items c
-    LEFT JOIN products p ON c.product_id = p.id
-    WHERE c.id = ?
-  `;
-  
-  db.query(checkSql, [parseInt(cartItemId)], (err, results) => {
-    if (err) {
-      console.error('Check cart item error:', err);
-      return res.status(500).json({ error: 'Database error' });
-    }
-    
-    if (results.length === 0) {
-      return res.status(404).json({ error: 'Cart item not found' });
-    }
-    
-    const cartItem = results[0];
-    
-    if (quantity > cartItem.stock_quantity) {
-      return res.status(400).json({ 
-        error: `Only ${cartItem.stock_quantity} items available in stock` 
-      });
-    }
-    
-    // Update quantity
-    const updateSql = 'UPDATE cart_items SET quantity = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?';
-    
-    db.query(updateSql, [parseInt(quantity), parseInt(cartItemId)], (err, result) => {
-      if (err) {
-        console.error('Update cart item error:', err);
-        return res.status(500).json({ error: 'Database error' });
-      }
-      
-      if (result.affectedRows === 0) {
-        return res.status(404).json({ error: 'Cart item not found' });
-      }
-      
-      res.json({
-        success: true,
-        message: 'Cart item updated successfully'
-      });
-    });
-  });
-});
-
-// DELETE remove item from cart
-app.delete('/api/cart/:id', (req, res) => {
-  const cartItemId = req.params.id;
-  
-  const deleteSql = 'DELETE FROM cart_items WHERE id = ?';
-  
-  db.query(deleteSql, [parseInt(cartItemId)], (err, result) => {
-    if (err) {
-      console.error('Delete cart item error:', err);
-      return res.status(500).json({ error: 'Database error' });
-    }
-    
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'Cart item not found' });
-    }
-    
-    res.json({
-      success: true,
-      message: 'Item removed from cart successfully'
-    });
-  });
-});
-
-// DELETE clear all cart items
-app.delete('/api/cart/clear', (req, res) => {
-  const clearSql = 'DELETE FROM cart_items';
-  
-  db.query(clearSql, (err, result) => {
+  db.query(clearSql, params, (err, result) => {
     if (err) {
       console.error('Clear cart error:', err);
-      return res.status(500).json({ error: 'Database error' });
+      return res.status(500).json({ error: 'Database error: ' + err.message });
     }
     
+    console.log(`Cleared ${result.affectedRows} items from cart for user ${user_id || 'null'}`);
     res.json({
       success: true,
       message: 'Cart cleared successfully',
-      deletedItems: result.affectedRows
+      deletedItems: result.affectedRows,
+      user_id: user_id
     });
   });
 });
 
-// POST checkout - process cart items and update product quantities
+// POST checkout - Enhanced with user handling (MOVED BEFORE :id route)
 app.post('/api/cart/checkout', (req, res) => {
-  // Get all cart items with product details
-  const getCartSql = `
+  const { user_id = null } = req.body;
+  
+  console.log(`Processing checkout for user ${user_id || 'null'}`);
+  
+  // Get all cart items with product details for this user
+  let getCartSql = `
     SELECT 
       c.id as cart_id, 
       c.quantity, 
@@ -1034,10 +996,19 @@ app.post('/api/cart/checkout', (req, res) => {
     LEFT JOIN products p ON c.product_id = p.id
   `;
   
-  db.query(getCartSql, (err, cartItems) => {
+  let params = [];
+  
+  if (user_id) {
+    getCartSql += ' WHERE c.user_id = ?';
+    params.push(parseInt(user_id));
+  } else {
+    getCartSql += ' WHERE c.user_id IS NULL';
+  }
+  
+  db.query(getCartSql, params, (err, cartItems) => {
     if (err) {
       console.error('Get cart for checkout error:', err);
-      return res.status(500).json({ error: 'Database error' });
+      return res.status(500).json({ error: 'Database error: ' + err.message });
     }
     
     if (cartItems.length === 0) {
@@ -1057,7 +1028,7 @@ app.post('/api/cart/checkout', (req, res) => {
     db.beginTransaction((err) => {
       if (err) {
         console.error('Transaction begin error:', err);
-        return res.status(500).json({ error: 'Database error' });
+        return res.status(500).json({ error: 'Database error: ' + err.message });
       }
       
       // Update product quantities
@@ -1078,23 +1049,33 @@ app.post('/api/cart/checkout', (req, res) => {
       Promise.all(updatePromises)
         .then(() => {
           // Clear cart after successful product updates
-          const clearCartSql = 'DELETE FROM cart_items';
+          let clearCartSql = 'DELETE FROM cart_items';
+          let clearParams = [];
           
-          db.query(clearCartSql, (err, result) => {
+          if (user_id) {
+            clearCartSql += ' WHERE user_id = ?';
+            clearParams.push(parseInt(user_id));
+          } else {
+            clearCartSql += ' WHERE user_id IS NULL';
+          }
+          
+          db.query(clearCartSql, clearParams, (err, result) => {
             if (err) {
               db.rollback(() => {
                 console.error('Clear cart error:', err);
-                res.status(500).json({ error: 'Database error during cart clearing' });
+                res.status(500).json({ error: 'Database error during cart clearing: ' + err.message });
               });
               return;
             }
+            
+            console.log(`Checkout completed: cleared ${result.affectedRows} cart items for user ${user_id || 'null'}`);
             
             // Commit transaction
             db.commit((err) => {
               if (err) {
                 db.rollback(() => {
                   console.error('Transaction commit error:', err);
-                  res.status(500).json({ error: 'Database error during commit' });
+                  res.status(500).json({ error: 'Database error during commit: ' + err.message });
                 });
                 return;
               }
@@ -1102,7 +1083,9 @@ app.post('/api/cart/checkout', (req, res) => {
               res.json({
                 success: true,
                 message: 'Checkout completed successfully',
-                processedItems: cartItems.length
+                processedItems: cartItems.length,
+                deletedCartItems: result.affectedRows,
+                user_id: user_id
               });
             });
           });
@@ -1110,146 +1093,158 @@ app.post('/api/cart/checkout', (req, res) => {
         .catch((error) => {
           db.rollback(() => {
             console.error('Product update error:', error);
-            res.status(500).json({ error: 'Database error during product update' });
+            res.status(500).json({ error: 'Database error during product update: ' + error.message });
           });
         });
     });
   });
 });
 
-// POST purchase single product endpoint
-app.post('/api/products/:id/purchase', (req, res) => {
-  const productId = req.params.id;
-  const { quantity } = req.body;
+// PUT update cart item quantity - Enhanced error handling and fixed ID parsing
+app.put('/api/cart/:id', (req, res) => {
+  const cartItemId = req.params.id;
+  const { quantity, user_id = null } = req.body;
+  
+  console.log(`Attempting to update cart item ${cartItemId} with quantity ${quantity} for user ${user_id || 'null'}`);
+  
+  // Validate cartItemId is a valid number
+  const parsedCartItemId = parseInt(cartItemId);
+  if (isNaN(parsedCartItemId) || parsedCartItemId <= 0) {
+    console.error(`Invalid cart item ID: ${cartItemId}`);
+    return res.status(400).json({ error: 'Invalid cart item ID' });
+  }
   
   if (!quantity || quantity <= 0) {
     return res.status(400).json({ error: 'Valid quantity is required' });
   }
   
-  // Check product availability
-  const checkProductSql = 'SELECT id, name, quantity as stock_quantity FROM products WHERE id = ?';
+  // First check if cart item exists and get product info
+  let checkSql = `
+    SELECT c.id, c.product_id, c.user_id, p.quantity as stock_quantity 
+    FROM cart_items c
+    LEFT JOIN products p ON c.product_id = p.id
+    WHERE c.id = ?
+  `;
   
-  db.query(checkProductSql, [parseInt(productId)], (err, results) => {
+  let checkParams = [parsedCartItemId];
+  
+  // Add user verification if user_id is provided
+  if (user_id && user_id !== 'null') {
+    const parsedUserId = parseInt(user_id);
+    if (!isNaN(parsedUserId)) {
+      checkSql += ' AND c.user_id = ?';
+      checkParams.push(parsedUserId);
+    } else {
+      checkSql += ' AND c.user_id IS NULL';
+    }
+  } else {
+    checkSql += ' AND c.user_id IS NULL';
+  }
+  
+  db.query(checkSql, checkParams, (err, results) => {
     if (err) {
-      console.error('Check product error:', err);
-      return res.status(500).json({ error: 'Database error' });
+      console.error('Check cart item error:', err);
+      return res.status(500).json({ error: 'Database error: ' + err.message });
     }
     
     if (results.length === 0) {
-      return res.status(404).json({ error: 'Product not found' });
+      return res.status(404).json({ error: 'Cart item not found or access denied' });
     }
     
-    const product = results[0];
+    const cartItem = results[0];
     
-    if (quantity > product.stock_quantity) {
+    if (quantity > cartItem.stock_quantity) {
       return res.status(400).json({ 
-        error: `Only ${product.stock_quantity} items available in stock` 
+        error: `Only ${cartItem.stock_quantity} items available in stock` 
       });
     }
     
-    // Update product quantity
-    const updateSql = 'UPDATE products SET quantity = quantity - ? WHERE id = ?';
+    // Update quantity
+    const updateSql = 'UPDATE cart_items SET quantity = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?';
     
-    db.query(updateSql, [parseInt(quantity), parseInt(productId)], (err, result) => {
+    db.query(updateSql, [parseInt(quantity), parsedCartItemId], (err, result) => {
       if (err) {
-        console.error('Purchase update error:', err);
-        return res.status(500).json({ error: 'Database error' });
+        console.error('Update cart item error:', err);
+        return res.status(500).json({ error: 'Database error: ' + err.message });
       }
+      
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ error: 'Cart item not found' });
+      }
+      
+      console.log(`Successfully updated cart item ${parsedCartItemId} quantity to ${quantity}`);
       
       res.json({
         success: true,
-        message: `Successfully purchased ${quantity} ${product.name}(s)`
+        message: 'Cart item updated successfully',
+        affectedRows: result.affectedRows
       });
     });
   });
 });
 
-// POST batch purchase multiple products
-app.post('/api/products/batch-purchase', (req, res) => {
-  const { items } = req.body;
+// DELETE remove item from cart - Enhanced with user verification and fixed ID parsing
+app.delete('/api/cart/:id', (req, res) => {
+  const cartItemId = req.params.id;
+  const { user_id = null } = req.query; // Get user_id from query params
   
-  if (!items || !Array.isArray(items) || items.length === 0) {
-    return res.status(400).json({ error: 'Items array is required' });
+  console.log(`Attempting to delete cart item ${cartItemId} for user ${user_id || 'null'}`);
+  
+  // Validate cartItemId is a valid number
+  const parsedCartItemId = parseInt(cartItemId);
+  if (isNaN(parsedCartItemId) || parsedCartItemId <= 0) {
+    console.error(`Invalid cart item ID: ${cartItemId}`);
+    return res.status(400).json({ error: 'Invalid cart item ID' });
   }
   
-  // Validate all items first
-  const checkPromises = items.map(item => {
-    return new Promise((resolve, reject) => {
-      if (!item.productId || !item.quantity || item.quantity <= 0) {
-        reject(new Error('Invalid item data'));
-        return;
+  // First verify the cart item exists and belongs to the user
+  let checkSql = 'SELECT id, user_id, product_id FROM cart_items WHERE id = ?';
+  let checkParams = [parsedCartItemId];
+  
+  if (user_id && user_id !== 'null') {
+    const parsedUserId = parseInt(user_id);
+    if (!isNaN(parsedUserId)) {
+      checkSql += ' AND user_id = ?';
+      checkParams.push(parsedUserId);
+    } else {
+      checkSql += ' AND user_id IS NULL';
+    }
+  } else {
+    checkSql += ' AND user_id IS NULL';
+  }
+  
+  db.query(checkSql, checkParams, (err, results) => {
+    if (err) {
+      console.error('Check cart item before delete error:', err);
+      return res.status(500).json({ error: 'Database error: ' + err.message });
+    }
+    
+    if (results.length === 0) {
+      console.log(`Cart item ${parsedCartItemId} not found or access denied`);
+      return res.status(404).json({ error: 'Cart item not found or access denied' });
+    }
+    
+    // Now delete the item
+    const deleteSql = 'DELETE FROM cart_items WHERE id = ?';
+    
+    db.query(deleteSql, [parsedCartItemId], (err, result) => {
+      if (err) {
+        console.error('Delete cart item error:', err);
+        return res.status(500).json({ error: 'Database error: ' + err.message });
       }
       
-      const checkSql = 'SELECT id, name, quantity as stock_quantity FROM products WHERE id = ?';
+      console.log(`Successfully deleted cart item ${parsedCartItemId}, affected rows: ${result.affectedRows}`);
       
-      db.query(checkSql, [parseInt(item.productId)], (err, results) => {
-        if (err) {
-          reject(err);
-        } else if (results.length === 0) {
-          reject(new Error(`Product ${item.productId} not found`));
-        } else {
-          const product = results[0];
-          if (item.quantity > product.stock_quantity) {
-            reject(new Error(`Insufficient stock for ${product.name}. Only ${product.stock_quantity} available.`));
-          } else {
-            resolve({ ...item, product });
-          }
-        }
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ error: 'Cart item not found' });
+      }
+      
+      res.json({
+        success: true,
+        message: 'Item removed from cart successfully',
+        deletedItemId: parsedCartItemId,
+        affectedRows: result.affectedRows
       });
     });
   });
-  
-  Promise.all(checkPromises)
-    .then(validatedItems => {
-      // Begin transaction
-      db.beginTransaction((err) => {
-        if (err) {
-          console.error('Transaction begin error:', err);
-          return res.status(500).json({ error: 'Database error' });
-        }
-        
-        // Update all product quantities
-        const updatePromises = validatedItems.map(item => {
-          return new Promise((resolve, reject) => {
-            const updateSql = 'UPDATE products SET quantity = quantity - ? WHERE id = ?';
-            
-            db.query(updateSql, [item.quantity, item.productId], (err, result) => {
-              if (err) {
-                reject(err);
-              } else {
-                resolve(result);
-              }
-            });
-          });
-        });
-        
-        Promise.all(updatePromises)
-          .then(() => {
-            db.commit((err) => {
-              if (err) {
-                db.rollback(() => {
-                  console.error('Transaction commit error:', err);
-                  res.status(500).json({ error: 'Database error during commit' });
-                });
-                return;
-              }
-              
-              res.json({
-                success: true,
-                message: `Successfully purchased ${validatedItems.length} product(s)`,
-                processedItems: validatedItems.length
-              });
-            });
-          })
-          .catch(error => {
-            db.rollback(() => {
-              console.error('Batch update error:', error);
-              res.status(500).json({ error: 'Database error during batch update' });
-            });
-          });
-      });
-    })
-    .catch(error => {
-      res.status(400).json({ error: error.message });
-    });
 });

@@ -271,30 +271,11 @@ class HomePage extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Categories',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => CategoryScreen(userData: userData),
-                    ),
-                  );
-                },
-                child: Text(
-                  'See All',
-                  style: TextStyle(color: Colors.green.shade700),
-                ),
-              ),
-            ],
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16),
+          child: Text(
+            'Categories',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
         ),
         const SizedBox(height: 12),
@@ -401,30 +382,11 @@ class HomePage extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Popular Products',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => CategoryScreen(userData: userData),
-                    ),
-                  );
-                },
-                child: Text(
-                  'See All',
-                  style: TextStyle(color: Colors.green.shade700),
-                ),
-              ),
-            ],
+        const Padding(
+          padding: EdgeInsets.fromLTRB(16, 24, 16, 0),
+          child: Text(
+            'Popular Products',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
         ),
         GridView.count(

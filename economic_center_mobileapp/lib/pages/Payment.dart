@@ -2,6 +2,7 @@
 
 import 'package:economic_center_mobileapp/main.dart';
 import 'package:economic_center_mobileapp/pages/categary.dart' as categary;
+import 'package:economic_center_mobileapp/pages/categary.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
@@ -180,11 +181,13 @@ class PaymentService {
 class PaymentPage extends StatefulWidget {
   final List<CartItem> cartItems;
   final double totalAmount;
+  final int? userId; // Add userId parameter
 
   const PaymentPage({
     super.key,
     required this.cartItems,
     required this.totalAmount,
+    this.userId,
   });
 
   @override
@@ -324,53 +327,67 @@ class _PaymentPageState extends State<PaymentPage> {
   double get total => subtotal + shipping + tax;
 
   Future<void> _processPayment() async {
-    if (!_formKey.currentState!.validate()) return;
-
     setState(() {
       _isProcessing = true;
-      _errorMessage = '';
     });
 
     try {
-      // Then process the payment
-      final orderSuccess = await PaymentService.processOrder(
-        name: _nameController.text,
-        email: _emailController.text,
-        address: _addressController.text,
-        city: _cityController.text,
-        zipCode: _zipCodeController.text,
-        cartItems: cartItems,
-        shippingMethod: shippingOptions[_selectedShippingMethod],
-        paymentMethod: paymentMethods[_selectedPaymentMethod].apiValue,
-        subtotal: subtotal,
-        shipping: shipping,
-        tax: tax,
-        total: total,
-        cardNumber:
-            _selectedPaymentMethod == 0 ? _cardNumberController.text : null,
-        expiryDate: _selectedPaymentMethod == 0 ? _expiryController.text : null,
-        cvv: _selectedPaymentMethod == 0 ? _cvvController.text : null,
-      );
+      // Simulate payment processing
+      await Future.delayed(const Duration(seconds: 2));
 
-      if (orderSuccess) {
+      // Call backend checkout to update stock and clear cart from database
+      final success = await ProductService.checkout(userId: widget.userId);
+
+      if (success) {
         setState(() {
-          _paymentSuccess = true;
+          _isProcessing = false;
         });
-        // Await the dialog dismissal
-        await _showPaymentSuccessDialog(
-            'ORD-${DateTime.now().millisecondsSinceEpoch}');
 
-        // If payment was successful and dialog is dismissed, pop PaymentPage with true
-        if (_paymentSuccess && mounted) {
-          Navigator.of(context).pop(true);
+        // Show success dialog
+        if (mounted) {
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (context) => AlertDialog(
+              title: const Row(
+                children: [
+                  Icon(Icons.check_circle, color: Colors.green),
+                  SizedBox(width: 8),
+                  Text('Payment Successful'),
+                ],
+              ),
+              content: const Text(
+                  'Your order has been placed successfully! Cart has been cleared from database.'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Close dialog
+                    Navigator.of(context)
+                        .pop(true); // Return to previous screen with success
+                  },
+                  child: const Text('OK'),
+                ),
+              ],
+            ),
+          );
         }
+      } else {
+        throw Exception('Failed to process checkout');
       }
     } catch (e) {
       setState(() {
-        _errorMessage = e.toString().replaceFirst('Exception: ', '');
+        _isProcessing = false;
       });
-    } finally {
-      setState(() => _isProcessing = false);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+                'Payment failed: ${e.toString().replaceAll('Exception: ', '')}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 

@@ -151,14 +151,31 @@ class CartItem {
   factory CartItem.fromJson(Map<String, dynamic> json) {
     // The backend returns product fields at the top level, not nested under 'product'
     // So we need to build the Product from the same map
+
+    // Ensure cartId is properly parsed as an integer
+    int parsedCartId;
+    if (json['cart_id'] is String) {
+      parsedCartId = int.tryParse(json['cart_id']) ?? 0;
+    } else {
+      parsedCartId = json['cart_id'] ?? 0;
+    }
+
+    // Ensure quantity is properly parsed as an integer
+    int parsedQuantity;
+    if (json['quantity'] is String) {
+      parsedQuantity = int.tryParse(json['quantity']) ?? 1;
+    } else {
+      parsedQuantity = json['quantity'] ?? 1;
+    }
+
     return CartItem(
       product: Product.fromJson({
         ...json,
         // Ensure stockQuantity is updated from the latest cart/product info
         'stock_quantity': json['stock_quantity'] ?? json['stock'] ?? 0,
       }),
-      quantity: json['quantity'] ?? 1,
-      cartId: json['cart_id'],
+      quantity: parsedQuantity,
+      cartId: parsedCartId,
     );
   }
 
