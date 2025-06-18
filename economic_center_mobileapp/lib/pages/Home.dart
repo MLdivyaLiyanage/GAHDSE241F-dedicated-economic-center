@@ -53,18 +53,24 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final userRole = userData['role'] ?? 'farmer';
+
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const UploadProductPage()),
-          );
-        },
-        backgroundColor: Colors.green.shade600,
-        child: const Icon(Icons.add_circle_outline_rounded, size: 32),
-        tooltip: 'Add Product',
-      ),
+      floatingActionButton: userRole == 'farmer'
+          ? FloatingActionButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => UploadProductPage(userData: userData),
+                  ),
+                );
+              },
+              backgroundColor: Colors.green.shade600,
+              child: const Icon(Icons.add_circle_outline_rounded, size: 32),
+              tooltip: 'Add Product',
+            )
+          : null, // Only show add product button for farmers
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -279,7 +285,7 @@ class HomePage extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const CategoryScreen(),
+                      builder: (context) => CategoryScreen(userData: userData),
                     ),
                   );
                 },
@@ -409,7 +415,7 @@ class HomePage extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const CategoryScreen(),
+                      builder: (context) => CategoryScreen(userData: userData),
                     ),
                   );
                 },
@@ -684,7 +690,9 @@ class HomePage extends StatelessWidget {
 }
 
 class UploadProductPage extends StatefulWidget {
-  const UploadProductPage({super.key});
+  final Map<String, dynamic> userData;
+
+  const UploadProductPage({super.key, required this.userData});
 
   @override
   State<UploadProductPage> createState() => _UploadProductPageState();
@@ -692,19 +700,13 @@ class UploadProductPage extends StatefulWidget {
 
 class _UploadProductPageState extends State<UploadProductPage> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final _priceController = TextEditingController();
-  final _stockController = TextEditingController();
-  final _descriptionController = TextEditingController();
-  String _selectedCategory = 'Vegetables';
-  File? _imageFile;
-  final ImagePicker _picker = ImagePicker();
+  List<ProductForm> _products = [ProductForm()];
   bool _isUploading = false;
+  PageController _pageController = PageController();
+  int _currentPage = 0;
 
-  // For Android emulator
-  static const String _baseUrl = 'http://10.0.2.2:5000';
-  // For iOS simulator or physical device, use your computer's local IP
-  // static const String _baseUrl = 'http://192.168.x.x:5000';
+  // Update the base URL to match the backend port
+  static const String _baseUrl = 'http://10.0.2.2:5001';
 
   final List<String> _categories = [
     'Vegetables',
@@ -716,30 +718,57 @@ class _UploadProductPageState extends State<UploadProductPage> {
     'Other',
   ];
 
-  Future<void> _pickImage() async {
-    try {
-      final XFile? pickedFile = await _picker.pickImage(
-        source: ImageSource.gallery,
-        maxWidth: 800,
-        maxHeight: 800,
-        imageQuality: 85,
+  void _addProduct() {
+    setState(() {
+      _products.add(ProductForm());
+    });
+    // Navigate to the new product page
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _pageController.animateToPage(
+        _products.length - 1,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
       );
+    });
+  }
 
-      if (pickedFile != null) {
-        setState(() {
-          _imageFile = File(pickedFile.path);
-        });
-      }
-    } catch (e) {
-      _showErrorSnackbar('Failed to pick image: ${e.toString()}');
+  void _removeProduct(int index) {
+    if (_products.length > 1) {
+      setState(() {
+        _products[index].dispose();
+        _products.removeAt(index);
+        if (_currentPage >= _products.length) {
+          _currentPage = _products.length - 1;
+        }
+      });
+      // Navigate to a valid page
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _pageController.animateToPage(
+          _currentPage,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+      });
     }
   }
 
-  Future<void> _uploadProduct() async {
+  Future<void> _uploadProducts() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_imageFile == null) {
-      _showErrorSnackbar('Please select a product image');
-      return;
+
+    // Validate that all products have images
+    for (int i = 0; i < _products.length; i++) {
+      if (_products[i].imageFile == null) {
+        _showErrorSnackbar('Please select an image for product ${i + 1}');
+        return;
+      }
+
+      // Check if file exists
+      bool fileExists = await _products[i].imageFile!.exists();
+      if (!fileExists) {
+        _showErrorSnackbar(
+            'Image file not found for product ${i + 1}. Please select again.');
+        return;
+      }
     }
 
     setState(() {
@@ -749,52 +778,118 @@ class _UploadProductPageState extends State<UploadProductPage> {
     try {
       var request = http.MultipartRequest(
         'POST',
-        Uri.parse('$_baseUrl/api/products'),
+        Uri.parse('$_baseUrl/api/products/multiple'),
       );
 
-      // Add text fields
-      request.fields['name'] = _nameController.text;
-      request.fields['price'] = _priceController.text;
-      request.fields['stock'] = _stockController.text;
-      request.fields['category'] = _selectedCategory;
-      request.fields['description'] = _descriptionController.text;
+      // Get farmer ID from logged-in user data
+      final farmerId = widget.userData['id'] ?? widget.userData['userId'];
+      // Remove farmer_name since we'll get it from users table via JOIN
 
-      // Add image file
-      var imageFile = await http.MultipartFile.fromPath(
-        'image',
-        _imageFile!.path,
-        contentType: MediaType('image', 'jpeg'),
+      if (farmerId == null) {
+        _showErrorSnackbar('User ID not found. Please login again.');
+        return;
+      }
+
+      // Prepare products data with proper validation
+      List<Map<String, dynamic>> productsData = [];
+      for (var product in _products) {
+        // Validate required fields before adding
+        if (product.nameController.text.trim().isEmpty ||
+            product.priceController.text.trim().isEmpty ||
+            product.stockController.text.trim().isEmpty) {
+          _showErrorSnackbar(
+              'Please fill all required fields for each product');
+          return;
+        }
+
+        productsData.add({
+          'name': product.nameController.text.trim(),
+          'price': product.priceController.text.trim(),
+          'quantity': product.stockController.text.trim(),
+          'category': product.selectedCategory,
+          'description': product.descriptionController.text.trim(),
+          'farmer_id': farmerId, // Use the logged-in user's ID
+          // Remove farmer_name - it will be fetched from users table
+          'address': product.addressController.text.trim().isEmpty
+              ? null
+              : product.addressController.text.trim(),
+        });
+      }
+
+      print('Farmer ID being used: $farmerId');
+      request.fields['products'] = json.encode(productsData);
+      print('Products data: ${json.encode(productsData)}');
+
+      // Add image files in the same order as products
+      for (int i = 0; i < _products.length; i++) {
+        try {
+          var imageFile = await http.MultipartFile.fromPath(
+            'images',
+            _products[i].imageFile!.path,
+            contentType: MediaType('image', 'jpeg'),
+          );
+          request.files.add(imageFile);
+          print('Added image ${i + 1}: ${_products[i].imageFile!.path}');
+        } catch (e) {
+          print('Error adding image ${i + 1}: $e');
+          _showErrorSnackbar('Error processing image ${i + 1}: $e');
+          return;
+        }
+      }
+
+      print('Sending request to: $_baseUrl/api/products/multiple');
+      print('Total files: ${request.files.length}');
+      print('Total products: ${productsData.length}');
+
+      // Send the request with timeout
+      var response = await request.send().timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          throw Exception('Request timed out. Please check your connection.');
+        },
       );
-      request.files.add(imageFile);
 
-      // Send the request
-      var response = await request.send();
       final responseBody = await response.stream.bytesToString();
-      final jsonResponse = json.decode(responseBody);
+
+      print('Response status: ${response.statusCode}');
+      print('Response body: $responseBody');
 
       if (response.statusCode == 201) {
+        final jsonResponse = json.decode(responseBody);
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(jsonResponse['message']),
+            content: Text(
+                jsonResponse['message'] ?? 'Products uploaded successfully!'),
             backgroundColor: Colors.green,
+            duration: const Duration(seconds: 3),
           ),
         );
-        Navigator.pop(context);
+        Navigator.pop(
+            context, true); // Return true to indicate successful upload
       } else {
-        _showErrorSnackbar(
-          'Failed to upload product: ${jsonResponse['error'] ?? 'Unknown error'}',
-        );
+        try {
+          final jsonResponse = json.decode(responseBody);
+          _showErrorSnackbar(
+            'Failed to upload products: ${jsonResponse['error'] ?? 'Unknown error'}',
+          );
+        } catch (e) {
+          _showErrorSnackbar(
+              'Server error: ${response.statusCode} - $responseBody');
+        }
       }
     } on SocketException {
       _showErrorSnackbar(
-        'Could not connect to the server. Please check your connection.',
+        'Could not connect to the server. Please check your connection and ensure the backend is running on port 5001.',
       );
     } on HttpException {
       _showErrorSnackbar('Could not reach the server. Please try again later.');
-    } on FormatException {
-      _showErrorSnackbar('Invalid server response. Please try again.');
+    } on FormatException catch (e) {
+      _showErrorSnackbar('Invalid server response: $e');
+    } on Exception catch (e) {
+      _showErrorSnackbar('Connection error: ${e.toString()}');
     } catch (e) {
+      print('Upload error: $e');
       _showErrorSnackbar('An unexpected error occurred: ${e.toString()}');
     } finally {
       if (mounted) {
@@ -806,17 +901,22 @@ class _UploadProductPageState extends State<UploadProductPage> {
   }
 
   void _showErrorSnackbar(String message) {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.red),
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 4),
+      ),
     );
   }
 
   @override
   void dispose() {
-    _nameController.dispose();
-    _priceController.dispose();
-    _stockController.dispose();
-    _descriptionController.dispose();
+    for (var product in _products) {
+      product.dispose();
+    }
+    _pageController.dispose();
     super.dispose();
   }
 
@@ -824,13 +924,20 @@ class _UploadProductPageState extends State<UploadProductPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Upload Product'),
+        title: Text('Upload Products (${_products.length})'),
         backgroundColor: Colors.green.shade600,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => Navigator.pop(context),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add_rounded),
+            onPressed: _addProduct,
+            tooltip: 'Add Another Product',
+          ),
+        ],
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -840,238 +947,358 @@ class _UploadProductPageState extends State<UploadProductPage> {
             colors: [Colors.green.shade50, Colors.white],
           ),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Form(
-            key: _formKey,
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  GestureDetector(
-                    onTap: _pickImage,
-                    child: Container(
-                      height: 200,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.grey.shade300),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              Expanded(
+                child: PageView.builder(
+                  controller: _pageController,
+                  itemCount: _products.length,
+                  onPageChanged: (index) {
+                    setState(() {
+                      _currentPage = index;
+                    });
+                  },
+                  itemBuilder: (context, index) {
+                    return _buildProductForm(index);
+                  },
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(_products.length, (index) {
+                        return Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 2),
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: index == _currentPage
+                                ? Colors.green
+                                : Colors.green.withOpacity(0.3),
+                            shape: BoxShape.circle,
                           ),
-                        ],
+                        );
+                      }),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Page ${_currentPage + 1} of ${_products.length}',
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 12,
                       ),
-                      child: _imageFile != null
-                          ? ClipRRect(
-                              borderRadius: BorderRadius.circular(16),
-                              child: Image.file(
-                                _imageFile!,
-                                fit: BoxFit.cover,
-                                width: double.infinity,
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: _isUploading ? null : _uploadProducts,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 3,
+                        minimumSize: const Size(double.infinity, 50),
+                      ),
+                      child: _isUploading
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
                               ),
                             )
-                          : Column(
+                          : Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(
-                                  Icons.add_photo_alternate_rounded,
-                                  size: 60,
-                                  color: Colors.green.shade300,
-                                ),
-                                const SizedBox(height: 12),
+                                const Icon(Icons.cloud_upload_outlined,
+                                    size: 24),
+                                const SizedBox(width: 8),
                                 Text(
-                                  'Tap to select product image',
-                                  style: TextStyle(
-                                    color: Colors.grey.shade600,
+                                  'Upload ${_products.length} Product${_products.length > 1 ? 's' : ''}',
+                                  style: const TextStyle(
                                     fontSize: 16,
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
                               ],
                             ),
                     ),
-                  ),
-                  const SizedBox(height: 24),
-                  TextFormField(
-                    controller: _nameController,
-                    decoration: InputDecoration(
-                      labelText: 'Product Name',
-                      prefixIcon: const Icon(
-                        Icons.shopping_bag_outlined,
-                        color: Colors.green,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      filled: true,
-                      fillColor: Colors.white,
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter product name';
-                      }
-                      if (value.length < 3) {
-                        return 'Name must be at least 3 characters';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _priceController,
-                    decoration: InputDecoration(
-                      labelText: 'Price (\Rs.)',
-                      prefixIcon: const Icon(
-                        Icons.currency_rupee_rounded,
-                        color: Colors.green,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      filled: true,
-                      fillColor: Colors.white,
-                    ),
-                    keyboardType: TextInputType.number,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter product price';
-                      }
-                      if (double.tryParse(value) == null) {
-                        return 'Please enter a valid price';
-                      }
-                      if (double.parse(value) <= 0) {
-                        return 'Price must be greater than 0';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _stockController,
-                    decoration: InputDecoration(
-                      labelText: 'Stock Quantity(kg)',
-                      prefixIcon: const Icon(
-                        Icons.inventory_2_outlined,
-                        color: Colors.green,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      filled: true,
-                      fillColor: Colors.white,
-                    ),
-                    keyboardType: TextInputType.number,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter stock quantity';
-                      }
-                      if (int.tryParse(value) == null) {
-                        return 'Please enter a valid number';
-                      }
-                      if (int.parse(value) < 0) {
-                        return 'Stock cannot be negative';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  DropdownButtonFormField<String>(
-                    value: _selectedCategory,
-                    decoration: InputDecoration(
-                      labelText: 'Category',
-                      prefixIcon: const Icon(
-                        Icons.category_outlined,
-                        color: Colors.green,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      filled: true,
-                      fillColor: Colors.white,
-                    ),
-                    items: _categories.map((String category) {
-                      return DropdownMenuItem<String>(
-                        value: category,
-                        child: Text(category),
-                      );
-                    }).toList(),
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        _selectedCategory = newValue!;
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _descriptionController,
-                    decoration: InputDecoration(
-                      labelText: 'Description',
-                      prefixIcon: const Icon(
-                        Icons.description_outlined,
-                        color: Colors.green,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      filled: true,
-                      fillColor: Colors.white,
-                    ),
-                    maxLines: 4,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter product description';
-                      }
-                      if (value.length < 10) {
-                        return 'Description must be at least 10 characters';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 24),
-                  ElevatedButton(
-                    onPressed: _isUploading ? null : _uploadProduct,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 3,
-                    ),
-                    child: _isUploading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
-                          )
-                        : const Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.cloud_upload_outlined, size: 24),
-                              SizedBox(width: 8),
-                              Text(
-                                'Upload Product',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                  ),
-                  const SizedBox(height: 40),
-                ],
+                  ],
+                ),
               ),
-            ),
+            ],
           ),
         ),
       ),
     );
+  }
+
+  Widget _buildProductForm(int index) {
+    final product = _products[index];
+
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Product ${index + 1} of ${_products.length}',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                if (_products.length > 1)
+                  IconButton(
+                    icon: const Icon(Icons.delete_rounded, color: Colors.red),
+                    onPressed: () => _removeProduct(index),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            GestureDetector(
+              onTap: () async {
+                await product.pickImage();
+                setState(() {}); // Trigger rebuild to show selected image
+              },
+              child: Container(
+                height: 200,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.grey.shade300),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: product.imageFile != null
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: Image.file(
+                          product.imageFile!,
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                        ),
+                      )
+                    : Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.add_photo_alternate_rounded,
+                            size: 60,
+                            color: Colors.green.shade300,
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'Tap to select product image',
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            TextFormField(
+              controller: product.nameController,
+              decoration: InputDecoration(
+                labelText: 'Product Name',
+                prefixIcon: const Icon(Icons.shopping_bag_outlined,
+                    color: Colors.green),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                filled: true,
+                fillColor: Colors.white,
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter product name';
+                }
+                if (value.length < 3) {
+                  return 'Name must be at least 3 characters';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: product.priceController,
+                    decoration: InputDecoration(
+                      labelText: 'Price (Rs.)',
+                      prefixIcon: const Icon(Icons.currency_rupee_rounded,
+                          color: Colors.green),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                      filled: true,
+                      fillColor: Colors.white,
+                    ),
+                    keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter price';
+                      }
+                      if (double.tryParse(value) == null ||
+                          double.parse(value) <= 0) {
+                        return 'Enter valid price';
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: TextFormField(
+                    controller: product.stockController,
+                    decoration: InputDecoration(
+                      labelText: 'Quantity (kg)',
+                      prefixIcon: const Icon(Icons.inventory_2_outlined,
+                          color: Colors.green),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                      filled: true,
+                      fillColor: Colors.white,
+                    ),
+                    keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter quantity';
+                      }
+                      if (int.tryParse(value) == null || int.parse(value) < 0) {
+                        return 'Enter valid quantity';
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            DropdownButtonFormField<String>(
+              value: product.selectedCategory,
+              decoration: InputDecoration(
+                labelText: 'Category',
+                prefixIcon:
+                    const Icon(Icons.category_outlined, color: Colors.green),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                filled: true,
+                fillColor: Colors.white,
+              ),
+              items: _categories.map((String category) {
+                return DropdownMenuItem<String>(
+                  value: category,
+                  child: Text(category),
+                );
+              }).toList(),
+              onChanged: (String? newValue) {
+                setState(() {
+                  product.selectedCategory = newValue!;
+                });
+              },
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: product.descriptionController,
+              decoration: InputDecoration(
+                labelText: 'Description',
+                prefixIcon:
+                    const Icon(Icons.description_outlined, color: Colors.green),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                filled: true,
+                fillColor: Colors.white,
+              ),
+              maxLines: 3,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter description';
+                }
+                if (value.length < 10) {
+                  return 'Description must be at least 10 characters';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: product.addressController,
+              decoration: InputDecoration(
+                labelText: 'Address (Optional)',
+                prefixIcon:
+                    const Icon(Icons.location_on_outlined, color: Colors.green),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                filled: true,
+                fillColor: Colors.white,
+              ),
+              maxLines: 2,
+            ),
+            const SizedBox(height: 40),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class ProductForm {
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController priceController = TextEditingController();
+  final TextEditingController stockController = TextEditingController();
+  final TextEditingController descriptionController = TextEditingController();
+  final TextEditingController addressController = TextEditingController();
+  String selectedCategory = 'Vegetables';
+  File? imageFile;
+  final ImagePicker _picker = ImagePicker();
+
+  Future<void> pickImage() async {
+    try {
+      final XFile? pickedFile = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 800,
+        maxHeight: 800,
+        imageQuality: 85,
+      );
+
+      if (pickedFile != null) {
+        imageFile = File(pickedFile.path);
+        print('Image selected: ${pickedFile.path}');
+        print('File exists: ${await imageFile!.exists()}');
+      } else {
+        print('No image selected');
+      }
+    } catch (e) {
+      print('Failed to pick image: $e');
+      // You might want to show this error to the user
+    }
+  }
+
+  void dispose() {
+    nameController.dispose();
+    priceController.dispose();
+    stockController.dispose();
+    descriptionController.dispose();
+    addressController.dispose();
   }
 }

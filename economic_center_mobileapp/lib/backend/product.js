@@ -1,783 +1,1255 @@
 const express = require('express');
-const mysql = require('mysql2/promise');
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs');
+const mysql = require('mysql2');
 const cors = require('cors');
-
+const fs = require('fs');
 const app = express();
 
-// CORS configuration
-app.use(cors({
-  origin: ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://10.0.2.2:3000'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+// Ensure uploads directory exists
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir);
+}
 
 app.use(express.json());
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use(cors());
+app.use('/uploads', express.static(uploadsDir));
 
-// MySQL Connection Pool
-const pool = mysql.createPool({
-  host: process.env.DB_HOST || 'localhost',
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_NAME || 'economic_center',
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
+// MySQL connection
+const db = mysql.createConnection({
+  host: 'localhost',
+  user: 'root',
+  password: '',
+  database: 'dedicated_economic_center'
 });
 
-// Test database connection
-(async () => {
-  try {
-    const connection = await pool.getConnection();
-    console.log('Successfully connected to the database');
-    connection.release();
-  } catch (err) {
-    console.error('Database connection failed:', err);
+db.connect((err) => {
+  if (err) {
+    console.error('MySQL connection error:', err);
     process.exit(1);
   }
-})();
+  console.log('Connected to MySQL');
+  
+  // Check and add missing columns
+  checkAndAddColumns();
+});
 
-// Configure multer for file uploads
+// Function to check and add missing columns
+function checkAndAddColumns() {
+  // Check if unit column exists
+  db.query(`
+    SELECT COLUMN_NAME 
+    FROM INFORMATION_SCHEMA.COLUMNS 
+    WHERE TABLE_SCHEMA = 'dedicated_economic_center' 
+    AND TABLE_NAME = 'products' 
+    AND COLUMN_NAME = 'unit'
+  `, (err, results) => {
+    if (err) {
+      console.error('Error checking unit column:', err);
+      return;
+    }
+    
+    if (results.length === 0) {
+      // Add unit column if it doesn't exist
+      db.query(`ALTER TABLE products ADD COLUMN unit VARCHAR(20) DEFAULT 'kg'`, (err) => {
+        if (err) {
+          console.error('Error adding unit column:', err);
+        } else {
+          console.log('Unit column added successfully');
+        }
+      });
+    }
+  });
+  
+  // Check if status column exists
+  db.query(`
+    SELECT COLUMN_NAME 
+    FROM INFORMATION_SCHEMA.COLUMNS 
+    WHERE TABLE_SCHEMA = 'dedicated_economic_center' 
+    AND TABLE_NAME = 'products' 
+    AND COLUMN_NAME = 'status'
+  `, (err, results) => {
+    if (err) {
+      console.error('Error checking status column:', err);
+      return;
+    }
+    
+    if (results.length === 0) {
+      // Add status column if it doesn't exist
+      db.query(`ALTER TABLE products ADD COLUMN status VARCHAR(20) DEFAULT 'active'`, (err) => {
+        if (err) {
+          console.error('Error adding status column:', err);
+        } else {
+          console.log('Status column added successfully');
+        }
+      });
+    }
+  });
+}
+
+// Multer for multiple images
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadPath = 'uploads/products';
-    if (!fs.existsSync(uploadPath)) {
-      fs.mkdirSync(uploadPath, { recursive: true });
-    }
-    cb(null, uploadPath);
+  destination: function (req, file, cb) {
+    cb(null, uploadsDir);
   },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + '-' + file.originalname.replace(/\s+/g, '_'));
   }
 });
+const upload = multer({ storage: storage });
 
-const upload = multer({ 
-  storage: storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
-  fileFilter: (req, file, cb) => {
-    const filetypes = /jpeg|jpg|png/;
-    const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = filetypes.test(file.mimetype);
-    
-    if (extname && mimetype) {
-      return cb(null, true);
-    } else {
-      cb(new Error('Only images (jpeg, jpg, png) are allowed'));
-    }
-  }
-});
-
-// PRODUCT ENDPOINTS //
-
-// GET all products
-app.get('/api/products', async (req, res) => {
+// Product upload endpoint
+app.post('/api/products/upload', upload.array('images', 5), (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM product');
-    
-    const products = rows.map(product => ({
-      ...product,
-      is_local: product.is_local || true,
-      rating: product.rating || 4.0,
-      seller: product.seller || 'Local Seller',
-      review_count: product.review_count || 0,
-      stock_quantity: product.stock || 0
-    }));
-    
-    res.status(200).json(products);
-  } catch (error) {
-    console.error('Error fetching products:', error);
-    res.status(500).json({ 
-      success: false,
-      error: 'Server error',
-      details: error.message 
+    const {
+      farmer_id,
+      name,
+      description,
+      price,
+      quantity,
+      category,
+      lat,
+      lng,
+      address,
+      unit,
+      status
+    } = req.body;
+
+    // Debug logging
+    console.log('Upload request body:', req.body);
+    console.log('Upload files:', req.files);
+
+    if (!farmer_id || !name || !price || !quantity) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    let image_url = null;
+    if (req.files && req.files.length > 0) {
+      image_url = `uploads/${req.files[0].filename}`; // Remove http://localhost:5001/ prefix for mobile app
+    }
+
+    // First, check which columns exist
+    db.query(`
+      SELECT COLUMN_NAME 
+      FROM INFORMATION_SCHEMA.COLUMNS 
+      WHERE TABLE_SCHEMA = 'dedicated_economic_center' 
+      AND TABLE_NAME = 'products'
+    `, (err, columns) => {
+      if (err) {
+        console.error('Error checking columns:', err);
+        return res.status(500).json({ error: 'Database error' });
+      }
+
+      const columnNames = columns.map(col => col.COLUMN_NAME);
+      const hasUnit = columnNames.includes('unit');
+      const hasStatus = columnNames.includes('status');
+
+      let sql = `
+        INSERT INTO products
+        (farmer_id, name, description, price, quantity, category, image_url, lat, lng, address${hasUnit ? ', unit' : ''}${hasStatus ? ', status' : ''})
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?${hasUnit ? ', ?' : ''}${hasStatus ? ', ?' : ''})
+      `;
+
+      const values = [
+        parseInt(farmer_id),
+        name,
+        description || null,
+        parseFloat(price),
+        parseInt(quantity),
+        category || null,
+        image_url,
+        lat ? parseFloat(lat) : null,
+        lng ? parseFloat(lng) : null,
+        address || null
+      ];
+
+      if (hasUnit) values.push(unit || 'kg');
+      if (hasStatus) values.push(status || 'active');
+
+      db.query(sql, values, (err, result) => {
+        if (err) {
+          console.error('Insert error:', err);
+          return res.status(500).json({ error: 'Database error: ' + err.message });
+        }
+        res.json({ success: true, productId: result.insertId });
+      });
     });
+  } catch (error) {
+    console.error('Server error:', error);
+    res.status(500).json({ error: 'Server error: ' + error.message });
   }
 });
 
-// GET single product with reviews
-app.get('/api/products/:id', async (req, res) => {
+// Product update endpoint - FIXED to check for existing columns
+app.put('/api/products/:id', upload.array('images', 5), (req, res) => {
   try {
     const productId = req.params.id;
     
-    // Get product
-    const [productRows] = await pool.query('SELECT * FROM product WHERE id = ?', [productId]);
-    
-    if (productRows.length === 0) {
-      return res.status(404).json({ 
-        success: false,
-        error: 'Product not found' 
+    // Debug logging
+    console.log('Update request body:', req.body);
+    console.log('Update files:', req.files);
+    console.log('Product ID:', productId);
+
+    // Safely destructure with default values
+    const name = req.body.name || '';
+    const description = req.body.description || '';
+    const price = req.body.price || 0;
+    const quantity = req.body.quantity || 0;
+    const category = req.body.category || '';
+    const lat = req.body.lat || null;
+    const lng = req.body.lng || null;
+    const address = req.body.address || '';
+    const unit = req.body.unit || 'kg';
+    const status = req.body.status || 'active';
+
+    // Handle image URL
+    let image_url = req.body.image_url || null;
+    if (req.files && req.files.length > 0) {
+      image_url = `uploads/${req.files[0].filename}`; // Remove http://localhost:5001/ prefix for mobile app
+    }
+
+    // Validate required fields
+    if (!name || !price || !quantity) {
+      return res.status(400).json({ error: 'Missing required fields: name, price, or quantity' });
+    }
+
+    // First, check which columns exist
+    db.query(`
+      SELECT COLUMN_NAME 
+      FROM INFORMATION_SCHEMA.COLUMNS 
+      WHERE TABLE_SCHEMA = 'dedicated_economic_center' 
+      AND TABLE_NAME = 'products'
+    `, (err, columns) => {
+      if (err) {
+        console.error('Error checking columns:', err);
+        return res.status(500).json({ error: 'Database error' });
+      }
+
+      const columnNames = columns.map(col => col.COLUMN_NAME);
+      const hasUnit = columnNames.includes('unit');
+      const hasStatus = columnNames.includes('status');
+
+      let sql = `
+        UPDATE products SET
+          name = ?,
+          description = ?,
+          price = ?,
+          quantity = ?,
+          category = ?,
+          image_url = ?,
+          lat = ?,
+          lng = ?,
+          address = ?
+      `;
+
+      const values = [
+        name,
+        description,
+        parseFloat(price),
+        parseInt(quantity),
+        category,
+        image_url,
+        lat ? parseFloat(lat) : null,
+        lng ? parseFloat(lng) : null,
+        address
+      ];
+
+      if (hasUnit) {
+        sql += ', unit = ?';
+        values.push(unit);
+      }
+
+      if (hasStatus) {
+        sql += ', status = ?';
+        values.push(status);
+      }
+
+      sql += ' WHERE id = ?';
+      values.push(parseInt(productId));
+
+      db.query(sql, values, (err, result) => {
+        if (err) {
+          console.error('Update error:', err);
+          return res.status(500).json({ error: 'Database error: ' + err.message });
+        }
+        
+        if (result.affectedRows === 0) {
+          return res.status(404).json({ error: 'Product not found' });
+        }
+        
+        console.log('Update successful, affected rows:', result.affectedRows);
+        res.json({ success: true, affectedRows: result.affectedRows });
       });
+    });
+  } catch (error) {
+    console.error('Server error:', error);
+    res.status(500).json({ error: 'Server error: ' + error.message });
+  }
+});
+
+// Product upload endpoint for multiple products - UPDATED to not handle farmer_name
+app.post('/api/products/multiple', upload.array('images'), (req, res) => {
+  try {
+    const { products } = req.body;
+    console.log('Multiple products request:', { products, filesCount: req.files?.length });
+    
+    if (!products) {
+      return res.status(400).json({ error: 'No products data provided' });
     }
     
-    const product = productRows[0];
+    let productsData;
+    try {
+      productsData = typeof products === 'string' ? JSON.parse(products) : products;
+    } catch (e) {
+      return res.status(400).json({ error: 'Invalid products data format' });
+    }
+    
+    if (!Array.isArray(productsData) || productsData.length === 0) {
+      return res.status(400).json({ error: 'Products must be a non-empty array' });
+    }
+    
+    if (!req.files || req.files.length !== productsData.length) {
+      return res.status(400).json({ 
+        error: `Number of images (${req.files?.length || 0}) must match number of products (${productsData.length})` 
+      });
+    }
+
+    // Check which columns exist (excluding farmer_name since we'll get it from users table)
+    db.query(`
+      SELECT COLUMN_NAME 
+      FROM INFORMATION_SCHEMA.COLUMNS 
+      WHERE TABLE_SCHEMA = 'dedicated_economic_center' 
+      AND TABLE_NAME = 'products'
+    `, (err, columns) => {
+      if (err) {
+        console.error('Error checking columns:', err);
+        return res.status(500).json({ error: 'Database error' });
+      }
+
+      const columnNames = columns.map(col => col.COLUMN_NAME);
+      const hasUnit = columnNames.includes('unit');
+      const hasStatus = columnNames.includes('status');
+
+      const insertPromises = productsData.map((product, index) => {
+        return new Promise((resolve, reject) => {
+          const {
+            name,
+            price,
+            quantity,
+            category,
+            description,
+            farmer_id,
+            address
+          } = product;
+
+          // Validate required fields
+          if (!name || !price || !quantity || !farmer_id) {
+            reject(new Error(`Missing required fields for product ${index + 1}`));
+            return;
+          }
+
+          const image_url = req.files[index] 
+            ? `uploads/${req.files[index].filename}`
+            : null;
+
+          let sql = `
+            INSERT INTO products
+            (farmer_id, name, description, price, quantity, category, image_url, address${hasUnit ? ', unit' : ''}${hasStatus ? ', status' : ''})
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?${hasUnit ? ', ?' : ''}${hasStatus ? ', ?' : ''})
+          `;
+
+          const values = [
+            parseInt(farmer_id),
+            name,
+            description || null,
+            parseFloat(price),
+            parseInt(quantity),
+            category || null,
+            image_url,
+            address || null
+          ];
+
+          if (hasUnit) values.push('kg');
+          if (hasStatus) values.push('active');
+
+          db.query(sql, values, (err, result) => {
+            if (err) {
+              console.error(`Insert error for product ${index + 1}:`, err);
+              reject(err);
+            } else {
+              resolve({ productId: result.insertId, name });
+            }
+          });
+        });
+      });
+
+      Promise.all(insertPromises)
+        .then(results => {
+          res.status(201).json({
+            success: true,
+            message: `Successfully uploaded ${results.length} product(s)`,
+            products: results
+          });
+        })
+        .catch(error => {
+          console.error('Multiple insert error:', error);
+          res.status(500).json({ 
+            error: 'Failed to upload products: ' + error.message 
+          });
+        });
+    });
+  } catch (error) {
+    console.error('Server error:', error);
+    res.status(500).json({ error: 'Server error: ' + error.message });
+  }
+});
+
+// GET endpoint to fetch products with farmer names from users table
+app.get('/api/products', (req, res) => {
+  const farmer_id = req.query.farmer_id;
+  
+  // First check which columns exist in products table
+  db.query(`
+    SELECT COLUMN_NAME 
+    FROM INFORMATION_SCHEMA.COLUMNS 
+    WHERE TABLE_SCHEMA = 'dedicated_economic_center' 
+    AND TABLE_NAME = 'products'
+  `, (err, columns) => {
+    if (err) {
+      console.error('Error checking columns:', err);
+      return res.status(500).json({ error: 'Database error' });
+    }
+
+    const columnNames = columns.map(col => col.COLUMN_NAME);
+    const hasUnit = columnNames.includes('unit');
+    const hasStatus = columnNames.includes('status');
+
+    // Use JOIN to get farmer name from users table
+    let sql = `
+      SELECT 
+        p.id, p.farmer_id, p.name, p.description, p.price, p.quantity, p.category, 
+        p.image_url, p.lat, p.lng, p.address, p.created_at,
+        u.name as farmer_name
+        ${hasUnit ? ', p.unit' : ''}
+        ${hasStatus ? ', p.status' : ''}
+      FROM products p
+      LEFT JOIN users u ON p.farmer_id = u.id
+    `;
+    
+    let params = [];
+    
+    if (farmer_id) {
+      sql += ' WHERE p.farmer_id = ? ORDER BY p.created_at DESC';
+      params.push(parseInt(farmer_id));
+    } else {
+      sql += ' ORDER BY p.created_at DESC';
+    }
+    
+    db.query(sql, params, (err, results) => {
+      if (err) {
+        console.error('Fetch error:', err);
+        return res.status(500).json({ error: 'Database error' });
+      }
+      
+      // Add default values for missing columns and ensure farmer_name is available
+      const productsWithDefaults = results.map(product => ({
+        ...product,
+        unit: hasUnit ? product.unit : 'kg',
+        status: hasStatus ? product.status : 'active',
+        farmer_name: product.farmer_name || 'Unknown Farmer' // Fallback if user not found
+      }));
+      
+      res.json(productsWithDefaults);
+    });
+  });
+});
+
+// GET single product by ID with farmer name and reviews
+app.get('/api/products/:id', (req, res) => {
+  const productId = req.params.id;
+  
+  // First get the product with farmer name
+  const productSql = `
+    SELECT 
+      p.*, 
+      u.name as farmer_name
+    FROM products p
+    LEFT JOIN users u ON p.farmer_id = u.id
+    WHERE p.id = ?
+  `;
+  
+  db.query(productSql, [parseInt(productId)], (err, productResults) => {
+    if (err) {
+      console.error('Fetch product error:', err);
+      return res.status(500).json({ error: 'Database error' });
+    }
+    
+    if (productResults.length === 0) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
     
     // Get reviews for this product
-    const [reviewRows] = await pool.query(
-      'SELECT * FROM product_reviews WHERE product_id = ? ORDER BY created_at DESC',
-      [productId]
-    );
+    const reviewsSql = `
+      SELECT id, username, rating, comment, created_at
+      FROM product_reviews
+      WHERE product_id = ?
+      ORDER BY created_at DESC
+    `;
     
-    // Calculate average rating
-    let averageRating = 4.0;
-    if (reviewRows.length > 0) {
-      const totalRating = reviewRows.reduce((sum, review) => sum + review.rating, 0);
-      averageRating = totalRating / reviewRows.length;
-    }
-    
-    // Update product with reviews and average rating
-    const productWithReviews = {
-      ...product,
-      stock_quantity: product.stock || 0,
-      rating: averageRating,
-      review_count: reviewRows.length,
-      reviews: reviewRows
-    };
-    
-    res.status(200).json(productWithReviews);
-  } catch (error) {
-    console.error('Error fetching product:', error);
-    res.status(500).json({ 
-      success: false,
-      error: 'Server error',
-      details: error.message 
+    db.query(reviewsSql, [parseInt(productId)], (err, reviewResults) => {
+      if (err) {
+        console.error('Fetch reviews error:', err);
+        return res.status(500).json({ error: 'Database error' });
+      }
+      
+      // Format reviews with proper date formatting
+      const reviews = reviewResults.map(review => ({
+        ...review,
+        date: new Date(review.created_at).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric'
+        })
+      }));
+      
+      // Calculate average rating
+      const avgRating = reviews.length > 0 
+        ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length 
+        : 0;
+      
+      const product = {
+        ...productResults[0],
+        farmer_name: productResults[0].farmer_name || 'Unknown Farmer',
+        reviews: reviews,
+        rating: avgRating
+      };
+      
+      res.json(product);
     });
-  }
+  });
 });
 
-// POST a new review
-app.post('/api/products/:id/reviews', async (req, res) => {
-  try {
-    const productId = req.params.id;
-    const { username, rating, comment } = req.body;
-    
-    // Validate input
-    if (!username || !rating || !comment) {
-      return res.status(400).json({ 
-        success: false,
-        error: 'All fields are required' 
-      });
+// POST endpoint to add a product review
+app.post('/api/products/:id/reviews', (req, res) => {
+  const productId = req.params.id;
+  const { username, rating, comment } = req.body;
+  
+  // Validate input
+  if (!username || !rating || !comment) {
+    return res.status(400).json({ error: 'Username, rating, and comment are required' });
+  }
+  
+  if (rating < 1 || rating > 5) {
+    return res.status(400).json({ error: 'Rating must be between 1 and 5' });
+  }
+  
+  // Check if product exists
+  const checkProductSql = 'SELECT id FROM products WHERE id = ?';
+  
+  db.query(checkProductSql, [parseInt(productId)], (err, results) => {
+    if (err) {
+      console.error('Check product error:', err);
+      return res.status(500).json({ error: 'Database error' });
     }
     
-    if (rating < 1 || rating > 5) {
-      return res.status(400).json({ 
-        success: false,
-        error: 'Rating must be between 1 and 5' 
-      });
-    }
-    
-    // Check if product exists
-    const [productRows] = await pool.query('SELECT id FROM product WHERE id = ?', [productId]);
-    if (productRows.length === 0) {
-      return res.status(404).json({ 
-        success: false,
-        error: 'Product not found' 
-      });
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'Product not found' });
     }
     
     // Insert review
-    const [result] = await pool.execute(
-      `INSERT INTO product_reviews 
-       (product_id, username, rating, comment) 
-       VALUES (?, ?, ?, ?)`,
-      [productId, username, rating, comment]
-    );
+    const insertSql = `
+      INSERT INTO product_reviews (product_id, username, rating, comment)
+      VALUES (?, ?, ?, ?)
+    `;
     
-    // Get the newly created review
-    const [reviewRows] = await pool.query(
-      'SELECT * FROM product_reviews WHERE id = ?',
-      [result.insertId]
-    );
-    
-    res.status(201).json({
-      success: true,
-      message: 'Review added successfully',
-      review: reviewRows[0]
-    });
-  } catch (error) {
-    console.error('Error adding review:', error);
-    res.status(500).json({ 
-      success: false,
-      error: 'Server error',
-      details: error.message 
-    });
-  }
-});
-
-// UPDATE product stock
-app.put('/api/products/:id/stock', async (req, res) => {
-  try {
-    const productId = req.params.id;
-    const { stock } = req.body;
-
-    if (stock === undefined || stock === null || isNaN(stock)) {
-      return res.status(400).json({ 
-        success: false,
-        error: 'Valid stock quantity is required' 
-      });
-    }
-
-    const [result] = await pool.execute(
-      'UPDATE product SET stock = ? WHERE id = ?',
-      [stock, productId]
-    );
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ 
-        success: false,
-        error: 'Product not found' 
-      });
-    }
-
-    res.status(200).json({ 
-      success: true,
-      message: 'Stock updated successfully' 
-    });
-  } catch (error) {
-    console.error('Error updating stock:', error);
-    res.status(500).json({ 
-      success: false,
-      error: 'Server error',
-      details: error.message 
-    });
-  }
-});
-
-// Handle product purchase
-// Handle product purchase
-app.post('/api/products/:id/purchase', async (req, res) => {
-  const connection = await pool.getConnection();
-  try {
-    await connection.beginTransaction();
-
-    const productId = req.params.id;
-    const { quantity } = req.body;
-
-    // Validate input
-    if (quantity === undefined || quantity === null || isNaN(quantity) || quantity <= 0) {
-      return res.status(400).json({ 
-        success: false,
-        error: 'Valid quantity is required (must be greater than 0)' 
-      });
-    }
-
-    // Check current stock with row lock
-    const [productRows] = await connection.query(
-      'SELECT stock FROM product WHERE id = ? FOR UPDATE', 
-      [productId]
-    );
-
-    if (productRows.length === 0) {
-      await connection.rollback();
-      connection.release();
-      return res.status(404).json({ 
-        success: false,
-        error: 'Product not found' 
-      });
-    }
-
-    const currentStock = productRows[0].stock;
-    
-    // Verify sufficient stock
-    if (currentStock < quantity) {
-      await connection.rollback();
-      connection.release();
-      return res.status(400).json({ 
-        success: false,
-        error: 'Insufficient stock available' 
-      });
-    }
-
-    // Update stock
-    const [result] = await connection.query(
-      'UPDATE product SET stock = stock - ? WHERE id = ?',
-      [quantity, productId]
-    );
-
-    if (result.affectedRows === 0) {
-      await connection.rollback();
-      connection.release();
-      return res.status(404).json({ 
-        success: false,
-        error: 'Product not found' 
-      });
-    }
-
-    // Commit transaction
-    await connection.commit();
-    connection.release();
-
-    res.status(200).json({ 
-      success: true,
-      message: 'Purchase successful',
-      remaining_stock: currentStock - quantity
-    });
-  } catch (error) {
-    await connection.rollback();
-    connection.release();
-    console.error('Error processing purchase:', error);
-    res.status(500).json({ 
-      success: false,
-      error: 'Server error',
-      details: error.message 
-    });
-  }
-});
-
-// Upload Product
-app.post('/api/products', upload.single('image'), async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ 
-        success: false,
-        error: 'Product image is required' 
-      });
-    }
-
-    const { name, price, stock, category, description } = req.body;
-
-    if (!name || !price || !stock || !category || !description) {
-      fs.unlink(req.file.path, (err) => {
-        if (err) console.error('Error deleting uploaded file:', err);
-      });
-      return res.status(400).json({ 
-        success: false,
-        error: 'All fields are required' 
-      });
-    }
-
-    const imageUrl = `uploads/products/${req.file.filename}`;
-    
-    const [result] = await pool.execute(
-      `INSERT INTO product 
-       (name, price, stock, category, description, image_url) 
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [
-        name, 
-        parseFloat(price), 
-        parseInt(stock), 
-        category, 
-        description, 
-        imageUrl
-      ]
-    );
-
-    res.status(201).json({
-      success: true,
-      message: 'Product uploaded successfully',
-      product: {
-        id: result.insertId,
-        name,
-        price: parseFloat(price),
-        stock_quantity: parseInt(stock),
-        category,
-        description,
-        image_url: imageUrl,
-        is_local: true,
-        rating: 4.0,
-        seller: 'Local Seller',
-        review_count: 0
+    db.query(insertSql, [parseInt(productId), username, parseInt(rating), comment], (err, result) => {
+      if (err) {
+        console.error('Insert review error:', err);
+        return res.status(500).json({ error: 'Database error' });
       }
-    });
-  } catch (error) {
-    console.error('Error uploading product:', error);
-    
-    if (req.file) {
-      fs.unlink(req.file.path, (err) => {
-        if (err) console.error('Error deleting uploaded file:', err);
-      });
-    }
-
-    res.status(500).json({ 
-      success: false,
-      error: 'Server error',
-      details: error.message 
-    });
-  }
-});
-
-// CART ENDPOINTS //
-
-// Add to cart
-app.post('/api/cart', async (req, res) => {
-  const connection = await pool.getConnection();
-  try {
-    await connection.beginTransaction();
-    
-    const { productId, quantity } = req.body;
-    
-    // Validate input
-    if (!productId || !quantity || quantity <= 0) {
-      return res.status(400).json({ 
-        success: false,
-        error: 'Valid productId and quantity are required' 
-      });
-    }
-    
-    // Check if product exists and has enough stock
-    const [productRows] = await connection.query(
-      'SELECT stock FROM product WHERE id = ? FOR UPDATE',
-      [productId]
-    );
-    
-    if (productRows.length === 0) {
-      await connection.rollback();
-      connection.release();
-      return res.status(404).json({ 
-        success: false,
-        error: 'Product not found' 
-      });
-    }
-    
-    const currentStock = productRows[0].stock;
-    if (currentStock < quantity) {
-      await connection.rollback();
-      connection.release();
-      return res.status(400).json({ 
-        success: false,
-        error: 'Insufficient stock available' 
-      });
-    }
-    
-    // Check if item already in cart
-    const [existingCartItems] = await connection.query(
-      'SELECT * FROM cart_items WHERE product_id = ?',
-      [productId]
-    );
-    
-    let cartItemId;
-    if (existingCartItems.length > 0) {
-      // Update existing cart item
-      const existingItem = existingCartItems[0];
-      const newQuantity = existingItem.quantity + quantity;
-      await connection.query(
-        'UPDATE cart_items SET quantity = ? WHERE id = ?',
-        [newQuantity, existingItem.id]
-      );
-      cartItemId = existingItem.id;
-    } else {
-      // Add new cart item
-      const [result] = await connection.query(
-        'INSERT INTO cart_items (product_id, quantity) VALUES (?, ?)',
-        [productId, quantity]
-      );
-      cartItemId = result.insertId;
-    }
-
-    // Fetch the newly added/updated cart item to return it
-    const [newCartItemRows] = await connection.query(`
-      SELECT c.id as cart_id, c.quantity, p.*
-      FROM cart_items c
-      JOIN product p ON c.product_id = p.id
-      WHERE c.id = ?
-    `, [cartItemId]);
-    
-    await connection.commit();
-    connection.release();
-    
-    if (newCartItemRows.length === 0) {
-      // This should ideally not happen if insert/update was successful
-      return res.status(500).json({
-        success: false,
-        error: 'Failed to retrieve the cart item after adding/updating.'
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      message: 'Product added/updated in cart successfully',
-      cartItem: newCartItemRows[0] // Send back the cart item
-    });
-  } catch (error) {
-    await connection.rollback();
-    connection.release();
-    console.error('Error adding to cart:', error);
-    res.status(500).json({ 
-      success: false,
-      error: 'Server error',
-      details: error.message 
-    });
-  }
-});
-
-// Get cart items
-app.get('/api/cart', async (req, res) => {
-  try {
-    const [cartItems] = await pool.query(`
-      SELECT c.id as cart_id, c.quantity, p.* 
-      FROM cart_items c
-      JOIN product p ON c.product_id = p.id
-    `);
-    
-    res.status(200).json(cartItems);
-  } catch (error) {
-    console.error('Error fetching cart items:', error);
-    res.status(500).json({ 
-      success: false,
-      error: 'Server error',
-      details: error.message 
-    });
-  }
-});
-
-// Update cart item quantity
-app.put('/api/cart/:cartItemId', async (req, res) => {
-  const connection = await pool.getConnection();
-  try {
-    await connection.beginTransaction();
-    
-    const cartItemId = req.params.cartItemId;
-    const { quantity } = req.body;
-    
-    if (!quantity || quantity <= 0) {
-      return res.status(400).json({ 
-        success: false,
-        error: 'Valid quantity is required' 
-      });
-    }
-    
-    // Get current cart item
-    const [cartItemRows] = await connection.query(
-      'SELECT * FROM cart_items WHERE id = ?',
-      [cartItemId]
-    );
-    
-    if (cartItemRows.length === 0) {
-      await connection.rollback();
-      connection.release();
-      return res.status(404).json({ 
-        success: false,
-        error: 'Cart item not found' 
-      });
-    }
-    
-    const cartItem = cartItemRows[0];
-    
-    // Check product stock
-    const [productRows] = await connection.query(
-      'SELECT stock FROM product WHERE id = ? FOR UPDATE',
-      [cartItem.product_id]
-    );
-    
-    if (productRows[0].stock < quantity) {
-      await connection.rollback();
-      connection.release();
-      return res.status(400).json({ 
-        success: false,
-        error: 'Insufficient stock available' 
-      });
-    }
-    
-    // Update cart item
-    await connection.query(
-      'UPDATE cart_items SET quantity = ? WHERE id = ?',
-      [quantity, cartItemId]
-    );
-    
-    await connection.commit();
-    connection.release();
-    
-    res.status(200).json({ 
-      success: true,
-      message: 'Cart updated successfully'
-    });
-  } catch (error) {
-    await connection.rollback();
-    connection.release();
-    console.error('Error updating cart:', error);
-    res.status(500).json({ 
-      success: false,
-      error: 'Server error',
-      details: error.message 
-    });
-  }
-});
-
-// Remove from cart
-// Clear all items from cart
-app.delete('/api/cart/clear', async (req, res) => {
-  try {
-    await pool.query('DELETE FROM cart_items');
-    res.status(200).json({
-      success: true,
-      message: 'Cart cleared successfully'
-    });
-  } catch (error) {
-    console.error('Error clearing cart:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Server error',
-      details: error.message
-    });
-  }
-});
-
-// Remove from cart
-app.delete('/api/cart/:cartItemId', async (req, res) => {
-  try {
-    const cartItemId = req.params.cartItemId;
-    
-    const [result] = await pool.query(
-      'DELETE FROM cart_items WHERE id = ?',
-      [cartItemId]
-    );
-    
-    if (result.affectedRows === 0) {
-      return res.status(404).json({
-        success: false,
-        error: 'Cart item not found'
-      });
-    }
-    
-    res.status(200).json({
-      success: true,
-      message: 'Item removed from cart successfully'
-    });
-  } catch (error) {
-    console.error('Error removing from cart:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Server error',
-      details: error.message
-    });
-  }
-});
-
-// Batch purchase (checkout)
-// Batch purchase (checkout)
-app.post('/api/cart/checkout', async (req, res) => {
-  const connection = await pool.getConnection();
-  try {
-    await connection.beginTransaction();
-    
-    // Get all cart items with product details
-    const [cartItems] = await connection.query(`
-      SELECT c.id as cart_id, c.quantity, p.* 
-      FROM cart_items c
-      JOIN product p ON c.product_id = p.id
-      FOR UPDATE
-    `);
-    
-    if (cartItems.length === 0) {
-      await connection.rollback();
-      connection.release();
-      return res.status(400).json({ 
-        success: false,
-        error: 'Cart is empty' 
-      });
-    }
-    
-    // Validate stock for all items
-    for (const item of cartItems) {
-      if (item.stock < item.quantity) {
-        await connection.rollback();
-        connection.release();
-        return res.status(400).json({ 
-          success: false,
-          error: `Insufficient stock for ${item.name}`,
-          productId: item.id
+      
+      // Get the newly created review
+      const getReviewSql = 'SELECT * FROM product_reviews WHERE id = ?';
+      
+      db.query(getReviewSql, [result.insertId], (err, reviewResults) => {
+        if (err) {
+          console.error('Get new review error:', err);
+          return res.status(500).json({ error: 'Database error' });
+        }
+        
+        const newReview = {
+          ...reviewResults[0],
+          date: new Date(reviewResults[0].created_at).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+          })
+        };
+        
+        res.status(201).json({
+          success: true,
+          message: 'Review added successfully',
+          review: newReview
         });
+      });
+    });
+  });
+});
+
+// GET endpoint to fetch all reviews for a product
+app.get('/api/products/:id/reviews', (req, res) => {
+  const productId = req.params.id;
+  
+  const sql = `
+    SELECT id, username, rating, comment, created_at
+    FROM product_reviews
+    WHERE product_id = ?
+    ORDER BY created_at DESC
+  `;
+  
+  db.query(sql, [parseInt(productId)], (err, results) => {
+    if (err) {
+      console.error('Fetch reviews error:', err);
+      return res.status(500).json({ error: 'Database error' });
+    }
+    
+    const reviews = results.map(review => ({
+      ...review,
+      date: new Date(review.created_at).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      })
+    }));
+    
+    res.json(reviews);
+  });
+});
+
+// DELETE endpoint to remove a review (optional - for moderation)
+app.delete('/api/products/:productId/reviews/:reviewId', (req, res) => {
+  const { productId, reviewId } = req.params;
+  
+  const sql = 'DELETE FROM product_reviews WHERE id = ? AND product_id = ?';
+  
+  db.query(sql, [parseInt(reviewId), parseInt(productId)], (err, result) => {
+    if (err) {
+      console.error('Delete review error:', err);
+      return res.status(500).json({ error: 'Database error' });
+    }
+    
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Review not found' });
+    }
+    
+    res.json({ success: true, message: 'Review deleted successfully' });
+  });
+});
+
+// DELETE endpoint for products
+// DELETE endpoint for products (Already exists, but here's the enhanced version)
+app.delete('/api/products/:id', (req, res) => {
+  const productId = req.params.id;
+  
+  // First, get the product to delete its image file
+  const selectSql = 'SELECT image_url FROM products WHERE id = ?';
+  
+  db.query(selectSql, [parseInt(productId)], (err, results) => {
+    if (err) {
+      console.error('Select error:', err);
+      return res.status(500).json({ error: 'Database error' });
+    }
+    
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+    
+    // Extract filename from URL if exists
+    const imageUrl = results[0].image_url;
+    if (imageUrl) {
+      const filename = imageUrl.split('/').pop();
+      const filepath = path.join(uploadsDir, filename);
+      
+      // Delete the file if it exists
+      if (fs.existsSync(filepath)) {
+        fs.unlinkSync(filepath);
+        console.log('Deleted image file:', filename);
       }
     }
     
-    // Update stock for all products
-    for (const item of cartItems) {
-      await connection.query(
-        'UPDATE product SET stock = stock - ? WHERE id = ?',
-        [item.quantity, item.id]
-      );
+    // Now delete the product from database
+    const deleteSql = 'DELETE FROM products WHERE id = ?';
+    
+    db.query(deleteSql, [parseInt(productId)], (err, result) => {
+      if (err) {
+        console.error('Delete error:', err);
+        return res.status(500).json({ error: 'Database error' });
+      }
+      
+      res.json({ success: true, affectedRows: result.affectedRows });
+    });
+  });
+});
+
+// Update product status endpoint
+app.patch('/api/products/:id/status', (req, res) => {
+  const productId = req.params.id;
+  const { status } = req.body;
+  
+  if (!status || !['active', 'inactive'].includes(status)) {
+    return res.status(400).json({ error: 'Invalid status' });
+  }
+
+  // Check if status column exists
+  db.query(`
+    SELECT COLUMN_NAME 
+    FROM INFORMATION_SCHEMA.COLUMNS 
+    WHERE TABLE_SCHEMA = 'dedicated_economic_center' 
+    AND TABLE_NAME = 'products' 
+    AND COLUMN_NAME = 'status'
+  `, (err, results) => {
+    if (err) {
+      console.error('Error checking status column:', err);
+      return res.status(500).json({ error: 'Database error' });
     }
     
-    // Clear the cart
-    await connection.query('DELETE FROM cart_items');
+    if (results.length === 0) {
+      return res.status(400).json({ error: 'Status column does not exist in database' });
+    }
+
+    const sql = 'UPDATE products SET status = ? WHERE id = ?';
     
-    await connection.commit();
-    connection.release();
-    
-    res.status(200).json({ 
-      success: true,
-      message: 'Checkout successful',
-      purchasedItems: cartItems.map(item => ({
-        productId: item.id,
-        name: item.name,
-        quantity: item.quantity,
-        price: item.price
-      }))
+    db.query(sql, [status, parseInt(productId)], (err, result) => {
+      if (err) {
+        console.error('Status update error:', err);
+        return res.status(500).json({ error: 'Database error' });
+      }
+      
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ error: 'Product not found' });
+      }
+      
+      res.json({ success: true, affectedRows: result.affectedRows });
     });
-  } catch (error) {
-    await connection.rollback();
-    connection.release();
-    console.error('Error during checkout:', error);
-    res.status(500).json({ 
-      success: false,
-      error: 'Server error',
-      details: error.message 
-    });
-  }
+  });
 });
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
-  res.status(200).json({ 
-    status: 'OK',
-    message: 'Server is running' 
-  });
+  res.json({ status: 'OK', message: 'Server is running' });
 });
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  if (err instanceof multer.MulterError) {
-    return res.status(400).json({ 
-      success: false,
-      error: err.message 
-    });
-  } else if (err) {
-    return res.status(500).json({ 
-      success: false,
-      error: err.message 
-    });
-  }
-  next();
+  console.error('Global error handler:', err);
+  res.status(500).json({ error: 'Internal server error' });
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`API URL: http://localhost:${PORT}/api/products`);
+  console.log(`Backend server running on port ${PORT}`);
 });
 
-// CREATE TABLE IF NOT EXISTS product (
-//     id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-//     name VARCHAR(255) NOT NULL,
-//     price DECIMAL(10, 2) NOT NULL,
-//     stock INT NOT NULL DEFAULT 0,
-//     category VARCHAR(50) NOT NULL,
-//     description TEXT NOT NULL,
-//     image_url VARCHAR(255) NOT NULL,
-//     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-//     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-// ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+// Cart endpoints
 
+// GET all cart items with product details
+app.get('/api/cart', (req, res) => {
+  const sql = `
+    SELECT 
+      c.id as cart_id, 
+      c.quantity, 
+      c.created_at as cart_created_at,
+      p.id, 
+      p.name, 
+      p.description, 
+      p.price, 
+      p.quantity as stock_quantity, 
+      p.category, 
+      p.image_url, 
+      p.farmer_id,
+      u.name as farmer_name
+    FROM cart_items c
+    LEFT JOIN products p ON c.product_id = p.id
+    LEFT JOIN users u ON p.farmer_id = u.id
+    ORDER BY c.created_at DESC
+  `;
+  
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error('Fetch cart error:', err);
+      return res.status(500).json({ error: 'Database error' });
+    }
+    
+    res.json(results);
+  });
+});
 
-// CREATE TABLE product_reviews (
-//   id INT AUTO_INCREMENT PRIMARY KEY,
-//   product_id INT NOT NULL,
-//   username VARCHAR(100) NOT NULL,
-//   rating INT NOT NULL CHECK (rating BETWEEN 1 AND 5),
-//   comment TEXT NOT NULL,
-//   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-//   FOREIGN KEY (product_id) REFERENCES product(id) ON DELETE CASCADE
-// );
+// POST add item to cart
+app.post('/api/cart', (req, res) => {
+  const { productId, quantity } = req.body;
+  
+  if (!productId || !quantity || quantity <= 0) {
+    return res.status(400).json({ error: 'Product ID and valid quantity are required' });
+  }
+  
+  // First check if product exists and has enough stock
+  const checkProductSql = 'SELECT id, name, price, quantity as stock_quantity FROM products WHERE id = ?';
+  
+  db.query(checkProductSql, [parseInt(productId)], (err, productResults) => {
+    if (err) {
+      console.error('Check product error:', err);
+      return res.status(500).json({ error: 'Database error' });
+    }
+    
+    if (productResults.length === 0) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+    
+    const product = productResults[0];
+    
+    if (product.stock_quantity < quantity) {
+      return res.status(400).json({ error: `Only ${product.stock_quantity} items available in stock` });
+    }
+    
+    // Check if item already exists in cart
+    const checkCartSql = 'SELECT id, quantity FROM cart_items WHERE product_id = ?';
+    
+    db.query(checkCartSql, [parseInt(productId)], (err, cartResults) => {
+      if (err) {
+        console.error('Check cart error:', err);
+        return res.status(500).json({ error: 'Database error' });
+      }
+      
+      if (cartResults.length > 0) {
+        // Item exists, update quantity
+        const existingItem = cartResults[0];
+        const newQuantity = existingItem.quantity + parseInt(quantity);
+        
+        if (newQuantity > product.stock_quantity) {
+          return res.status(400).json({ 
+            error: `Cannot add ${quantity} more items. Only ${product.stock_quantity - existingItem.quantity} more available` 
+          });
+        }
+        
+        const updateSql = 'UPDATE cart_items SET quantity = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?';
+        
+        db.query(updateSql, [newQuantity, existingItem.id], (err, result) => {
+          if (err) {
+            console.error('Update cart error:', err);
+            return res.status(500).json({ error: 'Database error' });
+          }
+          
+          // Return the updated cart item with product details
+          const getUpdatedItemSql = `
+            SELECT 
+              c.id as cart_id, 
+              c.quantity, 
+              c.created_at as cart_created_at,
+              p.id, 
+              p.name, 
+              p.description, 
+              p.price, 
+              p.quantity as stock_quantity, 
+              p.category, 
+              p.image_url, 
+              p.farmer_id,
+              u.name as farmer_name
+            FROM cart_items c
+            LEFT JOIN products p ON c.product_id = p.id
+            LEFT JOIN users u ON p.farmer_id = u.id
+            WHERE c.id = ?
+          `;
+          
+          db.query(getUpdatedItemSql, [existingItem.id], (err, itemResults) => {
+            if (err) {
+              console.error('Get updated item error:', err);
+              return res.status(500).json({ error: 'Database error' });
+            }
+            
+            res.json({
+              success: true,
+              message: 'Cart updated successfully',
+              cartItem: itemResults[0]
+            });
+          });
+        });
+      } else {
+        // Item doesn't exist, insert new
+        const insertSql = 'INSERT INTO cart_items (product_id, quantity) VALUES (?, ?)';
+        
+        db.query(insertSql, [parseInt(productId), parseInt(quantity)], (err, result) => {
+          if (err) {
+            console.error('Insert cart error:', err);
+            return res.status(500).json({ error: 'Database error' });
+          }
+          
+          // Return the new cart item with product details
+          const getNewItemSql = `
+            SELECT 
+              c.id as cart_id, 
+              c.quantity, 
+              c.created_at as cart_created_at,
+              p.id, 
+              p.name, 
+              p.description, 
+              p.price, 
+              p.quantity as stock_quantity, 
+              p.category, 
+              p.image_url, 
+              p.farmer_id,
+              u.name as farmer_name
+            FROM cart_items c
+            LEFT JOIN products p ON c.product_id = p.id
+            LEFT JOIN users u ON p.farmer_id = u.id
+            WHERE c.id = ?
+          `;
+          
+          db.query(getNewItemSql, [result.insertId], (err, itemResults) => {
+            if (err) {
+              console.error('Get new item error:', err);
+              return res.status(500).json({ error: 'Database error' });
+            }
+            
+            res.json({
+              success: true,
+              message: 'Item added to cart successfully',
+              cartItem: itemResults[0]
+            });
+          });
+        });
+      }
+    });
+  });
+});
 
+// PUT update cart item quantity
+app.put('/api/cart/:id', (req, res) => {
+  const cartItemId = req.params.id;
+  const { quantity } = req.body;
+  
+  if (!quantity || quantity <= 0) {
+    return res.status(400).json({ error: 'Valid quantity is required' });
+  }
+  
+  // First check if cart item exists and get product info
+  const checkSql = `
+    SELECT c.id, c.product_id, p.quantity as stock_quantity 
+    FROM cart_items c
+    LEFT JOIN products p ON c.product_id = p.id
+    WHERE c.id = ?
+  `;
+  
+  db.query(checkSql, [parseInt(cartItemId)], (err, results) => {
+    if (err) {
+      console.error('Check cart item error:', err);
+      return res.status(500).json({ error: 'Database error' });
+    }
+    
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'Cart item not found' });
+    }
+    
+    const cartItem = results[0];
+    
+    if (quantity > cartItem.stock_quantity) {
+      return res.status(400).json({ 
+        error: `Only ${cartItem.stock_quantity} items available in stock` 
+      });
+    }
+    
+    // Update quantity
+    const updateSql = 'UPDATE cart_items SET quantity = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?';
+    
+    db.query(updateSql, [parseInt(quantity), parseInt(cartItemId)], (err, result) => {
+      if (err) {
+        console.error('Update cart item error:', err);
+        return res.status(500).json({ error: 'Database error' });
+      }
+      
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ error: 'Cart item not found' });
+      }
+      
+      res.json({
+        success: true,
+        message: 'Cart item updated successfully'
+      });
+    });
+  });
+});
 
-// CREATE TABLE cart_items (
-//   id INT AUTO_INCREMENT PRIMARY KEY,
-//   product_id INT,
-//   quantity INT NOT NULL DEFAULT 1,
-//   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-//   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-//   FOREIGN KEY (product_id) REFERENCES product(id)
-// );
+// DELETE remove item from cart
+app.delete('/api/cart/:id', (req, res) => {
+  const cartItemId = req.params.id;
+  
+  const deleteSql = 'DELETE FROM cart_items WHERE id = ?';
+  
+  db.query(deleteSql, [parseInt(cartItemId)], (err, result) => {
+    if (err) {
+      console.error('Delete cart item error:', err);
+      return res.status(500).json({ error: 'Database error' });
+    }
+    
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Cart item not found' });
+    }
+    
+    res.json({
+      success: true,
+      message: 'Item removed from cart successfully'
+    });
+  });
+});
+
+// DELETE clear all cart items
+app.delete('/api/cart/clear', (req, res) => {
+  const clearSql = 'DELETE FROM cart_items';
+  
+  db.query(clearSql, (err, result) => {
+    if (err) {
+      console.error('Clear cart error:', err);
+      return res.status(500).json({ error: 'Database error' });
+    }
+    
+    res.json({
+      success: true,
+      message: 'Cart cleared successfully',
+      deletedItems: result.affectedRows
+    });
+  });
+});
+
+// POST checkout - process cart items and update product quantities
+app.post('/api/cart/checkout', (req, res) => {
+  // Get all cart items with product details
+  const getCartSql = `
+    SELECT 
+      c.id as cart_id, 
+      c.quantity, 
+      p.id as product_id, 
+      p.quantity as stock_quantity,
+      p.name as product_name
+    FROM cart_items c
+    LEFT JOIN products p ON c.product_id = p.id
+  `;
+  
+  db.query(getCartSql, (err, cartItems) => {
+    if (err) {
+      console.error('Get cart for checkout error:', err);
+      return res.status(500).json({ error: 'Database error' });
+    }
+    
+    if (cartItems.length === 0) {
+      return res.status(400).json({ error: 'Cart is empty' });
+    }
+    
+    // Check stock availability for all items
+    for (const item of cartItems) {
+      if (item.quantity > item.stock_quantity) {
+        return res.status(400).json({ 
+          error: `Insufficient stock for ${item.product_name}. Only ${item.stock_quantity} available.` 
+        });
+      }
+    }
+    
+    // Begin transaction to update product quantities and clear cart
+    db.beginTransaction((err) => {
+      if (err) {
+        console.error('Transaction begin error:', err);
+        return res.status(500).json({ error: 'Database error' });
+      }
+      
+      // Update product quantities
+      const updatePromises = cartItems.map(item => {
+        return new Promise((resolve, reject) => {
+          const updateProductSql = 'UPDATE products SET quantity = quantity - ? WHERE id = ?';
+          
+          db.query(updateProductSql, [item.quantity, item.product_id], (err, result) => {
+            if (err) {
+              reject(err);
+            } else {
+              resolve(result);
+            }
+          });
+        });
+      });
+      
+      Promise.all(updatePromises)
+        .then(() => {
+          // Clear cart after successful product updates
+          const clearCartSql = 'DELETE FROM cart_items';
+          
+          db.query(clearCartSql, (err, result) => {
+            if (err) {
+              db.rollback(() => {
+                console.error('Clear cart error:', err);
+                res.status(500).json({ error: 'Database error during cart clearing' });
+              });
+              return;
+            }
+            
+            // Commit transaction
+            db.commit((err) => {
+              if (err) {
+                db.rollback(() => {
+                  console.error('Transaction commit error:', err);
+                  res.status(500).json({ error: 'Database error during commit' });
+                });
+                return;
+              }
+              
+              res.json({
+                success: true,
+                message: 'Checkout completed successfully',
+                processedItems: cartItems.length
+              });
+            });
+          });
+        })
+        .catch((error) => {
+          db.rollback(() => {
+            console.error('Product update error:', error);
+            res.status(500).json({ error: 'Database error during product update' });
+          });
+        });
+    });
+  });
+});
+
+// POST purchase single product endpoint
+app.post('/api/products/:id/purchase', (req, res) => {
+  const productId = req.params.id;
+  const { quantity } = req.body;
+  
+  if (!quantity || quantity <= 0) {
+    return res.status(400).json({ error: 'Valid quantity is required' });
+  }
+  
+  // Check product availability
+  const checkProductSql = 'SELECT id, name, quantity as stock_quantity FROM products WHERE id = ?';
+  
+  db.query(checkProductSql, [parseInt(productId)], (err, results) => {
+    if (err) {
+      console.error('Check product error:', err);
+      return res.status(500).json({ error: 'Database error' });
+    }
+    
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+    
+    const product = results[0];
+    
+    if (quantity > product.stock_quantity) {
+      return res.status(400).json({ 
+        error: `Only ${product.stock_quantity} items available in stock` 
+      });
+    }
+    
+    // Update product quantity
+    const updateSql = 'UPDATE products SET quantity = quantity - ? WHERE id = ?';
+    
+    db.query(updateSql, [parseInt(quantity), parseInt(productId)], (err, result) => {
+      if (err) {
+        console.error('Purchase update error:', err);
+        return res.status(500).json({ error: 'Database error' });
+      }
+      
+      res.json({
+        success: true,
+        message: `Successfully purchased ${quantity} ${product.name}(s)`
+      });
+    });
+  });
+});
+
+// POST batch purchase multiple products
+app.post('/api/products/batch-purchase', (req, res) => {
+  const { items } = req.body;
+  
+  if (!items || !Array.isArray(items) || items.length === 0) {
+    return res.status(400).json({ error: 'Items array is required' });
+  }
+  
+  // Validate all items first
+  const checkPromises = items.map(item => {
+    return new Promise((resolve, reject) => {
+      if (!item.productId || !item.quantity || item.quantity <= 0) {
+        reject(new Error('Invalid item data'));
+        return;
+      }
+      
+      const checkSql = 'SELECT id, name, quantity as stock_quantity FROM products WHERE id = ?';
+      
+      db.query(checkSql, [parseInt(item.productId)], (err, results) => {
+        if (err) {
+          reject(err);
+        } else if (results.length === 0) {
+          reject(new Error(`Product ${item.productId} not found`));
+        } else {
+          const product = results[0];
+          if (item.quantity > product.stock_quantity) {
+            reject(new Error(`Insufficient stock for ${product.name}. Only ${product.stock_quantity} available.`));
+          } else {
+            resolve({ ...item, product });
+          }
+        }
+      });
+    });
+  });
+  
+  Promise.all(checkPromises)
+    .then(validatedItems => {
+      // Begin transaction
+      db.beginTransaction((err) => {
+        if (err) {
+          console.error('Transaction begin error:', err);
+          return res.status(500).json({ error: 'Database error' });
+        }
+        
+        // Update all product quantities
+        const updatePromises = validatedItems.map(item => {
+          return new Promise((resolve, reject) => {
+            const updateSql = 'UPDATE products SET quantity = quantity - ? WHERE id = ?';
+            
+            db.query(updateSql, [item.quantity, item.productId], (err, result) => {
+              if (err) {
+                reject(err);
+              } else {
+                resolve(result);
+              }
+            });
+          });
+        });
+        
+        Promise.all(updatePromises)
+          .then(() => {
+            db.commit((err) => {
+              if (err) {
+                db.rollback(() => {
+                  console.error('Transaction commit error:', err);
+                  res.status(500).json({ error: 'Database error during commit' });
+                });
+                return;
+              }
+              
+              res.json({
+                success: true,
+                message: `Successfully purchased ${validatedItems.length} product(s)`,
+                processedItems: validatedItems.length
+              });
+            });
+          })
+          .catch(error => {
+            db.rollback(() => {
+              console.error('Batch update error:', error);
+              res.status(500).json({ error: 'Database error during batch update' });
+            });
+          });
+      });
+    })
+    .catch(error => {
+      res.status(400).json({ error: error.message });
+    });
+});

@@ -5,6 +5,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:economic_center_mobileapp/pages/signup.dart';
 import 'package:economic_center_mobileapp/pages/home.dart';
+import 'package:economic_center_mobileapp/pages/categary.dart';
 
 class FarmerLoginScreen extends StatefulWidget {
   const FarmerLoginScreen({super.key});
@@ -49,19 +50,79 @@ class _FarmerLoginScreenState extends State<FarmerLoginScreen> {
       final responseData = jsonDecode(response.body);
 
       if (response.statusCode == 200 && responseData['success'] == true) {
-        // Successful login - navigate to HomePage
-        Navigator.pushReplacement(
+        // Store authentication token if remember me is checked
+        if (_rememberMe && responseData['token'] != null) {
+          // Store token logic here if needed
+        }
+
+        // Check user status
+        final userStatus = responseData['user']['status'];
+        if (userStatus == 'pending') {
           // ignore: use_build_context_synchronously
-          context,
-          MaterialPageRoute(
-            builder: (context) => HomePage(userData: responseData['user']),
-          ),
-        );
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                  'Account is pending verification. Please check your email.'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+          return;
+        } else if (userStatus == 'suspended') {
+          // ignore: use_build_context_synchronously
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Account is suspended. Please contact support.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          return;
+        }
+
+        // Successful login - navigate based on user role
+        final userRole = responseData['user']['role'];
+        final userData = {
+          'id': responseData['user']['id'],
+          'userId': responseData['user']['id'],
+          'username': responseData['user']['name'],
+          'email': responseData['user']['email'],
+          'role': responseData['user']['role'],
+          'status': responseData['user']['status'],
+        };
+
+        if (userRole == 'farmer') {
+          // Navigate farmers to HomePage
+          Navigator.pushReplacement(
+            // ignore: use_build_context_synchronously
+            context,
+            MaterialPageRoute(
+              builder: (context) => HomePage(userData: userData),
+            ),
+          );
+        } else if (userRole == 'customer') {
+          // Navigate customers to CategoryScreen
+          Navigator.pushReplacement(
+            // ignore: use_build_context_synchronously
+            context,
+            MaterialPageRoute(
+              builder: (context) => const CategoryScreen(),
+            ),
+          );
+        } else {
+          // Default fallback for other roles
+          Navigator.pushReplacement(
+            // ignore: use_build_context_synchronously
+            context,
+            MaterialPageRoute(
+              builder: (context) => HomePage(userData: userData),
+            ),
+          );
+        }
 
         // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Login successful'),
+          SnackBar(
+            content: Text(
+                'Welcome ${responseData['user']['name']}! Login successful'),
             backgroundColor: Colors.green,
           ),
         );

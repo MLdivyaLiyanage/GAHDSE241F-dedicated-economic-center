@@ -40,12 +40,17 @@ class Product {
           : (json['price']?.toDouble() ?? 0.0),
       imageUrl: json['image_url']?.toString() ?? '',
       category: json['category']?.toString() ?? 'Uncategorized',
-      stockQuantity: json['stock_quantity'] ?? json['stock'] ?? 0,
+      stockQuantity: json['quantity'] ??
+          json['stock_quantity'] ??
+          json['stock'] ??
+          0, // Handle farmer backend 'quantity' field
       isLocal: json['is_local'] ?? true,
       rating: (json['rating'] is String)
           ? double.tryParse(json['rating']) ?? 4.0
           : (json['rating']?.toDouble() ?? 4.0),
-      seller: json['seller']?.toString() ?? 'Local Seller',
+      seller: json['farmer_name']?.toString() ??
+          json['seller']?.toString() ??
+          'Local Farmer', // Use farmer_name if available, fallback to seller, then default
       reviewCount: json['review_count'] ?? 0,
       reviews: json['reviews'] != null
           ? (json['reviews'] as List).map((i) => Review.fromJson(i)).toList()

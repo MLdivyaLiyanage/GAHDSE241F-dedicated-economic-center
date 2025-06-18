@@ -6,6 +6,8 @@ import 'dart:convert';
 import 'dart:async';
 import 'dart:io';
 import 'package:economic_center_mobileapp/pages/signin.dart';
+import 'package:economic_center_mobileapp/pages/categary.dart';
+import 'package:economic_center_mobileapp/pages/Home.dart';
 
 void main() {
   runApp(const MyApp());
@@ -122,7 +124,7 @@ class _SignupPageState extends State<SignupPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                  '${_selectedUserRole ?? 'User'} Registration Successful!'),
+                  'Registration Successful! Welcome to Sri Lanka Economic Center!'),
               backgroundColor: Colors.green,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
@@ -131,16 +133,54 @@ class _SignupPageState extends State<SignupPage> {
             ),
           );
 
+          // Clear form fields
           _nameController.clear();
           _emailController.clear();
           _passwordController.clear();
           _confirmPasswordController.clear();
+          setState(() {
+            _selectedUserRole = null;
+            _agreeToTerms = false;
+          });
 
-          Navigator.pushReplacement(
-            // ignore: use_build_context_synchronously
-            context,
-            MaterialPageRoute(builder: (context) => const FarmerLoginScreen()),
-          );
+          // Navigate based on user role
+          final userRole = _selectedUserRole?.toLowerCase();
+          final userData = {
+            'id': responseData['user']['id'],
+            'userId': responseData['user']['id'],
+            'username': responseData['user']['name'],
+            'email': responseData['user']['email'],
+            'role': responseData['user']['role'],
+            'status': responseData['user']['status'],
+          };
+
+          if (userRole == 'farmer') {
+            // Navigate farmers to HomePage
+            Navigator.pushReplacement(
+              // ignore: use_build_context_synchronously
+              context,
+              MaterialPageRoute(
+                builder: (context) => HomePage(userData: userData),
+              ),
+            );
+          } else if (userRole == 'customer') {
+            // Navigate customers to CategoryScreen
+            Navigator.pushReplacement(
+              // ignore: use_build_context_synchronously
+              context,
+              MaterialPageRoute(
+                builder: (context) => const CategoryScreen(),
+              ),
+            );
+          } else {
+            // Default fallback - go to login page
+            Navigator.pushReplacement(
+              // ignore: use_build_context_synchronously
+              context,
+              MaterialPageRoute(
+                  builder: (context) => const FarmerLoginScreen()),
+            );
+          }
         } else {
           // ignore: use_build_context_synchronously
           ScaffoldMessenger.of(context).showSnackBar(

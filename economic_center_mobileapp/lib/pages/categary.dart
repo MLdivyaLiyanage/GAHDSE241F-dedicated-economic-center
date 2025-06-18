@@ -33,7 +33,8 @@ class MyApp extends StatelessWidget {
 }
 
 class ProductService {
-  static const String _baseUrl = 'http://10.0.2.2:5000';
+  static const String _baseUrl =
+      'http://10.0.2.2:5001'; // Updated to match farmer upload backend
 
   static Future<List<Product>> fetchProducts() async {
     try {
@@ -326,17 +327,26 @@ class ProductService {
   // Removed duplicate purchaseProduct method to resolve the naming conflict.
 }
 
-class CategoryScreen extends StatelessWidget {
-  const CategoryScreen({super.key});
+class CategoryScreen extends StatefulWidget {
+  final Map<String, dynamic>? userData;
+
+  const CategoryScreen({super.key, this.userData});
 
   @override
+  State<CategoryScreen> createState() => _CategoryScreenState();
+}
+
+class _CategoryScreenState extends State<CategoryScreen> {
+  @override
   Widget build(BuildContext context) {
-    return const ProductScreen();
+    return ProductScreen(userData: widget.userData);
   }
 }
 
 class ProductScreen extends StatefulWidget {
-  const ProductScreen({super.key});
+  final Map<String, dynamic>? userData;
+
+  const ProductScreen({super.key, this.userData});
 
   @override
   State<ProductScreen> createState() => _ProductScreenState();
@@ -653,7 +663,9 @@ class _ProductScreenState extends State<ProductScreen> {
                                 width: 50,
                                 height: 50,
                                 child: Image.network(
-                                  'http://10.0.2.2:5000/${item.product.imageUrl}',
+                                  item.product.imageUrl.startsWith('http')
+                                      ? item.product.imageUrl
+                                      : 'http://10.0.2.2:5001/${item.product.imageUrl}', // Add full URL if not present
                                   fit: BoxFit.cover,
                                   errorBuilder: (context, error, stackTrace) {
                                     return Container(
@@ -825,21 +837,29 @@ class _ProductScreenState extends State<ProductScreen> {
             onPressed: () async {
               // Make this async
               Navigator.pop(context); // Close the dialog first
-              final paymentSuccess = await Navigator.push<bool>(
-                // Await and expect a bool
-                context,
-                MaterialPageRoute(
-                  builder: (context) => PaymentPage(
-                    cartItems:
-                        List.from(cartItems), // Pass the current cart items
-                    totalAmount: totalCartValue,
+              try {
+                final paymentSuccess = await Navigator.push<bool>(
+                  // Await and expect a bool
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => PaymentPage(
+                      cartItems:
+                          List.from(cartItems), // Pass the current cart items
+                      totalAmount: totalCartValue,
+                    ),
                   ),
-                ),
-              );
+                );
 
-              if (paymentSuccess == true && mounted) {
-                _fetchProducts(); // Refresh products to show updated stock
-                _fetchCartItems(); // Refresh cart (likely empty after checkout)
+                if (paymentSuccess == true && mounted) {
+                  _fetchProducts(); // Refresh products to show updated stock
+                  _fetchCartItems(); // Refresh cart (likely empty after checkout)
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error: ${e.toString()}')),
+                  );
+                }
               }
             },
             child: const Text('Proceed'),
@@ -851,7 +871,7 @@ class _ProductScreenState extends State<ProductScreen> {
 
   List<String> get categories {
     final categorySet =
-        products.map((product) => product.category).toSet().toList();
+        this.products.map((product) => product.category).toSet().toList();
     categorySet.sort();
     return ['All', ...categorySet];
   }
@@ -895,9 +915,14 @@ class _ProductScreenState extends State<ProductScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final userRole = widget.userData?['role'] ?? 'customer';
+    final userName = widget.userData?['username'] ?? 'Customer';
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Sri Lankan Marketplace'),
+        title: Text(userRole == 'farmer'
+            ? 'Sri Lankan Marketplace'
+            : 'Sri Lankan Marketplace - Customer'),
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Colors.white,
         elevation: 0,
@@ -908,6 +933,28 @@ class _ProductScreenState extends State<ProductScreen> {
           ),
         ),
         actions: [
+          if (userRole == 'customer')
+            Padding(
+              padding: const EdgeInsets.only(right: 16.0),
+              child: Row(
+                children: [
+                  Text(
+                    'Hi, $userName',
+                    style: const TextStyle(fontSize: 12, color: Colors.white70),
+                  ),
+                  const SizedBox(width: 8),
+                  CircleAvatar(
+                    radius: 16,
+                    backgroundColor: Colors.grey[300],
+                    child: Icon(
+                      Icons.person,
+                      color: Colors.grey[600],
+                      size: 20,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           IconButton(
             icon: const Icon(Icons.search),
             onPressed: () {},
@@ -1136,7 +1183,7 @@ class _ProductScreenState extends State<ProductScreen> {
               top: 0,
               child: Container(
                 padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: Colors.red,
                   shape: BoxShape.circle,
                 ),
@@ -1195,7 +1242,7 @@ class ProductCard extends StatelessWidget {
         child: ConstrainedBox(
           constraints: const BoxConstraints(
             minHeight: 200,
-            maxHeight: 240, // Added max height constraint
+            maxHeight: 240,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1203,7 +1250,7 @@ class ProductCard extends StatelessWidget {
             children: [
               // Image Container
               Container(
-                height: 120, // Reduced height to make more space for text
+                height: 120,
                 width: double.infinity,
                 decoration: BoxDecoration(
                   borderRadius:
@@ -1215,7 +1262,9 @@ class ProductCard extends StatelessWidget {
                       const BorderRadius.vertical(top: Radius.circular(16)),
                   child: product.imageUrl.isNotEmpty
                       ? Image.network(
-                          'http://10.0.2.2:5000/${product.imageUrl}',
+                          product.imageUrl.startsWith('http')
+                              ? product.imageUrl
+                              : 'http://10.0.2.2:5001/${product.imageUrl}',
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) {
                             return Center(
@@ -1254,7 +1303,7 @@ class ProductCard extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     SizedBox(
-                      height: 20, // Fixed height for product name
+                      height: 20,
                       child: Text(
                         product.name,
                         style: const TextStyle(
@@ -1267,7 +1316,7 @@ class ProductCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     SizedBox(
-                      height: 16, // Fixed height for category
+                      height: 16,
                       child: Text(
                         product.category,
                         style: TextStyle(
@@ -1503,6 +1552,213 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     }
   }
 
+  Widget _buildReviewForm() {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Write a Review',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () {
+                  setState(() {
+                    _showReviewForm = false;
+                    _nameController.clear();
+                    _commentController.clear();
+                    _selectedRating = 5;
+                  });
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _nameController,
+            decoration: const InputDecoration(
+              labelText: 'Your Name',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 16),
+          const Text('Rating:', style: TextStyle(fontWeight: FontWeight.w500)),
+          const SizedBox(height: 8),
+          Row(
+            children: List.generate(5, (index) {
+              return IconButton(
+                icon: Icon(
+                  index < _selectedRating ? Icons.star : Icons.star_border,
+                  color: Colors.amber,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _selectedRating = index + 1;
+                  });
+                },
+              );
+            }),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _commentController,
+            maxLines: 3,
+            decoration: const InputDecoration(
+              labelText: 'Your Review',
+              border: OutlineInputBorder(),
+              hintText: 'Share your experience with this product...',
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () {
+                    setState(() {
+                      _showReviewForm = false;
+                      _nameController.clear();
+                      _commentController.clear();
+                      _selectedRating = 5;
+                    });
+                  },
+                  child: const Text('Cancel'),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: _submitReview,
+                  child: const Text('Submit Review'),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRatingBar(int stars, double percentage) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        children: [
+          Text('$stars'),
+          const SizedBox(width: 4),
+          const Icon(Icons.star, size: 12, color: Colors.amber),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Container(
+              height: 6,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(3),
+              ),
+              child: FractionallySizedBox(
+                alignment: Alignment.centerLeft,
+                widthFactor: percentage,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.amber,
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            '${(percentage * 100).toInt()}%',
+            style: const TextStyle(fontSize: 12),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReviewItem(Review review) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 16,
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                child: Text(
+                  review.username.isNotEmpty
+                      ? review.username[0].toUpperCase()
+                      : 'U',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      review.username,
+                      style: const TextStyle(fontWeight: FontWeight.w500),
+                    ),
+                    Row(
+                      children: [
+                        Row(
+                          children: List.generate(5, (index) {
+                            return Icon(
+                              index < review.rating
+                                  ? Icons.star
+                                  : Icons.star_border,
+                              size: 14,
+                              color: Colors.amber,
+                            );
+                          }),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          review.date,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            review.comment,
+            style: const TextStyle(fontSize: 14),
+          ),
+        ],
+      ),
+    );
+  }
+
   // Calculate average rating
   double _calculateAverageRating(List<Review> reviews) {
     if (reviews.isEmpty) return 0;
@@ -1562,7 +1818,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Product Image Gallery with indicators
+                  // Product Image Gallery
                   FutureBuilder<Product>(
                     future: _productFuture,
                     builder: (context, snapshot) {
@@ -1576,8 +1832,11 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                             height: 300,
                             child: product.imageUrl.isNotEmpty
                                 ? Image.network(
-                                    'http://10.0.2.2:5000/${product.imageUrl}',
+                                    product.imageUrl.startsWith('http')
+                                        ? product.imageUrl
+                                        : 'http://10.0.2.2:5001/${product.imageUrl}',
                                     fit: BoxFit.cover,
+                                    width: double.infinity,
                                     errorBuilder: (context, error, stackTrace) {
                                       return Container(
                                         color: Colors.grey[200],
@@ -1596,7 +1855,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                     ),
                                   ),
                           ),
-                          // Image indicators (simplified since we only have one image)
                           Padding(
                             padding: const EdgeInsets.only(bottom: 16.0),
                             child: Row(
@@ -1607,7 +1865,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                   height: 8,
                                   margin:
                                       const EdgeInsets.symmetric(horizontal: 4),
-                                  decoration: BoxDecoration(
+                                  decoration: const BoxDecoration(
                                     shape: BoxShape.circle,
                                     color: Colors.white,
                                   ),
@@ -1620,6 +1878,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     },
                   ),
 
+                  // Product details content
                   Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: FutureBuilder<Product>(
@@ -1660,6 +1919,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            // Product price and stock info
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
@@ -1693,6 +1953,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                 ),
                               ],
                             ),
+
                             const SizedBox(height: 8),
                             Text(
                               product.name,
@@ -2007,9 +2268,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               ),
             ),
           ),
-
           // Fixed bottom buttons
-          // In the ProductDetailPage's build method, update the bottom buttons:
           Positioned(
             bottom: 0,
             left: 0,
@@ -2035,8 +2294,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                   return Row(
                     children: [
                       Expanded(
-                        child: // In the buy now button section of ProductDetailPage
-                            ElevatedButton(
+                        child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: product.stockQuantity > 0
                                 ? Theme.of(context).colorScheme.primary
@@ -2049,36 +2307,33 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           onPressed: product.stockQuantity > 0
                               ? () async {
                                   try {
-                                    // Create a cart item with the selected quantity
                                     final cartItem = CartItem(
                                       product: product,
                                       quantity: _quantity,
-                                      cartId:
-                                          0, // Provide a default or appropriate cartId
+                                      cartId: 0,
                                     );
-                                    // Make the navigation async and await result
                                     final paymentSuccess =
                                         await Navigator.push<bool>(
                                       context,
                                       MaterialPageRoute(
                                         builder: (context) => PaymentPage(
-                                          cartItems: [
-                                            cartItem
-                                          ], // Pass as a list with one item
+                                          cartItems: [cartItem],
                                           totalAmount:
                                               product.price * _quantity,
                                         ),
                                       ),
                                     );
 
-                                    // If payment was successful, refresh product details
                                     if (paymentSuccess == true && mounted) {
                                       _refreshProduct();
                                     }
                                   } catch (e) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text(e.toString())),
-                                    );
+                                    if (mounted) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(content: Text(e.toString())),
+                                      );
+                                    }
                                   }
                                 }
                               : null,
@@ -2093,8 +2348,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       ),
                       const SizedBox(width: 16),
                       Expanded(
-                        child: // In the bottom buttons section, replace the current OutlinedButton with:
-                            OutlinedButton(
+                        child: OutlinedButton(
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
@@ -2112,21 +2366,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                     for (int i = 0; i < _quantity; i++) {
                                       widget.onAddToCart!(product);
                                     }
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                            '${product.name} (x$_quantity) added to cart'),
-                                        duration: const Duration(seconds: 1),
-                                      ),
-                                    );
-                                  } else {
-                                    final state =
-                                        context.findAncestorStateOfType<
-                                            _ProductScreenState>();
-                                    if (state != null) {
-                                      for (int i = 0; i < _quantity; i++) {
-                                        state.addToCart(product);
-                                      }
+                                    if (mounted) {
                                       ScaffoldMessenger.of(context)
                                           .showSnackBar(
                                         SnackBar(
@@ -2135,6 +2375,26 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                           duration: const Duration(seconds: 1),
                                         ),
                                       );
+                                    }
+                                  } else {
+                                    final state =
+                                        context.findAncestorStateOfType<
+                                            _ProductScreenState>();
+                                    if (state != null) {
+                                      for (int i = 0; i < _quantity; i++) {
+                                        state.addToCart(product);
+                                      }
+                                      if (mounted) {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                                '${product.name} (x$_quantity) added to cart'),
+                                            duration:
+                                                const Duration(seconds: 1),
+                                          ),
+                                        );
+                                      }
                                     }
                                   }
                                 }
@@ -2161,107 +2421,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     );
   }
 
-  Widget _buildReviewForm() {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 24),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.shade300),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Write a Review',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _nameController,
-            decoration: const InputDecoration(
-              labelText: 'Your Name',
-              border: OutlineInputBorder(),
-              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Your Rating:',
-                style: TextStyle(fontWeight: FontWeight.w500),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: List.generate(
-                  5,
-                  (index) => IconButton(
-                    onPressed: () {
-                      setState(() {
-                        _selectedRating = index + 1;
-                      });
-                    },
-                    icon: Icon(
-                      index < _selectedRating ? Icons.star : Icons.star_border,
-                      color: Colors.amber,
-                    ),
-                    constraints: const BoxConstraints(),
-                    padding: const EdgeInsets.only(right: 4),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _commentController,
-            maxLines: 3,
-            decoration: const InputDecoration(
-              labelText: 'Your Review',
-              hintText: 'Share your experience with this product',
-              border: OutlineInputBorder(),
-              contentPadding: EdgeInsets.all(12),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                  onPressed: _submitReview,
-                  child: const Text(
-                    'Submit Review',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              TextButton(
-                onPressed: () {
-                  setState(() {
-                    _showReviewForm = false;
-                  });
-                },
-                child: const Text('Cancel'),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRatingBar(int stars, double percentage) {
+  Widget _buildDetailRatingBar(int stars, double percentage) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2.0),
       child: Row(
@@ -2306,7 +2466,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     );
   }
 
-  Widget _buildReviewItem(Review review) {
+  Widget _buildDetailReviewItem(Review review) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12.0),
       child: Column(
@@ -2350,5 +2510,13 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _commentController.dispose();
+    _stockController.dispose();
+    super.dispose();
   }
 }
