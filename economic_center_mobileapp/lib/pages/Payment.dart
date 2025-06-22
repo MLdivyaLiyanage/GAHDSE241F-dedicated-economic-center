@@ -396,7 +396,7 @@ class _PaymentPageState extends State<PaymentPage> {
 
         // Determine if this is a real cart checkout or a Buy Now
         final isBuyNow = cartItems.length == 1 &&
-            (cartItems[0].cartId == 0 || cartItems[0].cartId == null);
+            (cartItems[0].cartId == 0);
 
         if (!isBuyNow && widget.userId != null) {
           // Only clear backend cart if this is a real cart checkout
