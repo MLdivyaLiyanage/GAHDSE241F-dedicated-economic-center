@@ -32,15 +32,44 @@ class MyApp extends StatelessWidget {
         userData: {'username': 'Guest'}, // Provide default user data
       ),
       debugShowCheckedModeBanner: false,
-      routes: {
-        '/message': (context) =>
-            const FarmerCommunicationApp(isDarkMode: false),
-        '/farmers': (context) => const FarmerProfilesPage(),
-        '/farmer-details': (context) =>
-            const FarmerProfilesApp(), // Add your farmers page widget
-        '/about': (context) =>
-            const AboutUsPage(), // Add your about us page widget
-        '/location': (context) => const SriLankaExplorer(),
+      onGenerateRoute: (settings) {
+        switch (settings.name) {
+          case '/message':
+            return MaterialPageRoute(
+              builder: (context) => const ChatsListScreen(isDarkMode: false),
+            );
+          case '/farmers':
+            return MaterialPageRoute(
+              builder: (context) => const FarmerProfilesPage(),
+            );
+          case '/farmer-details':
+            return MaterialPageRoute(
+              builder: (context) => const FarmerProfilesApp(),
+            );
+          case '/about':
+            return MaterialPageRoute(
+              builder: (context) => const AboutUsPage(),
+            );
+          case '/location':
+            return MaterialPageRoute(
+              builder: (context) => const SriLankaExplorer(),
+            );
+          default:
+            return null;
+        }
+      },
+      onUnknownRoute: (settings) {
+        return MaterialPageRoute(
+          builder: (context) => Scaffold(
+            appBar: AppBar(
+              title: const Text('Page Not Found'),
+              backgroundColor: Colors.green.shade600,
+            ),
+            body: const Center(
+              child: Text('The requested page could not be found.'),
+            ),
+          ),
+        );
       },
     );
   }
@@ -600,13 +629,32 @@ class HomePage extends StatelessWidget {
           ),
         ],
         onTap: (index) {
-          if (index == 1) {
-            Navigator.pushNamed(context, '/message');
-          } else if (index == 2) {
-            // Add this condition for location
-            Navigator.pushNamed(context, '/location');
-          } else if (index == 3) {
-            _showMoreOptions(context);
+          try {
+            if (index == 1) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      const ChatsListScreen(isDarkMode: false),
+                ),
+              );
+            } else if (index == 2) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SriLankaExplorer(),
+                ),
+              );
+            } else if (index == 3) {
+              _showMoreOptions(context);
+            }
+          } catch (e) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Navigation error: ${e.toString()}'),
+                backgroundColor: Colors.red,
+              ),
+            );
           }
         },
       ),
@@ -629,7 +677,21 @@ class HomePage extends StatelessWidget {
                 title: const Text('Farmers Pages'),
                 onTap: () {
                   Navigator.pop(context);
-                  Navigator.pushNamed(context, '/farmers');
+                  try {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const FarmerProfilesPage(),
+                      ),
+                    );
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Navigation error: ${e.toString()}'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
                 },
               ),
               ListTile(
@@ -640,7 +702,21 @@ class HomePage extends StatelessWidget {
                 title: const Text('About Us'),
                 onTap: () {
                   Navigator.pop(context);
-                  Navigator.pushNamed(context, '/about');
+                  try {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AboutUsPage(),
+                      ),
+                    );
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Navigation error: ${e.toString()}'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
                 },
               ),
             ],
@@ -662,9 +738,9 @@ class UploadProductPage extends StatefulWidget {
 
 class _UploadProductPageState extends State<UploadProductPage> {
   final _formKey = GlobalKey<FormState>();
-  List<ProductForm> _products = [ProductForm()];
+  final List<ProductForm> _products = [ProductForm()];
   bool _isUploading = false;
-  PageController _pageController = PageController();
+  final PageController _pageController = PageController();
   int _currentPage = 0;
 
   // Update the base URL to match the backend port

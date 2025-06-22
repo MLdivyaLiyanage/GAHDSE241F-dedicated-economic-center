@@ -467,20 +467,22 @@ class _ProductScreenState extends State<ProductScreen> {
     }
   }
 
-// Duplicate _showCartDialog removed to resolve method conflict.
-
   // Modified addToCart method
   void addToCart(Product product, {int quantityToAdd = 1}) async {
+    if (!mounted) return; // Early return if widget is disposed
+
     try {
       // ProductService.addToCart now returns CartItem?
       CartItem? addedItem =
           await ProductService.addToCart(product.id, quantityToAdd);
 
+      if (!mounted) return; // Check again after async operation
+
       if (addedItem != null) {
         // Successfully added/updated, backend returned the item.
         // Refresh the whole cart for simplicity.
         await _fetchCartItems();
-        await _fetchProducts(); // <-- Add this line to refresh product list and update stock on cards
+        await _fetchProducts();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -520,12 +522,16 @@ class _ProductScreenState extends State<ProductScreen> {
 
   // Modified removeFromCart method with better error handling
   void removeFromCart(CartItem item) async {
+    if (!mounted) return; // Early return if widget is disposed
+
     try {
       // Validate cartId before attempting removal
       if (item.cartId <= 0) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Invalid cart item ID')),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Invalid cart item ID')),
+          );
+        }
         return;
       }
 
@@ -542,6 +548,8 @@ class _ProductScreenState extends State<ProductScreen> {
             await ProductService.removeFromCart(item.cartId, userId: null);
         message = '${item.product.name} removed from cart';
       }
+
+      if (!mounted) return; // Check again after async operation
 
       if (success) {
         await _fetchCartItems(); // Refresh cart from server
@@ -579,9 +587,14 @@ class _ProductScreenState extends State<ProductScreen> {
   }
 
   void clearCart() async {
+    if (!mounted) return; // Early return if widget is disposed
+
     try {
       // Pass null for userId since we're not implementing user auth yet
       bool success = await ProductService.clearCartBackend(userId: null);
+
+      if (!mounted) return; // Check again after async operation
+
       if (success) {
         await _fetchCartItems(); // Refresh local cart
         await _fetchProducts(); // Refresh product list and update stock on cards
@@ -592,8 +605,7 @@ class _ProductScreenState extends State<ProductScreen> {
                 children: [
                   Icon(Icons.delete_forever, color: Colors.white),
                   SizedBox(width: 8),
-                  Text(
-                      'Cart cleared successfully'),
+                  Text('Cart cleared successfully'),
                 ],
               ),
               behavior: SnackBarBehavior.floating,
@@ -625,9 +637,11 @@ class _ProductScreenState extends State<ProductScreen> {
   }
 
   void _showCartDialog(BuildContext context) {
+    if (!mounted) return; // Early return if widget is disposed
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: Row(
           children: [
             const Icon(Icons.shopping_cart),
@@ -637,8 +651,10 @@ class _ProductScreenState extends State<ProductScreen> {
             if (cartItems.isNotEmpty)
               TextButton(
                 onPressed: () {
-                  Navigator.pop(context);
-                  clearCart();
+                  Navigator.pop(dialogContext);
+                  if (mounted) {
+                    clearCart();
+                  }
                 },
                 child: const Text('Clear All',
                     style: TextStyle(color: Colors.red)),
@@ -711,12 +727,20 @@ class _ProductScreenState extends State<ProductScreen> {
                                   IconButton(
                                     icon:
                                         const Icon(Icons.remove_circle_outline),
-                                    onPressed: () => removeFromCart(item),
+                                    onPressed: () {
+                                      if (mounted) {
+                                        removeFromCart(item);
+                                      }
+                                    },
                                   ),
                                   Text('${item.quantity}'),
                                   IconButton(
                                     icon: const Icon(Icons.add_circle_outline),
-                                    onPressed: () => addToCart(item.product),
+                                    onPressed: () {
+                                      if (mounted) {
+                                        addToCart(item.product);
+                                      }
+                                    },
                                   ),
                                 ],
                               ),
@@ -749,14 +773,16 @@ class _ProductScreenState extends State<ProductScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Close'),
           ),
           if (cartItems.isNotEmpty)
             ElevatedButton(
               onPressed: () {
-                Navigator.pop(context);
-                _showCheckoutDialog(context);
+                Navigator.pop(dialogContext);
+                if (mounted) {
+                  _showCheckoutDialog(context);
+                }
               },
               child: const Text('Checkout'),
             ),
@@ -766,9 +792,11 @@ class _ProductScreenState extends State<ProductScreen> {
   }
 
   void _showCheckoutDialog(BuildContext context) {
+    if (!mounted) return; // Early return if widget is disposed
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Checkout'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -787,12 +815,15 @@ class _ProductScreenState extends State<ProductScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Cancel'),
           ),
           TextButton(
             onPressed: () async {
-              Navigator.pop(context); // Close the dialog first
+              Navigator.pop(dialogContext); // Close the dialog first
+
+              if (!mounted) return; // Check if still mounted before navigation
+
               try {
                 final paymentSuccess = await Navigator.push<bool>(
                   context,
@@ -807,22 +838,34 @@ class _ProductScreenState extends State<ProductScreen> {
                   ),
                 );
 
-                if (paymentSuccess == true && mounted) {
-                  _fetchProducts(); // Refresh products to show updated stock
-                  _fetchCartItems(); // Refresh cart (should be empty after checkout)
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                          'Payment successful! Cart has been cleared from database.'),
-                      backgroundColor: Colors.green,
-                      duration: Duration(seconds: 2),
-                    ),
-                  );
+                if (!mounted) return; // Check again after navigation
+
+                if (paymentSuccess == true) {
+                  // Clear cart from backend after successful payment
+                  await ProductService.clearCartBackend(userId: null);
+
+                  // Refresh UI
+                  if (mounted) {
+                    _fetchProducts(); // Refresh products to show updated stock
+                    _fetchCartItems(); // Refresh cart (should be empty after checkout)
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content:
+                            Text('Payment successful! Cart has been cleared.'),
+                        backgroundColor: Colors.green,
+                        duration: Duration(seconds: 3),
+                      ),
+                    );
+                  }
                 }
               } catch (e) {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error: ${e.toString()}')),
+                    SnackBar(
+                      content: Text('Error: ${e.toString()}'),
+                      backgroundColor: Colors.red,
+                    ),
                   );
                 }
               }
@@ -836,7 +879,7 @@ class _ProductScreenState extends State<ProductScreen> {
 
   List<String> get categories {
     final categorySet =
-        this.products.map((product) => product.category).toSet().toList();
+        products.map((product) => product.category).toSet().toList();
     categorySet.sort();
     return ['All', ...categorySet];
   }
@@ -1134,7 +1177,9 @@ class _ProductScreenState extends State<ProductScreen> {
         children: [
           FloatingActionButton(
             onPressed: () {
-              _showCartDialog(context);
+              if (mounted) {
+                _showCartDialog(context);
+              }
             },
             backgroundColor: Theme.of(context).colorScheme.primary,
             shape: RoundedRectangleBorder(
@@ -1244,6 +1289,7 @@ class ProductCard extends StatelessWidget {
                                   value: loadingProgress.expectedTotalBytes !=
                                           null
                                       ? loadingProgress.cumulativeBytesLoaded /
+// ...
                                           loadingProgress.expectedTotalBytes!
                                       : null,
                                   strokeWidth: 2,
@@ -2271,11 +2317,14 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           onPressed: product.stockQuantity > 0
                               ? () async {
                                   try {
+                                    // Create a temporary cart item for Buy Now
                                     final cartItem = CartItem(
                                       product: product,
                                       quantity: _quantity,
-                                      cartId: 0,
+                                      cartId:
+                                          0, // 0 indicates Buy Now (not from actual cart)
                                     );
+
                                     final paymentSuccess =
                                         await Navigator.push<bool>(
                                       context,
@@ -2284,20 +2333,35 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                           cartItems: [cartItem],
                                           totalAmount:
                                               product.price * _quantity,
+                                          userId:
+                                              null, // Pass user ID if implementing user auth
                                         ),
                                       ),
                                     );
 
-                                    if (paymentSuccess == true && mounted) {
+                                    if (paymentSuccess == true) {
+                                      // Refresh product details to show updated stock
                                       _refreshProduct();
-                                    }
-                                  } catch (e) {
-                                    if (mounted) {
+
                                       ScaffoldMessenger.of(context)
                                           .showSnackBar(
-                                        SnackBar(content: Text(e.toString())),
+                                        const SnackBar(
+                                          content: Text(
+                                              'Purchase completed successfully!'),
+                                          backgroundColor: Colors.green,
+                                          duration: Duration(seconds: 2),
+                                        ),
                                       );
                                     }
+                                  } catch (e) {
+                                    ScaffoldMessenger.of(context)
+                                        .showSnackBar(
+                                      SnackBar(
+                                        content:
+                                            Text('Error: ${e.toString()}'),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
                                   }
                                 }
                               : null,
@@ -2326,16 +2390,15 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           ),
                           onPressed: product.stockQuantity > 0
                               ? () {
-                                  if (widget.onAddToCart != null) {
-                                    for (int i = 0; i < _quantity; i++) {
-                                      widget.onAddToCart!(product);
-                                    }
+                                  final onAddToCartCallback = widget.onAddToCart;
+                                  if (onAddToCartCallback != null) {
+                                    onAddToCartCallback(product);
                                     if (mounted) {
                                       ScaffoldMessenger.of(context)
                                           .showSnackBar(
                                         SnackBar(
                                           content: Text(
-                                              '${product.name} (x$_quantity) added to cart'),
+                                              '${product.name} added to cart'),
                                           duration: const Duration(seconds: 1),
                                         ),
                                       );
@@ -2345,20 +2408,16 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                         context.findAncestorStateOfType<
                                             _ProductScreenState>();
                                     if (state != null) {
-                                      for (int i = 0; i < _quantity; i++) {
-                                        state.addToCart(product);
-                                      }
-                                      if (mounted) {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          SnackBar(
-                                            content: Text(
-                                                '${product.name} (x$_quantity) added to cart'),
-                                            duration:
-                                                const Duration(seconds: 1),
-                                          ),
-                                        );
-                                      }
+                                      state.addToCart(product);
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                              '${product.name} added to cart'),
+                                          duration:
+                                              const Duration(seconds: 1),
+                                        ),
+                                      );
                                     }
                                   }
                                 }

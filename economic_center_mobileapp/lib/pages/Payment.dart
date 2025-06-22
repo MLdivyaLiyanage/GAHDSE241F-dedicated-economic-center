@@ -42,6 +42,7 @@ class PaymentService {
 
   static Future<bool> testConnection() async {
     try {
+      print('Testing connection to: $_baseUrl/api/health');
       final response = await http.get(
         Uri.parse('$_baseUrl/api/health'),
         headers: {
@@ -55,7 +56,7 @@ class PaymentService {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        return data['status'] == 'OK';
+        return data['status'] == 'OK' && data['database'] == 'connected';
       }
       return false;
     } catch (e) {
@@ -64,7 +65,7 @@ class PaymentService {
     }
   }
 
-  static Future<bool> processOrder({
+  static Future<Map<String, dynamic>> processOrder({
     required String name,
     required String email,
     required String address,
@@ -82,54 +83,61 @@ class PaymentService {
     String? cvv,
   }) async {
     try {
-      // for (final item in cartItems) {
-      //   final success = await categary.ProductService.purchaseProduct(
-      //     item.product.id,
-      //     item.quantity,
-      //   );
-
-      //   if (!success) {
-      //     throw Exception('Failed to update stock for ${item.product.name}');
-      //   }
-      // }
-      // // Test connection first
+      // Test connection first
       print('Testing connection...');
       final isConnected = await testConnection();
       if (!isConnected) {
         throw Exception(
-            'Cannot connect to server. Please check your connection and ensure the server is running.');
+            'Cannot connect to server. Please check your connection and ensure the server is running on port 3000.');
       }
 
-      print('Sending order request...');
+      print('Connection successful, sending payment request...');
+
       final requestBody = {
         'customerInfo': {
-          'name': name,
-          'email': email,
-          'address': address,
-          'city': city,
-          'zipCode': zipCode,
+          'name': name.trim(),
+          'email': email.trim().toLowerCase(),
+          'address': address.trim(),
+          'city': city.trim(),
+          'zipCode': zipCode.trim(),
         },
-        'shippingMethod': shippingMethod.toJson(),
+        'shippingMethod': {
+          'id': shippingMethod.id,
+          'name': shippingMethod.name,
+          'price': shippingMethod.price,
+          'days': shippingMethod.days,
+        },
         'paymentMethod': paymentMethod,
-        'cardDetails': paymentMethod == 'credit_card'
+        'cardDetails': paymentMethod == 'credit_card' && cardNumber != null
             ? {
-                'number': cardNumber?.replaceAll(' ', ''),
+                'number': cardNumber.replaceAll(' ', ''),
                 'expiry': expiryDate,
                 'cvv': cvv,
               }
             : null,
-        'cartItems': cartItems.map((item) => item.toJson()).toList(),
+        'cartItems': cartItems
+            .map((item) => {
+                  'product': {
+                    'id': item.product.id,
+                    'name': item.product.name,
+                    'price': item.product.price,
+                    'imageUrl': item.product.imageUrl,
+                  },
+                  'quantity': item.quantity,
+                })
+            .toList(),
         'subtotal': subtotal,
         'shipping': shipping,
         'tax': tax,
         'total': total,
       };
 
+      print('Request URL: $_baseUrl/api/payments');
       print('Request body: ${json.encode(requestBody)}');
 
       final response = await http
           .post(
-            Uri.parse('$_baseUrl/api/orders'),
+            Uri.parse('$_baseUrl/api/payments'),
             headers: {
               'Content-Type': 'application/json',
               'Accept': 'application/json',
@@ -141,32 +149,41 @@ class PaymentService {
       print('Response status: ${response.statusCode}');
       print('Response body: ${response.body}');
 
+      final responseData = json.decode(response.body);
+
       if (response.statusCode == 201) {
-        final responseData = json.decode(response.body);
         if (responseData['success'] == true) {
-          return true;
+          return {
+            'success': true,
+            'orderId': responseData['orderId']?.toString() ?? 'Unknown',
+            'paymentId': responseData['paymentId']?.toString(),
+            'message':
+                responseData['message'] ?? 'Order processed successfully',
+          };
         } else {
           throw Exception(responseData['error'] ?? 'Unknown error occurred');
         }
       } else {
-        // Try to decode error response
-        try {
-          final errorData = json.decode(response.body);
-          throw Exception(errorData['error'] ??
-              errorData['message'] ??
-              'Failed to process order');
-        } catch (jsonError) {
-          // If response is not JSON (like HTML error page)
-          throw Exception(
-              'Server error: ${response.statusCode}. Please ensure the server is running and accessible.');
+        // Handle error responses
+        String errorMessage = 'Server error';
+        if (responseData.containsKey('error')) {
+          errorMessage = responseData['error'];
+          if (responseData.containsKey('details')) {
+            errorMessage += ': ${responseData['details']}';
+          }
+          if (responseData.containsKey('missingFields')) {
+            errorMessage +=
+                ' (Missing: ${responseData['missingFields'].join(', ')})';
+          }
         }
+        throw Exception(errorMessage);
       }
     } on TimeoutException {
       throw Exception(
           'Request timeout. Please check your connection and try again.');
     } on FormatException catch (e) {
       throw Exception(
-          'Invalid response format. Server might be returning HTML instead of JSON. Error: ${e.message}');
+          'Invalid server response. Server might be down or returning HTML. Error: ${e.message}');
     } catch (e) {
       print('Error in processOrder: $e');
       if (e.toString().contains('Exception:')) {
@@ -199,8 +216,8 @@ class _PaymentPageState extends State<PaymentPage> {
   int _selectedPaymentMethod = 0;
   int _selectedShippingMethod = 0;
   bool _isProcessing = false;
-  bool _paymentSuccess = false;
-  String _errorMessage = '';
+  final bool _paymentSuccess = false;
+  final String _errorMessage = '';
 
   // Removed duplicate build method to resolve the error.
 
@@ -327,54 +344,80 @@ class _PaymentPageState extends State<PaymentPage> {
   double get total => subtotal + shipping + tax;
 
   Future<void> _processPayment() async {
+    if (!_formKey.currentState!.validate()) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please fill all required fields')),
+        );
+      }
+      return;
+    }
+
     setState(() {
       _isProcessing = true;
     });
 
     try {
-      // Simulate payment processing
-      await Future.delayed(const Duration(seconds: 2));
+      // Call the payment service to process the order and payment
+      final result = await PaymentService.processOrder(
+        name: _nameController.text,
+        email: _emailController.text,
+        address: _addressController.text,
+        city: _cityController.text,
+        zipCode: _zipCodeController.text,
+        cartItems: cartItems,
+        shippingMethod: shippingOptions[_selectedShippingMethod],
+        paymentMethod: paymentMethods[_selectedPaymentMethod].apiValue,
+        subtotal: subtotal,
+        shipping: shipping,
+        tax: tax,
+        total: total,
+        cardNumber:
+            _selectedPaymentMethod == 0 ? _cardNumberController.text : null,
+        expiryDate: _selectedPaymentMethod == 0 ? _expiryController.text : null,
+        cvv: _selectedPaymentMethod == 0 ? _cvvController.text : null,
+      );
 
-      // Call backend checkout to update stock and clear cart from database
-      final success = await ProductService.checkout(userId: widget.userId);
+      if (!mounted) return; // Check if widget is still mounted
 
-      if (success) {
+      if (result['success'] == true) {
         setState(() {
           _isProcessing = false;
         });
 
+        // Use the actual order ID from the backend
+        final orderId = result['orderId'] ??
+            DateTime.now().millisecondsSinceEpoch.toString().substring(7);
+
         // Show success dialog
+        await _showPaymentSuccessDialog(orderId);
+
+        if (!mounted) return; // Check again after dialog
+
+        // Determine if this is a real cart checkout or a Buy Now
+        final isBuyNow = cartItems.length == 1 &&
+            (cartItems[0].cartId == 0 || cartItems[0].cartId == null);
+
+        if (!isBuyNow && widget.userId != null) {
+          // Only clear backend cart if this is a real cart checkout
+          try {
+            await ProductService.checkout(userId: widget.userId);
+          } catch (e) {
+            print('Error clearing cart: $e');
+            // Don't fail the whole process if cart clearing fails
+          }
+        }
+
+        // Return success to previous screen
         if (mounted) {
-          showDialog(
-            context: context,
-            barrierDismissible: false,
-            builder: (context) => AlertDialog(
-              title: const Row(
-                children: [
-                  Icon(Icons.check_circle, color: Colors.green),
-                  SizedBox(width: 8),
-                  Text('Payment Successful'),
-                ],
-              ),
-              content: const Text(
-                  'Your order has been placed successfully! Cart has been cleared from database.'),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop(); // Close dialog
-                    Navigator.of(context)
-                        .pop(true); // Return to previous screen with success
-                  },
-                  child: const Text('OK'),
-                ),
-              ],
-            ),
-          );
+          Navigator.of(context).pop(true);
         }
       } else {
-        throw Exception('Failed to process checkout');
+        throw Exception(result['message'] ?? 'Payment processing failed');
       }
     } catch (e) {
+      if (!mounted) return; // Check if widget is still mounted
+
       setState(() {
         _isProcessing = false;
       });
@@ -385,22 +428,20 @@ class _PaymentPageState extends State<PaymentPage> {
             content: Text(
                 'Payment failed: ${e.toString().replaceAll('Exception: ', '')}'),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
           ),
         );
       }
     }
   }
 
-  // Make the dialog function async to be awaitable, though not strictly necessary
-  // if we handle the pop outside based on _paymentSuccess.
-  // The key change is in the onPressed of the "Done" button.
   Future<void> _showPaymentSuccessDialog(String orderId) async {
+    if (!mounted) return; // Early return if not mounted
+
     return showDialog<void>(
-      // Return Future<void> and specify type for showDialog
       context: context,
       barrierDismissible: false,
       builder: (BuildContext dialogContext) => AlertDialog(
-        // Use a different context name
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
@@ -466,6 +507,7 @@ class _PaymentPageState extends State<PaymentPage> {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
                 ),
               ),
@@ -1022,7 +1064,22 @@ class _PaymentPageState extends State<PaymentPage> {
             borderRadius: BorderRadius.circular(8),
           ),
         ),
-        onPressed: _isProcessing ? null : _processPayment,
+        onPressed: _isProcessing
+            ? null
+            : () async {
+                // Wrap the payment processing in a try-catch to handle disposal
+                try {
+                  await _processPayment();
+                } catch (e) {
+                  // If widget is disposed, just log the error
+                  if (!mounted) {
+                    print('Payment processing interrupted: widget disposed');
+                    return;
+                  }
+                  // Re-throw if widget is still mounted
+                  rethrow;
+                }
+              },
         child: _isProcessing
             ? const SizedBox(
                 width: 20,
@@ -1084,7 +1141,9 @@ class _PaymentPageState extends State<PaymentPage> {
             width: double.infinity,
             child: ElevatedButton(
               onPressed: () {
-                Navigator.of(context).popUntil((route) => route.isFirst);
+                if (mounted) {
+                  Navigator.of(context).popUntil((route) => route.isFirst);
+                }
               },
               child: const Text('Back to Home'),
             ),

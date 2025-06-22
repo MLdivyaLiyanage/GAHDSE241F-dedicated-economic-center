@@ -123,7 +123,7 @@ class _SignupPageState extends State<SignupPage> {
           // ignore: use_build_context_synchronously
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(
+              content: const Text(
                   'Registration Successful! Welcome to Sri Lanka Economic Center!'),
               backgroundColor: Colors.green,
               behavior: SnackBarBehavior.floating,

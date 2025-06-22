@@ -1206,10 +1206,10 @@ class FarmerProfileScreen extends StatelessWidget {
   final bool isDarkMode;
 
   const FarmerProfileScreen({
-    Key? key,
+    super.key,
     required this.farmer,
     required this.isDarkMode,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1365,8 +1365,7 @@ class ChatScreen extends StatefulWidget {
   final User farmer;
   final bool isDarkMode;
 
-  const ChatScreen({Key? key, required this.farmer, required this.isDarkMode})
-      : super(key: key);
+  const ChatScreen({super.key, required this.farmer, required this.isDarkMode});
 
   @override
   _ChatScreenState createState() => _ChatScreenState();

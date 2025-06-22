@@ -1,31 +1,15 @@
-CREATE TABLE users (
+-- Step 1: Create users table
+CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL,
+    email VARCHAR(100) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
-    phone VARCHAR(20),
-    location VARCHAR(100),
-    avatar VARCHAR(255),
-    farm_size VARCHAR(50),
-    join_date DATE,
-    status ENUM('active', 'pending', 'suspended') DEFAULT 'pending',
-    verified BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
+    role ENUM('farmer', 'customer') NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE feedback (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  farmer_id INT NOT NULL,
-  user_id INT NOT NULL,
-  rating DECIMAL(2,1) NOT NULL CHECK (rating BETWEEN 1 AND 5),
-  comment TEXT,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (farmer_id) REFERENCES users(id),
-  FOREIGN KEY (user_id) REFERENCES users(id)
-);
-
-CREATE TABLE products (
+-- Step 2: Create products table
+CREATE TABLE IF NOT EXISTS products (
     id INT AUTO_INCREMENT PRIMARY KEY,
     farmer_id INT NOT NULL,
     name VARCHAR(100) NOT NULL,
@@ -39,60 +23,99 @@ CREATE TABLE products (
     address VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (farmer_id) REFERENCES users(id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE product_reviews (
-   id INT AUTO_INCREMENT PRIMARY KEY,
-   product_id INT NOT NULL,
-   username VARCHAR(100) NOT NULL,
-   rating INT NOT NULL CHECK (rating BETWEEN 1 AND 5),
-   comment TEXT NOT NULL,
-   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-   FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
- );
- 
- -- Orders table
-CREATE TABLE orders (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    customer_id INT NOT NULL,
-    product_id INT NOT NULL,
-    shipping_option_id VARCHAR(50) NOT NULL,
-    quantity INT NOT NULL DEFAULT 1,
-    unit_price DECIMAL(10, 2) NOT NULL,
-    subtotal DECIMAL(10, 2) NOT NULL,
-    shipping_cost DECIMAL(10, 2) NOT NULL,
-    tax DECIMAL(10, 2) NOT NULL,
-    total DECIMAL(10, 2) NOT NULL,
-    payment_method VARCHAR(50) NOT NULL,
-    status ENUM('pending', 'paid', 'shipped', 'delivered', 'cancelled') DEFAULT 'pending',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (customer_id) REFERENCES customers(id),
-    FOREIGN KEY (product_id) REFERENCES products(id),
-    FOREIGN KEY (shipping_option_id) REFERENCES shipping_options(id)
-);
- 
- CREATE TABLE order_items (
-   id INT AUTO_INCREMENT PRIMARY KEY,
-   order_id INT NOT NULL,
-   product_id INT NOT NULL,
-   quantity INT NOT NULL,
-   price DECIMAL(10,2) NOT NULL,
-   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-   FOREIGN KEY (order_id) REFERENCES orders(id),
-   FOREIGN KEY (product_id) REFERENCES products(id)
- );
+-- Step 3: Create customer tables
+CREATE TABLE IF NOT EXISTS customer (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  email VARCHAR(100) NOT NULL UNIQUE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Ensure cart_items table exists and has correct structure
-DROP TABLE IF EXISTS cart_items;
-CREATE TABLE cart_items (
-   id INT AUTO_INCREMENT PRIMARY KEY,
-   user_id INT DEFAULT NULL,
-   product_id INT NOT NULL,
-   quantity INT NOT NULL DEFAULT 1,
-   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-   FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
-   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-   INDEX idx_user_product (user_id, product_id),
-   INDEX idx_product (product_id)
-);
+CREATE TABLE IF NOT EXISTS customer_address (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  customer_id INT NOT NULL,
+  address VARCHAR(255) NOT NULL,
+  city VARCHAR(50) NOT NULL,
+  zip_code VARCHAR(20) NOT NULL,
+  is_default BOOLEAN DEFAULT false,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (customer_id) REFERENCES customer(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Step 4: Create order table
+CREATE TABLE IF NOT EXISTS `order` (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  customer_id INT NOT NULL,
+  address_id INT NOT NULL,
+  order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  payment_method VARCHAR(50) NOT NULL,
+  shipping_method VARCHAR(50) NOT NULL,
+  subtotal DECIMAL(10,2) NOT NULL,
+  shipping_cost DECIMAL(10,2) NOT NULL,
+  tax DECIMAL(10,2) NOT NULL,
+  total DECIMAL(10,2) NOT NULL,
+  status VARCHAR(20) DEFAULT 'pending',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (customer_id) REFERENCES customer(id) ON DELETE CASCADE,
+  FOREIGN KEY (address_id) REFERENCES customer_address(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Step 5: NOW create order_item table (after both order and products exist)
+CREATE TABLE IF NOT EXISTS order_item (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  order_id INT NOT NULL,
+  product_id INT NOT NULL,
+  quantity INT NOT NULL,
+  price DECIMAL(10,2) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (order_id) REFERENCES `order`(id) ON DELETE CASCADE,
+  FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Step 6: Create payment table
+CREATE TABLE IF NOT EXISTS payment (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  order_id INT NOT NULL,
+  payment_method VARCHAR(50) NOT NULL,
+  card_number VARCHAR(32),
+  card_expiry VARCHAR(10),
+  card_cvv VARCHAR(10),
+  amount DECIMAL(10,2) NOT NULL,
+  status VARCHAR(20) DEFAULT 'pending',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (order_id) REFERENCES `order`(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  FOREIGN KEY (order_id) REFERENCES `order`(id) ON DELETE CASCADE,
+  FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS payment (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  order_id INT NOT NULL,
+  payment_method VARCHAR(50) NOT NULL,
+  card_number VARCHAR(32), -- Store only last 4 digits for security
+  card_expiry VARCHAR(10),
+  card_cvv VARCHAR(10), -- Should be NULL in production for security
+  amount DECIMAL(10,2) NOT NULL,
+  status VARCHAR(20) DEFAULT 'pending',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (order_id) REFERENCES `order`(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Add indexes for better performance (only for payment tables)
+CREATE INDEX IF NOT EXISTS idx_customer_email ON customer(email);
+CREATE INDEX IF NOT EXISTS idx_customer_address_customer_id ON customer_address(customer_id);
+CREATE INDEX IF NOT EXISTS idx_order_customer_id ON `order`(customer_id);
+CREATE INDEX IF NOT EXISTS idx_order_address_id ON `order`(address_id);
+CREATE INDEX IF NOT EXISTS idx_order_status ON `order`(status);
+CREATE INDEX IF NOT EXISTS idx_order_item_order_id ON order_item(order_id);
+CREATE INDEX IF NOT EXISTS idx_order_item_product_id ON order_item(product_id);
+CREATE INDEX IF NOT EXISTS idx_payment_order_id ON payment(order_id);
+CREATE INDEX IF NOT EXISTS idx_payment_status ON payment(status);
+CREATE INDEX IF NOT EXISTS idx_payment_method ON payment(payment_method);
+
